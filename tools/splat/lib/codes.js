@@ -88,7 +88,10 @@ function tableTons(palette, rampe, tonDe, couche = 0) {
 // pixel posé appartient à la couche MAJORITAIRE de ses échantillons (égalité →
 // la plus basse) ; `couche` choisit celle qu'on extrait (une pièce par couche,
 // même cadrage, attaches cohérentes). Une seule couche = comportement du ①/②.
-function piece(photo, monde, tons, couche = 0) {
+// RELIQUATS ③ : `part` > 0 (sur-couche de DÉTAIL, lib/details.js) → le pixel appartient à
+// la couche dès que ses splats sont propriétaires d'au moins `part` des échantillons, quelle
+// que soit la majorité : un poil fin n'est jamais majoritaire, il doit pourtant se voir.
+function piece(photo, monde, tons, couche = 0, part = 0) {
   const { passes: P, cote, demi, base, lacet, ss } = photo;
   const grand = cote * ss, n = cote * cote, codes = new Uint8Array(n);
   let x0 = cote, y0 = cote, x1 = -1, y1 = -1, plats = 0, posés = 0;
@@ -105,10 +108,13 @@ function piece(photo, monde, tons, couche = 0) {
         if (v === undefined) throw new Error('couleur de splat hors rampe (splat ' + id + ')');
         total++; parCouche[v >> 3]++;
       }
-    if (2 * total < ss * ss) continue;
-    let maj = 0;
-    for (let c = 1; c < 8; c++) if (parCouche[c] > parCouche[maj]) maj = c;
-    if (maj !== couche) continue;
+    if (part > 0) { if (parCouche[couche] < part * ss * ss) continue; }
+    else {
+      if (2 * total < ss * ss) continue;
+      let maj = 0;
+      for (let c = 1; c < 8; c++) if (parCouche[c] > parCouche[maj]) maj = c;
+      if (maj !== couche) continue;
+    }
     let k = 0, sTon = 0;
     const nv = [0, 0, 0];
     for (let j = 0; j < ss; j++)

@@ -16,5 +16,6 @@ module.exports = recette({
     ctx.S.ball(ctx.P([0, ry, 0]), [0.3 * r, 0.25 * r, 0.3 * r], ctx.mat(0), { res: 0.01, neg: true });   // cuvette
     const t = (h(0, 3) - 0.5) * 0.6 * CM;
     tige(ctx, [[0, ry * 0.8, 0], [t, ry + 0.5 * CM, 0], [t * 2, ry + 0.9 * CM, 0.1 * CM]], 0.1 * CM, 0.07 * CM, 1);
+    return [{ c: ctx.P([0, 0, 0]), r, ry }];   // RELIQUATS ③ : site de la pruine (lib/details.js)
   }
 });

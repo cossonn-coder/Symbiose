@@ -37,6 +37,13 @@
 //   `couches: ['petales', 'coeur']` → une pièce PAR COUCHE et par vue (même
 //   cadrage, champ `couche` du manifeste ; lib/organe.js, lib/codes.js).
 //
+// RELIQUATS ③ : `--details` → les SUR-COUCHES de détail de la recette (lib/details.js :
+//   nervures, duvet, poils, éclat, revers, pruine, glandes, gouttes, étamines). Même
+//   sculpture, MÊMES vues, détails ajoutés au monde ; seules les couches de détail sont
+//   extraites (un pixel leur appartient dès que leur splat est propriétaire d'un tiers de
+//   ses échantillons), sans trous, aux paliers de la table → `<recette>_details.json`.
+//   La pièce de base n'est pas recuite.
+//
 // Déterministe : graines fixes, aucune horloge dans les fichiers écrits (les
 // temps ne vont qu'à la console). Golden non concerné (outil hors moteur).
 
@@ -52,6 +59,7 @@ const codes = require('./lib/codes');
 const planche = require('./lib/planche');
 const controle = require('./lib/controle');
 const { CLASSES, classesDe, suffixe } = require('./lib/classes');
+const details = require('./lib/details');
 
 const RACINE = path.resolve(__dirname, '..', '..');
 const GRAINE = 7;
@@ -66,10 +74,11 @@ const INCLINAISONS = [-30, 0, 30];              // V retenu au ① (8 lacets × 
 
 function options(argv) {
   const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: null,
-    inclinaisons: null, paliers: null };
+    inclinaisons: null, paliers: null, details: false };
   for (let i = 1; i < argv.length; i += 2) {
     const k = argv[i].replace(/^--/, ''), v = argv[i + 1];
-    if (k === 'lacets') o.lacets = +v;
+    if (k === 'details') { o.details = true; i--; }
+    else if (k === 'lacets') o.lacets = +v;
     else if (k === 'inclinaisons') o.inclinaisons = v.split(',').map(Number);
     else if (k === 'paliers') o.paliers = v.split(',').map(Number);
     else if (k in o) o[k] = v;
@@ -81,7 +90,8 @@ function options(argv) {
 
 // Palette du builder : 0 = fond, puis CRANS gris croissants PAR COUCHE (③) ; la
 // couche c décale le rouge de c (couleurs distinctes, la couche 0 inchangée).
-const COUCHES = 3;
+// RELIQUATS ③ : 8 couches (recette + détails ; lib/codes.js en code 8 au plus).
+const COUCHES = 8;
 const PALETTE = [0x000000, ...Array.from({ length: CRANS * COUCHES },
   (_, i) => (12 + (i % CRANS) * 24) * 0x010101 + ((i / CRANS) | 0) * 0x010000)];
 const RAMPE = Array.from({ length: CRANS }, (_, k) => k + 1);
@@ -89,13 +99,16 @@ const rampeCouche = c => RAMPE.map(i => i + c * CRANS);
 const tableTons = () => new Map(Array.from({ length: COUCHES },
   (_, c) => [...codes.tableTons(PALETTE, rampeCouche(c), TON_DE, c)]).flat());
 
-// Sculpte et cuit la recette pour une (variante, inclinaison) → monde ink-studio.
-function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null) {
+// Sculpte et cuit la recette pour une (variante, inclinaison) → monde ink-studio ;
+// `avecDetails` : ses détails ajoutés (RELIQUATS ③, couches après celles de la recette).
+function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null, avecDetails = false) {
   const B = L.makeBuilder(GRAINE, PALETTE);
   const S = L.KIT.sculpt(L.makeSculpt(B));
   S.sunK = 0; S.amb = AMBIANT; S.sky = CIEL;
-  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE }, couches: Array.from({ length: COUCHES }, (_, c) => ({ r: rampeCouche(c) })) }, variante, trou,
-    inclinaison: (inclinaisonDeg * Math.PI) / 180 });
+  const ctx = { S, K: L.KIT, M: { organe: { r: RAMPE }, couches: Array.from({ length: COUCHES }, (_, c) => ({ r: rampeCouche(c) })) }, variante, trou,
+    inclinaison: (inclinaisonDeg * Math.PI) / 180 };
+  const sites = recette.sculpter(ctx);
+  if (avecDetails) details.sculpter(ctx, recette, sites, (recette.couches || [0]).length);
   S.bake();
   const r = recette.rayonCm / iso.CM_PAR_UNITE + 1;
   return B.finish({ cam: { target: [0, 0, 0], dist: 5, pitch: 0.5, yaw: 0.8 }, detail: 20, dither: 0, radius: r });
@@ -112,7 +125,7 @@ function plan(recette, o) {
   for (const inclinaison of o.inclinaisons)
     for (let variante = 0; variante < recette.variantes; variante++)
       prises.push({ trou: null, variante, inclinaison, zooms });
-  if (recette.trous) {
+  if (recette.trous && !o.details) {
     const zt = zooms.filter(q => PALIERS_TROUS.includes(q.z));
     for (const trou of TROUS.filter(Boolean))
       for (const inclinaison of o.inclinaisons)
@@ -129,15 +142,16 @@ function cuireRecette(recette, o) {
   const pieces = [], temps = { monde: [], photo: new Map() };
   for (const { trou, variante, inclinaison, zooms } of plan(recette, o)) {
     let t = process.hrtime.bigint();
-    const monde = cuireMonde(L, recette, variante, inclinaison, trou);
+    const monde = cuireMonde(L, recette, variante, inclinaison, trou, o.details);
     temps.monde.push(Number(process.hrtime.bigint() - t) / 1e6);
     for (const q of zooms)
       for (let k = 0; k < o.lacets; k++) {
         const lacetDeg = (360 * k) / o.lacets;
         t = process.hrtime.bigint();
         const photo = iso.photographier(ink, monde, recette.rayonCm, q.z * q.k, (lacetDeg * Math.PI) / 180);
-        const couches = recette.couches || [null];
-        const ps = couches.map((_, c) => codes.piece(photo, monde, tons, c));
+        const couches = o.details ? coucheDetails(recette) : recette.couches || [null];
+        const ps = couches.map((n, c) => (o.details ? (c < o.base ? codes.piece(photo, monde, tons, c)
+          : codes.piece(photo, monde, tons, c, PART_DETAIL)) : codes.piece(photo, monde, tons, c)));
         const dt = Number(process.hrtime.bigint() - t) / 1e6;
         const cle = q.taille ? 't' + q.taille : q.z * q.k;
         const [n, s] = temps.photo.get(cle) || [0, 0];
@@ -148,6 +162,11 @@ function cuireRecette(recette, o) {
   }
   return { pieces, temps };
 }
+
+// RELIQUATS ③ : couches photographiées en mode --details = celles de la recette (pour la
+// planche de contrôle seulement, préfixées « base: ») puis ses détails.
+const PART_DETAIL = 1 / 3;
+const coucheDetails = r => [...(r.couches || ['limbe']).map(c => 'base:' + c), ...details.DETAILS[r.nom].couches];
 
 // « capture.png:x,y,w,h » → la région de la capture, { w, h, rgb }.
 function recadrer(spec) {
@@ -209,23 +228,32 @@ function principal() {
   const recette = require(`./recettes/${o.recette}.js`);
   if (o.lacets === null) o.lacets = recette.lacets || 8;
   if (o.inclinaisons === null) o.inclinaisons = recette.inclinaisons || INCLINAISONS;
+  if (o.details) {
+    if (!details.DETAILS[recette.nom]) throw new Error(recette.nom + ' : aucun détail (lib/details.js)');
+    if (o.paliers === null) o.paliers = details.DETAILS[recette.nom].paliers;
+    o.base = (recette.couches || [0]).length;
+  }
   if (o.paliers === null) o.paliers = recette.paliers || iso.PALIERS;
   const t0 = process.hrtime.bigint();
-  const { pieces, temps } = cuireRecette(recette, o);
+  const tout = cuireRecette(recette, o), temps = tout.temps;
+  // --details : seules les couches de détail sont écrites ; la base sert au contrôle.
+  const pieces = o.details ? tout.pieces.filter(p => !p.couche.startsWith('base:')) : tout.pieces;
   const meta = {
     format: 'R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé',
     px_par_cm_x1: iso.PX_PAR_CM_X, seuil_plat: codes.SEUIL_PLAT,
     lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
     ...(recette.vue ? { vue: recette.vue } : {}), ...(recette.notes ? { notes: recette.notes } : {}),
-    ...(recette.couches ? { couches: recette.couches } : {}),
+    ...(o.details ? { couches: details.DETAILS[recette.nom].couches, base: recette.nom }
+      : recette.couches ? { couches: recette.couches } : {}),
     ...(CLASSES[recette.nom] && !recette.tailles ? { classes: classesDe(recette.nom).map(c => ({ echelle: c.k, taille_cm: c.tailleCm })),
       taille_nominale_cm: CLASSES[recette.nom].nominalCm, rond: !!CLASSES[recette.nom].rond } : {}),
     ...(recette.trous ? { trous: { paliers: PALIERS_TROUS, variantes: TROUS_VARIANTES,
       degres: TROUS.filter(Boolean) } } : {}),
     attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'
   };
-  const fichiers = planche.ecrire(png, path.resolve(RACINE, o.sortie), recette.nom, meta, pieces);
-  if (o.controle) fichiers.push(ecrireControle(path.resolve(RACINE, o.controle), recette.nom, pieces, o));
+  const nom = recette.nom + (o.details ? '_details' : '');
+  const fichiers = planche.ecrire(png, path.resolve(RACINE, o.sortie), nom, meta, pieces);
+  if (o.controle) fichiers.push(ecrireControle(path.resolve(RACINE, o.controle), nom, o.details ? tout.pieces : pieces, o));
   const total = Number(process.hrtime.bigint() - t0) / 1e6;
   const vides = pieces.filter(p => p.w === 0).length;
   console.log(`${recette.nom} : ${pieces.length} pièces (${vides} vides), ${total.toFixed(0)} ms au total`);

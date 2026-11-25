@@ -11,6 +11,10 @@ module.exports = recette({
   sculpter(ctx, h) {
     const r = 1.3 * CM * (0.9 + 0.2 * h(0, 0));
     tige(ctx, [[0, 0, 0], [0, 0.25 * CM, 0]], 0.12 * CM, 0.2 * CM, 1);   // réceptacle
-    corolle(ctx, [0, 0.3 * CM, 0], r, [0.1 * (h(0, 2) - 0.5), 1, 0], h(0, 1) * 2 * Math.PI, 1, 0.2 + 0.2 * h(0, 3));
+    const haut = [0.1 * (h(0, 2) - 0.5), 1, 0];
+    corolle(ctx, [0, 0.3 * CM, 0], r, haut, h(0, 1) * 2 * Math.PI, 1, 0.2 + 0.2 * h(0, 3));
+    // RELIQUATS ③ : site des étamines (lib/details.js) = le dessus du cœur.
+    const n = Math.hypot(...haut), u = haut.map(v => v / n);
+    return [{ c: ctx.P([u[0] * r * 0.25, 0.3 * CM + u[1] * r * 0.25, 0]), r, haut: ctx.R(u) }];
   }
 });

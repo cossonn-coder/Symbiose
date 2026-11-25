@@ -80,7 +80,7 @@ function limbe(ctx, o) {
     S.puff([boucle], c, epais, M.organe, { res, ax: [U, Vh, Wh] });
     if (o.gaufre) gaufrer(ctx, c, U, Vh, Wh, o, epais);
   }
-  return { c, U, V, W, long: o.long, large: o.large, moitie: o.moitie };
+  return { c, U, V, W, long: o.long, large: o.large, moitie: o.moitie, pli, epais };   // pli, epais : RELIQUATS ③ (lib/details.js)
 }
 
 // Gaufrage (ortie, menthe, consoude, tomate) : 3 sillons par moitié, de la

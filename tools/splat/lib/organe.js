@@ -59,7 +59,7 @@ function recette(spec) {
       const P = p => { const q = R(p); return [q[0], q[1] * OBLIQUE, q[2]]; };
       const mat = (k = 0) => ctx.M.couches[k];
       const h = (i, j) => ctx.K.hash(1000 + ctx.variante, i, j);
-      spec.sculpter({ ...ctx, R, P, mat }, h);
+      return spec.sculpter({ ...ctx, R, P, mat }, h);   // RELIQUATS ③ : sites des détails
     }
   };
 }

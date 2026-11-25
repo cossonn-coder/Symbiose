@@ -127,9 +127,11 @@ namespace Symbiose
 			int v = trou > 0 ? 0 : Variante(k, variantes);   // trous cuits sur la variante 0 (②)
 			float z = WorldView.CurrentZoom;
 			int e = SplatPlanches.Classe(recette, longCm);
-			if (!SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, trou, out var p)
-				&& (trou == 0 || !SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, 0, out p))) return false;
-			PoserPieceSplat(p, ancre, PaletteIndexee.Palette(col));
+			// Pièce trouée absente → la saine (trou remis à 0) ; les détails ne se posent que sur une saine.
+			if (!SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, trou, out var p, out int ep)
+				&& (trou == 0 || !SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, (trou = 0), out p, out ep))) return false;
+			PoserPieceSplat(p, ancre, PaletteIndexee.Palette(Retournee(k) ? Clair(col) : col));
+			if (trou == 0) PoserDetailsFeuille(recette, ancre, z, ep, inc, lacet, v, col);   // RELIQUATS ③ (SplatsDetails.cs)
 			_feuillesSplat = true;
 			return true;
 		}
@@ -191,14 +193,17 @@ namespace Symbiose
 			float z = WorldView.CurrentZoom;
 			int e = SplatPlanches.Classe(recette, tailleCm);
 			bool posee = false;
+			int ep = e;
 			for (int k = 0; k < couches.Length; k++)
 			{
 				// Tournesol fané : seul le disque de graines reste (comme PoserSoleil).
 				if (recette == "tete_soleil" && !fleur && couches[k] != "coeur") continue;
-				if (!SplatPlanches.Trouver(recette, z, e, k, inc, lacet, v, 0, out var p)) continue;
+				if (!SplatPlanches.Trouver(recette, z, e, k, inc, lacet, v, 0, out var p, out int ek)) continue;
 				PoserPieceSplat(p, ancre, PaletteIndexee.Palette(CouleurCouche(recette, couches[k], c, pal)));
+				if (!posee) ep = ek;
 				posee = true;
 			}
+			if (posee) PoserDetailsOrgane(recette, ancre, z, ep, inc, lacet, v, fleur);   // RELIQUATS ③ (SplatsDetails.cs)
 			return posee;
 		}
 

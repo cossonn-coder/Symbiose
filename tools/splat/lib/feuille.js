@@ -32,6 +32,7 @@ function recette({ nom, rayonCm, vue, notes, variantes = 3, sculpter }) {
       const h = (i, j) => ctx.K.hash(1000 + ctx.variante, i, j);
       const sites = sculpter(c, h);
       percer(c, ctx.trou, sites, ctx.variante);
+      return sites;   // RELIQUATS ③ : sites des détails (lib/details.js)
     }
   };
 }

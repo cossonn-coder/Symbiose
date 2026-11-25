@@ -1,0 +1,8703 @@
+{
+ "recette": "feuille_paume_details",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 8,
+ "inclinaisons_deg": [
+  -30,
+  0,
+  30
+ ],
+ "variantes": 3,
+ "vue": [
+  "FormeFeuille.Paume",
+  "LeafShape.Lobee"
+ ],
+ "couches": [
+  "nervures",
+  "poils"
+ ],
+ "base": "feuille_paume",
+ "classes": [
+  {
+   "echelle": 1,
+   "taille_cm": 20
+  }
+ ],
+ "taille_nominale_cm": 20,
+ "rond": false,
+ "trous": {
+  "paliers": [
+   16,
+   32
+  ],
+  "variantes": 1,
+  "degres": [
+   {
+    "type": "morsure",
+    "degre": 1
+   },
+   {
+    "type": "morsure",
+    "degre": 2
+   },
+   {
+    "type": "grele",
+    "degre": 1
+   },
+   {
+    "type": "grele",
+    "degre": 2
+   }
+  ]
+ },
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "x8": "feuille_paume_details_x8.png",
+  "x16": "feuille_paume_details_x16.png",
+  "x32": "feuille_paume_details_x32.png"
+ },
+ "pieces": [
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    0,
+    0,
+    98,
+    82
+   ],
+   "attache": [
+    14,
+    -9
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    99,
+    0,
+    122,
+    97
+   ],
+   "attache": [
+    23,
+    3
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    222,
+    0,
+    64,
+    80
+   ],
+   "attache": [
+    -24,
+    20
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    287,
+    0,
+    58,
+    100
+   ],
+   "attache": [
+    -34,
+    30
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    346,
+    0,
+    24,
+    38
+   ],
+   "attache": [
+    5,
+    30
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    371,
+    0,
+    111,
+    74
+   ],
+   "attache": [
+    15,
+    38
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    483,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    135,
+    135
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    484,
+    0,
+    150,
+    33
+   ],
+   "attache": [
+    74,
+    20
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    635,
+    0,
+    31,
+    26
+   ],
+   "attache": [
+    17,
+    19
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    667,
+    0,
+    122,
+    57
+   ],
+   "attache": [
+    98,
+    26
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    790,
+    0,
+    64,
+    73
+   ],
+   "attache": [
+    87,
+    13
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    855,
+    0,
+    58,
+    87
+   ],
+   "attache": [
+    91,
+    21
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    914,
+    0,
+    86,
+    78
+   ],
+   "attache": [
+    80,
+    -13
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1001,
+    0,
+    111,
+    93
+   ],
+   "attache": [
+    95,
+    -2
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1113,
+    0,
+    130,
+    77
+   ],
+   "attache": [
+    66,
+    -27
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1244,
+    0,
+    150,
+    75
+   ],
+   "attache": [
+    75,
+    -28
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1395,
+    0,
+    103,
+    83
+   ],
+   "attache": [
+    14,
+    -4
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1499,
+    0,
+    130,
+    98
+   ],
+   "attache": [
+    25,
+    8
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1630,
+    0,
+    66,
+    81
+   ],
+   "attache": [
+    -23,
+    25
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1697,
+    0,
+    60,
+    99
+   ],
+   "attache": [
+    -32,
+    35
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1758,
+    0,
+    33,
+    38
+   ],
+   "attache": [
+    15,
+    32
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1792,
+    0,
+    132,
+    68
+   ],
+   "attache": [
+    27,
+    40
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1925,
+    0,
+    11,
+    2
+   ],
+   "attache": [
+    3,
+    0
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    0,
+    101,
+    171,
+    23
+   ],
+   "attache": [
+    86,
+    18
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    172,
+    101,
+    32,
+    38
+   ],
+   "attache": [
+    17,
+    32
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    205,
+    101,
+    130,
+    69
+   ],
+   "attache": [
+    104,
+    40
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    336,
+    101,
+    66,
+    81
+   ],
+   "attache": [
+    88,
+    25
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    403,
+    101,
+    60,
+    101
+   ],
+   "attache": [
+    91,
+    35
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    464,
+    101,
+    106,
+    83
+   ],
+   "attache": [
+    89,
+    -4
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    571,
+    101,
+    132,
+    101
+   ],
+   "attache": [
+    104,
+    8
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    704,
+    101,
+    148,
+    76
+   ],
+   "attache": [
+    73,
+    -25
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    853,
+    101,
+    171,
+    74
+   ],
+   "attache": [
+    84,
+    -24
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1025,
+    101,
+    98,
+    82
+   ],
+   "attache": [
+    12,
+    -7
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1124,
+    101,
+    123,
+    95
+   ],
+   "attache": [
+    22,
+    5
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1248,
+    101,
+    67,
+    79
+   ],
+   "attache": [
+    -21,
+    21
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1316,
+    101,
+    56,
+    95
+   ],
+   "attache": [
+    -34,
+    31
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1373,
+    101,
+    32,
+    33
+   ],
+   "attache": [
+    15,
+    27
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1406,
+    101,
+    128,
+    64
+   ],
+   "attache": [
+    26,
+    35
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1535,
+    101,
+    0,
+    0
+   ],
+   "attache": [
+    135,
+    135
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1536,
+    101,
+    163,
+    28
+   ],
+   "attache": [
+    83,
+    18
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1700,
+    101,
+    29,
+    37
+   ],
+   "attache": [
+    16,
+    31
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1730,
+    101,
+    123,
+    71
+   ],
+   "attache": [
+    100,
+    39
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1854,
+    101,
+    67,
+    81
+   ],
+   "attache": [
+    87,
+    23
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1922,
+    101,
+    56,
+    101
+   ],
+   "attache": [
+    89,
+    33
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    0,
+    203,
+    102,
+    84
+   ],
+   "attache": [
+    86,
+    -5
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    103,
+    203,
+    128,
+    102
+   ],
+   "attache": [
+    101,
+    7
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    232,
+    203,
+    142,
+    78
+   ],
+   "attache": [
+    70,
+    -24
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    375,
+    203,
+    163,
+    76
+   ],
+   "attache": [
+    79,
+    -23
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    539,
+    203,
+    98,
+    70
+   ],
+   "attache": [
+    10,
+    17
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    638,
+    203,
+    125,
+    83
+   ],
+   "attache": [
+    21,
+    26
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    764,
+    203,
+    82,
+    76
+   ],
+   "attache": [
+    -29,
+    45
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    847,
+    203,
+    74,
+    89
+   ],
+   "attache": [
+    -37,
+    54
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    922,
+    203,
+    94,
+    58
+   ],
+   "attache": [
+    6,
+    55
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1017,
+    203,
+    122,
+    70
+   ],
+   "attache": [
+    18,
+    62
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1140,
+    203,
+    129,
+    33
+   ],
+   "attache": [
+    62,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1270,
+    203,
+    149,
+    33
+   ],
+   "attache": [
+    73,
+    51
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1420,
+    203,
+    93,
+    37
+   ],
+   "attache": [
+    83,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1514,
+    203,
+    125,
+    44
+   ],
+   "attache": [
+    103,
+    50
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1640,
+    203,
+    81,
+    54
+   ],
+   "attache": [
+    109,
+    36
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1722,
+    203,
+    74,
+    65
+   ],
+   "attache": [
+    110,
+    42
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1797,
+    203,
+    94,
+    60
+   ],
+   "attache": [
+    87,
+    7
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1892,
+    203,
+    122,
+    70
+   ],
+   "attache": [
+    103,
+    15
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    0,
+    306,
+    129,
+    56
+   ],
+   "attache": [
+    66,
+    -13
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    130,
+    306,
+    150,
+    63
+   ],
+   "attache": [
+    75,
+    -5
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    281,
+    306,
+    103,
+    69
+   ],
+   "attache": [
+    14,
+    20
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    385,
+    306,
+    137,
+    79
+   ],
+   "attache": [
+    27,
+    28
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    523,
+    306,
+    79,
+    73
+   ],
+   "attache": [
+    -28,
+    48
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    603,
+    306,
+    73,
+    86
+   ],
+   "attache": [
+    -36,
+    58
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    677,
+    306,
+    105,
+    52
+   ],
+   "attache": [
+    16,
+    56
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    783,
+    306,
+    137,
+    64
+   ],
+   "attache": [
+    29,
+    63
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    921,
+    306,
+    144,
+    33
+   ],
+   "attache": [
+    72,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1066,
+    306,
+    171,
+    32
+   ],
+   "attache": [
+    86,
+    50
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1238,
+    306,
+    105,
+    53
+   ],
+   "attache": [
+    89,
+    56
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1344,
+    306,
+    137,
+    65
+   ],
+   "attache": [
+    109,
+    63
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1482,
+    306,
+    80,
+    75
+   ],
+   "attache": [
+    107,
+    49
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1563,
+    306,
+    73,
+    87
+   ],
+   "attache": [
+    108,
+    57
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1637,
+    306,
+    108,
+    69
+   ],
+   "attache": [
+    91,
+    20
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1746,
+    306,
+    137,
+    82
+   ],
+   "attache": [
+    107,
+    29
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1884,
+    306,
+    145,
+    52
+   ],
+   "attache": [
+    71,
+    -13
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    0,
+    394,
+    171,
+    56
+   ],
+   "attache": [
+    84,
+    -5
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    172,
+    394,
+    103,
+    67
+   ],
+   "attache": [
+    13,
+    16
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    276,
+    394,
+    132,
+    76
+   ],
+   "attache": [
+    24,
+    24
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    409,
+    394,
+    83,
+    67
+   ],
+   "attache": [
+    -26,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    493,
+    394,
+    73,
+    79
+   ],
+   "attache": [
+    -36,
+    52
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    567,
+    394,
+    102,
+    46
+   ],
+   "attache": [
+    14,
+    51
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    670,
+    394,
+    133,
+    57
+   ],
+   "attache": [
+    27,
+    58
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    804,
+    394,
+    142,
+    32
+   ],
+   "attache": [
+    71,
+    42
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    947,
+    394,
+    163,
+    27
+   ],
+   "attache": [
+    83,
+    48
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1111,
+    394,
+    103,
+    54
+   ],
+   "attache": [
+    89,
+    55
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1215,
+    394,
+    132,
+    65
+   ],
+   "attache": [
+    107,
+    61
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1348,
+    394,
+    83,
+    73
+   ],
+   "attache": [
+    108,
+    47
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1432,
+    394,
+    73,
+    87
+   ],
+   "attache": [
+    108,
+    55
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1506,
+    394,
+    104,
+    70
+   ],
+   "attache": [
+    89,
+    19
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1611,
+    394,
+    133,
+    83
+   ],
+   "attache": [
+    105,
+    27
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1745,
+    394,
+    142,
+    54
+   ],
+   "attache": [
+    70,
+    -13
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    0,
+    482,
+    163,
+    59
+   ],
+   "attache": [
+    79,
+    -4
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    164,
+    482,
+    94,
+    59
+   ],
+   "attache": [
+    16,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    259,
+    482,
+    120,
+    68
+   ],
+   "attache": [
+    27,
+    51
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    380,
+    482,
+    77,
+    76
+   ],
+   "attache": [
+    -27,
+    67
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    458,
+    482,
+    74,
+    90
+   ],
+   "attache": [
+    -28,
+    75
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    533,
+    482,
+    99,
+    61
+   ],
+   "attache": [
+    17,
+    77
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    633,
+    482,
+    126,
+    84
+   ],
+   "attache": [
+    29,
+    90
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    760,
+    482,
+    129,
+    65
+   ],
+   "attache": [
+    62,
+    87
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    890,
+    482,
+    150,
+    58
+   ],
+   "attache": [
+    74,
+    91
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1041,
+    482,
+    94,
+    53
+   ],
+   "attache": [
+    77,
+    72
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1136,
+    482,
+    120,
+    63
+   ],
+   "attache": [
+    92,
+    81
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1257,
+    482,
+    77,
+    54
+   ],
+   "attache": [
+    103,
+    58
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1335,
+    482,
+    74,
+    68
+   ],
+   "attache": [
+    101,
+    66
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1410,
+    482,
+    98,
+    34
+   ],
+   "attache": [
+    81,
+    33
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1509,
+    482,
+    126,
+    40
+   ],
+   "attache": [
+    96,
+    37
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1636,
+    482,
+    128,
+    32
+   ],
+   "attache": [
+    65,
+    16
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1765,
+    482,
+    141,
+    35
+   ],
+   "attache": [
+    66,
+    20
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1907,
+    482,
+    104,
+    51
+   ],
+   "attache": [
+    23,
+    45
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    0,
+    573,
+    136,
+    60
+   ],
+   "attache": [
+    37,
+    52
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    137,
+    573,
+    74,
+    73
+   ],
+   "attache": [
+    -25,
+    69
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    212,
+    573,
+    73,
+    88
+   ],
+   "attache": [
+    -24,
+    78
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    286,
+    573,
+    107,
+    60
+   ],
+   "attache": [
+    25,
+    78
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    394,
+    573,
+    135,
+    82
+   ],
+   "attache": [
+    38,
+    91
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    530,
+    573,
+    146,
+    66
+   ],
+   "attache": [
+    73,
+    88
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    677,
+    573,
+    171,
+    61
+   ],
+   "attache": [
+    86,
+    91
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    849,
+    573,
+    107,
+    60
+   ],
+   "attache": [
+    81,
+    78
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    957,
+    573,
+    137,
+    80
+   ],
+   "attache": [
+    98,
+    90
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1095,
+    573,
+    75,
+    75
+   ],
+   "attache": [
+    99,
+    70
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1171,
+    573,
+    73,
+    91
+   ],
+   "attache": [
+    96,
+    79
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1245,
+    573,
+    105,
+    53
+   ],
+   "attache": [
+    81,
+    46
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1351,
+    573,
+    135,
+    62
+   ],
+   "attache": [
+    96,
+    52
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1487,
+    573,
+    147,
+    27
+   ],
+   "attache": [
+    73,
+    15
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1635,
+    573,
+    170,
+    28
+   ],
+   "attache": [
+    83,
+    18
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1806,
+    573,
+    102,
+    45
+   ],
+   "attache": [
+    21,
+    40
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1909,
+    573,
+    133,
+    54
+   ],
+   "attache": [
+    35,
+    47
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    0,
+    665,
+    77,
+    67
+   ],
+   "attache": [
+    -24,
+    65
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    78,
+    665,
+    76,
+    81
+   ],
+   "attache": [
+    -23,
+    73
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    155,
+    665,
+    103,
+    57
+   ],
+   "attache": [
+    23,
+    74
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    259,
+    665,
+    130,
+    78
+   ],
+   "attache": [
+    35,
+    88
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    390,
+    665,
+    141,
+    67
+   ],
+   "attache": [
+    71,
+    87
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    532,
+    665,
+    163,
+    57
+   ],
+   "attache": [
+    83,
+    89
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    696,
+    665,
+    105,
+    59
+   ],
+   "attache": [
+    81,
+    76
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    802,
+    665,
+    133,
+    81
+   ],
+   "attache": [
+    97,
+    89
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    936,
+    665,
+    78,
+    75
+   ],
+   "attache": [
+    101,
+    68
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1015,
+    665,
+    76,
+    90
+   ],
+   "attache": [
+    98,
+    76
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1092,
+    665,
+    102,
+    54
+   ],
+   "attache": [
+    79,
+    44
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1195,
+    665,
+    130,
+    63
+   ],
+   "attache": [
+    94,
+    50
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x8",
+   "rect": [
+    1326,
+    665,
+    140,
+    29
+   ],
+   "attache": [
+    68,
+    14
+   ]
+  },
+  {
+   "palier": 8,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x8",
+   "rect": [
+    1467,
+    665,
+    163,
+    30
+   ],
+   "attache": [
+    79,
+    18
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    0,
+    195,
+    164
+   ],
+   "attache": [
+    28,
+    -18
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    196,
+    0,
+    245,
+    192
+   ],
+   "attache": [
+    47,
+    6
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    442,
+    0,
+    128,
+    159
+   ],
+   "attache": [
+    -47,
+    39
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    571,
+    0,
+    115,
+    198
+   ],
+   "attache": [
+    -68,
+    60
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    687,
+    0,
+    50,
+    76
+   ],
+   "attache": [
+    11,
+    60
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    738,
+    0,
+    220,
+    146
+   ],
+   "attache": [
+    30,
+    75
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    959,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    267,
+    267
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    960,
+    0,
+    299,
+    66
+   ],
+   "attache": [
+    147,
+    40
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1260,
+    0,
+    63,
+    53
+   ],
+   "attache": [
+    34,
+    39
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1324,
+    0,
+    244,
+    111
+   ],
+   "attache": [
+    197,
+    51
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1569,
+    0,
+    129,
+    145
+   ],
+   "attache": [
+    174,
+    25
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1699,
+    0,
+    114,
+    174
+   ],
+   "attache": [
+    182,
+    43
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1814,
+    0,
+    171,
+    154
+   ],
+   "attache": [
+    159,
+    -27
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    0,
+    199,
+    220,
+    185
+   ],
+   "attache": [
+    189,
+    -3
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    221,
+    199,
+    258,
+    153
+   ],
+   "attache": [
+    132,
+    -54
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    480,
+    199,
+    299,
+    147
+   ],
+   "attache": [
+    151,
+    -57
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    780,
+    199,
+    209,
+    167
+   ],
+   "attache": [
+    31,
+    -8
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    990,
+    199,
+    258,
+    195
+   ],
+   "attache": [
+    50,
+    15
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1249,
+    199,
+    132,
+    161
+   ],
+   "attache": [
+    -45,
+    49
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1382,
+    199,
+    119,
+    196
+   ],
+   "attache": [
+    -63,
+    70
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1502,
+    199,
+    68,
+    76
+   ],
+   "attache": [
+    32,
+    64
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1571,
+    199,
+    261,
+    133
+   ],
+   "attache": [
+    53,
+    79
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1833,
+    199,
+    19,
+    3
+   ],
+   "attache": [
+    13,
+    -1
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    0,
+    396,
+    341,
+    46
+   ],
+   "attache": [
+    173,
+    35
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    342,
+    396,
+    65,
+    77
+   ],
+   "attache": [
+    35,
+    65
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    408,
+    396,
+    258,
+    137
+   ],
+   "attache": [
+    207,
+    80
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    667,
+    396,
+    132,
+    162
+   ],
+   "attache": [
+    176,
+    50
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    800,
+    396,
+    119,
+    201
+   ],
+   "attache": [
+    181,
+    70
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    920,
+    396,
+    210,
+    166
+   ],
+   "attache": [
+    177,
+    -8
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1131,
+    396,
+    261,
+    200
+   ],
+   "attache": [
+    207,
+    15
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1393,
+    396,
+    295,
+    150
+   ],
+   "attache": [
+    147,
+    -50
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1689,
+    396,
+    341,
+    146
+   ],
+   "attache": [
+    167,
+    -48
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    598,
+    196,
+    165
+   ],
+   "attache": [
+    26,
+    -13
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    197,
+    598,
+    245,
+    190
+   ],
+   "attache": [
+    44,
+    10
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    443,
+    598,
+    131,
+    157
+   ],
+   "attache": [
+    -43,
+    41
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    575,
+    598,
+    112,
+    188
+   ],
+   "attache": [
+    -67,
+    62
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    688,
+    598,
+    64,
+    67
+   ],
+   "attache": [
+    31,
+    55
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    753,
+    598,
+    255,
+    127
+   ],
+   "attache": [
+    53,
+    69
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1009,
+    598,
+    1,
+    1
+   ],
+   "attache": [
+    -4,
+    -4
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1011,
+    598,
+    326,
+    54
+   ],
+   "attache": [
+    166,
+    35
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1338,
+    598,
+    60,
+    75
+   ],
+   "attache": [
+    34,
+    62
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1399,
+    598,
+    246,
+    140
+   ],
+   "attache": [
+    200,
+    77
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1646,
+    598,
+    133,
+    162
+   ],
+   "attache": [
+    174,
+    46
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1780,
+    598,
+    112,
+    201
+   ],
+   "attache": [
+    178,
+    67
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    800,
+    203,
+    168
+   ],
+   "attache": [
+    171,
+    -10
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    204,
+    800,
+    255,
+    203
+   ],
+   "attache": [
+    201,
+    14
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    460,
+    800,
+    282,
+    155
+   ],
+   "attache": [
+    139,
+    -48
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    743,
+    800,
+    326,
+    150
+   ],
+   "attache": [
+    159,
+    -47
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1070,
+    800,
+    194,
+    140
+   ],
+   "attache": [
+    20,
+    33
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1265,
+    800,
+    248,
+    165
+   ],
+   "attache": [
+    41,
+    52
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1514,
+    800,
+    162,
+    152
+   ],
+   "attache": [
+    -58,
+    90
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1677,
+    800,
+    146,
+    178
+   ],
+   "attache": [
+    -74,
+    108
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1824,
+    800,
+    188,
+    116
+   ],
+   "attache": [
+    12,
+    110
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    0,
+    1004,
+    242,
+    138
+   ],
+   "attache": [
+    36,
+    124
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    243,
+    1004,
+    258,
+    66
+   ],
+   "attache": [
+    125,
+    88
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    502,
+    1004,
+    299,
+    66
+   ],
+   "attache": [
+    147,
+    103
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    802,
+    1004,
+    194,
+    75
+   ],
+   "attache": [
+    173,
+    89
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    997,
+    1004,
+    248,
+    86
+   ],
+   "attache": [
+    206,
+    100
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1246,
+    1004,
+    162,
+    107
+   ],
+   "attache": [
+    219,
+    71
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1409,
+    1004,
+    146,
+    129
+   ],
+   "attache": [
+    219,
+    84
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1556,
+    1004,
+    188,
+    121
+   ],
+   "attache": [
+    175,
+    15
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1745,
+    1004,
+    242,
+    138
+   ],
+   "attache": [
+    205,
+    29
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    1143,
+    258,
+    112
+   ],
+   "attache": [
+    132,
+    -27
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    259,
+    1143,
+    299,
+    125
+   ],
+   "attache": [
+    151,
+    -10
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    559,
+    1143,
+    214,
+    136
+   ],
+   "attache": [
+    31,
+    39
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    774,
+    1143,
+    272,
+    158
+   ],
+   "attache": [
+    54,
+    57
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1047,
+    1143,
+    162,
+    146
+   ],
+   "attache": [
+    -55,
+    97
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1210,
+    1143,
+    143,
+    170
+   ],
+   "attache": [
+    -73,
+    115
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1354,
+    1143,
+    213,
+    103
+   ],
+   "attache": [
+    31,
+    112
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1568,
+    1143,
+    272,
+    125
+   ],
+   "attache": [
+    57,
+    125
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    1314,
+    295,
+    65
+   ],
+   "attache": [
+    147,
+    88
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    296,
+    1314,
+    341,
+    64
+   ],
+   "attache": [
+    173,
+    99
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    638,
+    1314,
+    212,
+    105
+   ],
+   "attache": [
+    181,
+    112
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    851,
+    1314,
+    272,
+    128
+   ],
+   "attache": [
+    217,
+    126
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1124,
+    1314,
+    163,
+    149
+   ],
+   "attache": [
+    217,
+    98
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1288,
+    1314,
+    143,
+    173
+   ],
+   "attache": [
+    215,
+    114
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1432,
+    1314,
+    214,
+    138
+   ],
+   "attache": [
+    181,
+    40
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1647,
+    1314,
+    272,
+    162
+   ],
+   "attache": [
+    214,
+    57
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    1488,
+    295,
+    103
+   ],
+   "attache": [
+    147,
+    -26
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    296,
+    1488,
+    341,
+    113
+   ],
+   "attache": [
+    167,
+    -9
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    638,
+    1488,
+    205,
+    133
+   ],
+   "attache": [
+    26,
+    31
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    844,
+    1488,
+    262,
+    153
+   ],
+   "attache": [
+    48,
+    49
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1107,
+    1488,
+    166,
+    133
+   ],
+   "attache": [
+    -52,
+    87
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1274,
+    1488,
+    144,
+    159
+   ],
+   "attache": [
+    -72,
+    105
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1419,
+    1488,
+    207,
+    92
+   ],
+   "attache": [
+    29,
+    103
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1627,
+    1488,
+    264,
+    113
+   ],
+   "attache": [
+    54,
+    115
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    1648,
+    282,
+    64
+   ],
+   "attache": [
+    142,
+    84
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    283,
+    1648,
+    325,
+    53
+   ],
+   "attache": [
+    166,
+    96
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    609,
+    1648,
+    202,
+    108
+   ],
+   "attache": [
+    175,
+    110
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    812,
+    1648,
+    262,
+    129
+   ],
+   "attache": [
+    213,
+    122
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1075,
+    1648,
+    166,
+    149
+   ],
+   "attache": [
+    217,
+    94
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1242,
+    1648,
+    144,
+    173
+   ],
+   "attache": [
+    215,
+    110
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1387,
+    1648,
+    207,
+    140
+   ],
+   "attache": [
+    177,
+    37
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1595,
+    1648,
+    265,
+    166
+   ],
+   "attache": [
+    210,
+    55
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    1822,
+    282,
+    107
+   ],
+   "attache": [
+    139,
+    -27
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    283,
+    1822,
+    326,
+    116
+   ],
+   "attache": [
+    159,
+    -9
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    610,
+    1822,
+    188,
+    116
+   ],
+   "attache": [
+    32,
+    87
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    799,
+    1822,
+    238,
+    136
+   ],
+   "attache": [
+    54,
+    102
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1038,
+    1822,
+    153,
+    150
+   ],
+   "attache": [
+    -54,
+    133
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1192,
+    1822,
+    147,
+    179
+   ],
+   "attache": [
+    -57,
+    150
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1340,
+    1822,
+    197,
+    120
+   ],
+   "attache": [
+    33,
+    153
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1538,
+    1822,
+    251,
+    167
+   ],
+   "attache": [
+    58,
+    180
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1790,
+    1822,
+    258,
+    129
+   ],
+   "attache": [
+    125,
+    174
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    0,
+    2002,
+    299,
+    115
+   ],
+   "attache": [
+    147,
+    182
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    300,
+    2002,
+    186,
+    106
+   ],
+   "attache": [
+    153,
+    144
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    487,
+    2002,
+    238,
+    125
+   ],
+   "attache": [
+    183,
+    162
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    726,
+    2002,
+    153,
+    109
+   ],
+   "attache": [
+    206,
+    116
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    880,
+    2002,
+    147,
+    135
+   ],
+   "attache": [
+    203,
+    132
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1028,
+    2002,
+    197,
+    68
+   ],
+   "attache": [
+    163,
+    65
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1226,
+    2002,
+    251,
+    79
+   ],
+   "attache": [
+    192,
+    74
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1478,
+    2002,
+    257,
+    65
+   ],
+   "attache": [
+    132,
+    32
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1736,
+    2002,
+    299,
+    70
+   ],
+   "attache": [
+    151,
+    40
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    2138,
+    214,
+    103
+   ],
+   "attache": [
+    51,
+    90
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    215,
+    2138,
+    271,
+    122
+   ],
+   "attache": [
+    75,
+    105
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    487,
+    2138,
+    150,
+    146
+   ],
+   "attache": [
+    -50,
+    138
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    638,
+    2138,
+    146,
+    176
+   ],
+   "attache": [
+    -48,
+    157
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    785,
+    2138,
+    214,
+    118
+   ],
+   "attache": [
+    51,
+    155
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1000,
+    2138,
+    269,
+    164
+   ],
+   "attache": [
+    76,
+    183
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1270,
+    2138,
+    295,
+    132
+   ],
+   "attache": [
+    147,
+    176
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1566,
+    2138,
+    341,
+    120
+   ],
+   "attache": [
+    173,
+    181
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    2315,
+    214,
+    119
+   ],
+   "attache": [
+    163,
+    156
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    215,
+    2315,
+    271,
+    161
+   ],
+   "attache": [
+    195,
+    181
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    487,
+    2315,
+    150,
+    150
+   ],
+   "attache": [
+    199,
+    140
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    638,
+    2315,
+    146,
+    180
+   ],
+   "attache": [
+    193,
+    157
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    785,
+    2315,
+    214,
+    106
+   ],
+   "attache": [
+    162,
+    91
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1000,
+    2315,
+    269,
+    122
+   ],
+   "attache": [
+    192,
+    103
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1270,
+    2315,
+    295,
+    53
+   ],
+   "attache": [
+    147,
+    29
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1566,
+    2315,
+    340,
+    56
+   ],
+   "attache": [
+    167,
+    35
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    2496,
+    209,
+    92
+   ],
+   "attache": [
+    46,
+    81
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    210,
+    2496,
+    264,
+    107
+   ],
+   "attache": [
+    69,
+    94
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    475,
+    2496,
+    155,
+    134
+   ],
+   "attache": [
+    -48,
+    129
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    631,
+    2496,
+    149,
+    162
+   ],
+   "attache": [
+    -47,
+    147
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    781,
+    2496,
+    205,
+    115
+   ],
+   "attache": [
+    45,
+    149
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    987,
+    2496,
+    259,
+    154
+   ],
+   "attache": [
+    70,
+    175
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1247,
+    2496,
+    282,
+    133
+   ],
+   "attache": [
+    142,
+    174
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1530,
+    2496,
+    326,
+    112
+   ],
+   "attache": [
+    166,
+    178
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    0,
+    2659,
+    210,
+    118
+   ],
+   "attache": [
+    163,
+    152
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    211,
+    2659,
+    264,
+    160
+   ],
+   "attache": [
+    194,
+    177
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    476,
+    2659,
+    155,
+    148
+   ],
+   "attache": [
+    202,
+    135
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    632,
+    2659,
+    150,
+    178
+   ],
+   "attache": [
+    196,
+    152
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    783,
+    2659,
+    205,
+    108
+   ],
+   "attache": [
+    159,
+    88
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    989,
+    2659,
+    259,
+    125
+   ],
+   "attache": [
+    188,
+    100
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x16",
+   "rect": [
+    1249,
+    2659,
+    281,
+    57
+   ],
+   "attache": [
+    139,
+    28
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    1531,
+    2659,
+    326,
+    59
+   ],
+   "attache": [
+    159,
+    35
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    0,
+    389,
+    328
+   ],
+   "attache": [
+    56,
+    -35
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    390,
+    0,
+    487,
+    385
+   ],
+   "attache": [
+    93,
+    13
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    878,
+    0,
+    257,
+    318
+   ],
+   "attache": [
+    -92,
+    78
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1136,
+    0,
+    228,
+    397
+   ],
+   "attache": [
+    -137,
+    121
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1365,
+    0,
+    100,
+    151
+   ],
+   "attache": [
+    22,
+    119
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1466,
+    0,
+    439,
+    292
+   ],
+   "attache": [
+    60,
+    151
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1906,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    8,
+    -11
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    398,
+    596,
+    130
+   ],
+   "attache": [
+    294,
+    80
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    597,
+    398,
+    124,
+    104
+   ],
+   "attache": [
+    68,
+    77
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    722,
+    398,
+    487,
+    221
+   ],
+   "attache": [
+    393,
+    102
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1210,
+    398,
+    257,
+    289
+   ],
+   "attache": [
+    348,
+    50
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1468,
+    398,
+    228,
+    346
+   ],
+   "attache": [
+    364,
+    86
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1697,
+    398,
+    342,
+    309
+   ],
+   "attache": [
+    319,
+    -54
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    745,
+    439,
+    368
+   ],
+   "attache": [
+    378,
+    -7
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    440,
+    745,
+    517,
+    307
+   ],
+   "attache": [
+    265,
+    -107
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    958,
+    745,
+    596,
+    294
+   ],
+   "attache": [
+    301,
+    -113
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1555,
+    745,
+    416,
+    331
+   ],
+   "attache": [
+    62,
+    -17
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    1114,
+    516,
+    390
+   ],
+   "attache": [
+    100,
+    31
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    517,
+    1114,
+    263,
+    323
+   ],
+   "attache": [
+    -90,
+    99
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    781,
+    1114,
+    238,
+    391
+   ],
+   "attache": [
+    -125,
+    140
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1020,
+    1114,
+    133,
+    151
+   ],
+   "attache": [
+    64,
+    128
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1154,
+    1114,
+    521,
+    267
+   ],
+   "attache": [
+    106,
+    159
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1676,
+    1114,
+    40,
+    5
+   ],
+   "attache": [
+    24,
+    -3
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    1506,
+    680,
+    92
+   ],
+   "attache": [
+    345,
+    70
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    681,
+    1506,
+    131,
+    153
+   ],
+   "attache": [
+    71,
+    129
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    813,
+    1506,
+    516,
+    273
+   ],
+   "attache": [
+    415,
+    160
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1330,
+    1506,
+    263,
+    323
+   ],
+   "attache": [
+    352,
+    100
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1594,
+    1506,
+    237,
+    401
+   ],
+   "attache": [
+    362,
+    141
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    1908,
+    419,
+    332
+   ],
+   "attache": [
+    354,
+    -16
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    420,
+    1908,
+    521,
+    398
+   ],
+   "attache": [
+    414,
+    30
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    942,
+    1908,
+    590,
+    300
+   ],
+   "attache": [
+    294,
+    -100
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    2307,
+    680,
+    292
+   ],
+   "attache": [
+    334,
+    -95
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    681,
+    2307,
+    391,
+    328
+   ],
+   "attache": [
+    52,
+    -27
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1073,
+    2307,
+    490,
+    379
+   ],
+   "attache": [
+    89,
+    21
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1564,
+    2307,
+    263,
+    315
+   ],
+   "attache": [
+    -85,
+    83
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    2687,
+    223,
+    376
+   ],
+   "attache": [
+    -134,
+    125
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    224,
+    2687,
+    128,
+    134
+   ],
+   "attache": [
+    63,
+    110
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    353,
+    2687,
+    508,
+    253
+   ],
+   "attache": [
+    105,
+    139
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    862,
+    2687,
+    0,
+    0
+   ],
+   "attache": [
+    532,
+    532
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    863,
+    2687,
+    650,
+    107
+   ],
+   "attache": [
+    332,
+    70
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1514,
+    2687,
+    118,
+    150
+   ],
+   "attache": [
+    65,
+    125
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    3064,
+    490,
+    279
+   ],
+   "attache": [
+    400,
+    154
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    491,
+    3064,
+    263,
+    325
+   ],
+   "attache": [
+    347,
+    93
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    755,
+    3064,
+    223,
+    401
+   ],
+   "attache": [
+    356,
+    133
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    979,
+    3064,
+    406,
+    335
+   ],
+   "attache": [
+    342,
+    -20
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1386,
+    3064,
+    508,
+    403
+   ],
+   "attache": [
+    402,
+    27
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    3468,
+    563,
+    310
+   ],
+   "attache": [
+    279,
+    -96
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": -30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    564,
+    3468,
+    650,
+    300
+   ],
+   "attache": [
+    317,
+    -93
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1215,
+    3468,
+    388,
+    279
+   ],
+   "attache": [
+    40,
+    66
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    3779,
+    496,
+    328
+   ],
+   "attache": [
+    83,
+    103
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    497,
+    3779,
+    325,
+    304
+   ],
+   "attache": [
+    -115,
+    180
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    823,
+    3779,
+    290,
+    355
+   ],
+   "attache": [
+    -149,
+    216
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1114,
+    3779,
+    375,
+    231
+   ],
+   "attache": [
+    24,
+    220
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1490,
+    3779,
+    483,
+    274
+   ],
+   "attache": [
+    71,
+    247
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    4135,
+    515,
+    132
+   ],
+   "attache": [
+    250,
+    175
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    516,
+    4135,
+    596,
+    131
+   ],
+   "attache": [
+    294,
+    205
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1113,
+    4135,
+    388,
+    150
+   ],
+   "attache": [
+    347,
+    177
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1502,
+    4135,
+    496,
+    170
+   ],
+   "attache": [
+    412,
+    199
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    4306,
+    325,
+    214
+   ],
+   "attache": [
+    439,
+    142
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    326,
+    4306,
+    290,
+    257
+   ],
+   "attache": [
+    438,
+    168
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    617,
+    4306,
+    376,
+    243
+   ],
+   "attache": [
+    351,
+    30
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    994,
+    4306,
+    483,
+    275
+   ],
+   "attache": [
+    411,
+    58
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1478,
+    4306,
+    516,
+    224
+   ],
+   "attache": [
+    264,
+    -53
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    4582,
+    596,
+    250
+   ],
+   "attache": [
+    301,
+    -20
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    597,
+    4582,
+    426,
+    273
+   ],
+   "attache": [
+    62,
+    78
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1024,
+    4582,
+    543,
+    314
+   ],
+   "attache": [
+    108,
+    113
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1568,
+    4582,
+    324,
+    292
+   ],
+   "attache": [
+    -110,
+    194
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    4897,
+    286,
+    340
+   ],
+   "attache": [
+    -145,
+    230
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    287,
+    4897,
+    427,
+    206
+   ],
+   "attache": [
+    63,
+    223
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    715,
+    4897,
+    544,
+    249
+   ],
+   "attache": [
+    114,
+    250
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1260,
+    4897,
+    590,
+    132
+   ],
+   "attache": [
+    295,
+    177
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    5238,
+    680,
+    128
+   ],
+   "attache": [
+    345,
+    198
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    681,
+    5238,
+    424,
+    211
+   ],
+   "attache": [
+    362,
+    225
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1106,
+    5238,
+    543,
+    255
+   ],
+   "attache": [
+    434,
+    252
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1650,
+    5238,
+    324,
+    298
+   ],
+   "attache": [
+    433,
+    196
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    5537,
+    286,
+    345
+   ],
+   "attache": [
+    430,
+    228
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    287,
+    5537,
+    428,
+    276
+   ],
+   "attache": [
+    363,
+    81
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    716,
+    5537,
+    544,
+    325
+   ],
+   "attache": [
+    429,
+    115
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1261,
+    5537,
+    590,
+    205
+   ],
+   "attache": [
+    294,
+    -53
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    5883,
+    680,
+    225
+   ],
+   "attache": [
+    334,
+    -19
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    681,
+    5883,
+    410,
+    267
+   ],
+   "attache": [
+    53,
+    62
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1092,
+    5883,
+    523,
+    304
+   ],
+   "attache": [
+    96,
+    97
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1616,
+    5883,
+    330,
+    267
+   ],
+   "attache": [
+    -105,
+    175
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    6188,
+    288,
+    315
+   ],
+   "attache": [
+    -144,
+    209
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    289,
+    6188,
+    414,
+    184
+   ],
+   "attache": [
+    58,
+    205
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    704,
+    6188,
+    528,
+    224
+   ],
+   "attache": [
+    108,
+    230
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1233,
+    6188,
+    562,
+    127
+   ],
+   "attache": [
+    283,
+    168
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    6504,
+    650,
+    107
+   ],
+   "attache": [
+    332,
+    193
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    651,
+    6504,
+    409,
+    217
+   ],
+   "attache": [
+    356,
+    220
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1061,
+    6504,
+    523,
+    256
+   ],
+   "attache": [
+    426,
+    243
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1585,
+    6504,
+    331,
+    298
+   ],
+   "attache": [
+    434,
+    188
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    6803,
+    288,
+    344
+   ],
+   "attache": [
+    431,
+    219
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    289,
+    6803,
+    414,
+    280
+   ],
+   "attache": [
+    355,
+    75
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    704,
+    6803,
+    528,
+    330
+   ],
+   "attache": [
+    419,
+    109
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1233,
+    6803,
+    563,
+    215
+   ],
+   "attache": [
+    279,
+    -53
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    7148,
+    650,
+    231
+   ],
+   "attache": [
+    317,
+    -17
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    651,
+    7148,
+    374,
+    232
+   ],
+   "attache": [
+    63,
+    174
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1026,
+    7148,
+    474,
+    271
+   ],
+   "attache": [
+    107,
+    204
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1501,
+    7148,
+    307,
+    301
+   ],
+   "attache": [
+    -107,
+    266
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    7450,
+    294,
+    357
+   ],
+   "attache": [
+    -113,
+    300
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    295,
+    7450,
+    394,
+    240
+   ],
+   "attache": [
+    67,
+    306
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    690,
+    7450,
+    499,
+    334
+   ],
+   "attache": [
+    115,
+    361
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1190,
+    7450,
+    516,
+    257
+   ],
+   "attache": [
+    251,
+    348
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    7808,
+    596,
+    228
+   ],
+   "attache": [
+    294,
+    364
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    597,
+    7808,
+    373,
+    212
+   ],
+   "attache": [
+    309,
+    288
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    971,
+    7808,
+    474,
+    250
+   ],
+   "attache": [
+    366,
+    325
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1446,
+    7808,
+    307,
+    216
+   ],
+   "attache": [
+    413,
+    231
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1754,
+    7808,
+    294,
+    270
+   ],
+   "attache": [
+    406,
+    264
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    8079,
+    393,
+    136
+   ],
+   "attache": [
+    326,
+    131
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    394,
+    8079,
+    499,
+    157
+   ],
+   "attache": [
+    383,
+    148
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    894,
+    8079,
+    515,
+    128
+   ],
+   "attache": [
+    264,
+    63
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1410,
+    8079,
+    596,
+    139
+   ],
+   "attache": [
+    301,
+    79
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    8237,
+    430,
+    206
+   ],
+   "attache": [
+    102,
+    180
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    431,
+    8237,
+    541,
+    241
+   ],
+   "attache": [
+    150,
+    209
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    973,
+    8237,
+    299,
+    292
+   ],
+   "attache": [
+    -100,
+    276
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1273,
+    8237,
+    292,
+    351
+   ],
+   "attache": [
+    -95,
+    313
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1566,
+    8237,
+    428,
+    236
+   ],
+   "attache": [
+    102,
+    310
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    8589,
+    537,
+    325
+   ],
+   "attache": [
+    152,
+    365
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    538,
+    8589,
+    590,
+    263
+   ],
+   "attache": [
+    295,
+    352
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1129,
+    8589,
+    680,
+    238
+   ],
+   "attache": [
+    345,
+    362
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    8915,
+    428,
+    237
+   ],
+   "attache": [
+    327,
+    311
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    429,
+    8915,
+    541,
+    319
+   ],
+   "attache": [
+    390,
+    361
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    971,
+    8915,
+    299,
+    299
+   ],
+   "attache": [
+    398,
+    279
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1271,
+    8915,
+    291,
+    358
+   ],
+   "attache": [
+    386,
+    314
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1563,
+    8915,
+    428,
+    213
+   ],
+   "attache": [
+    325,
+    183
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    9274,
+    537,
+    243
+   ],
+   "attache": [
+    384,
+    206
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    538,
+    9274,
+    590,
+    105
+   ],
+   "attache": [
+    294,
+    58
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1129,
+    9274,
+    680,
+    111
+   ],
+   "attache": [
+    334,
+    70
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    9518,
+    417,
+    182
+   ],
+   "attache": [
+    91,
+    161
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    418,
+    9518,
+    527,
+    214
+   ],
+   "attache": [
+    138,
+    188
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    946,
+    9518,
+    309,
+    268
+   ],
+   "attache": [
+    -96,
+    258
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1256,
+    9518,
+    299,
+    323
+   ],
+   "attache": [
+    -93,
+    293
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1556,
+    9518,
+    410,
+    228
+   ],
+   "attache": [
+    90,
+    297
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    9842,
+    516,
+    307
+   ],
+   "attache": [
+    140,
+    350
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    517,
+    9842,
+    563,
+    264
+   ],
+   "attache": [
+    283,
+    347
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1081,
+    9842,
+    650,
+    224
+   ],
+   "attache": [
+    332,
+    356
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    0,
+    10150,
+    418,
+    236
+   ],
+   "attache": [
+    325,
+    305
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    419,
+    10150,
+    527,
+    319
+   ],
+   "attache": [
+    388,
+    354
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    947,
+    10150,
+    310,
+    297
+   ],
+   "attache": [
+    405,
+    270
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1258,
+    10150,
+    300,
+    355
+   ],
+   "attache": [
+    392,
+    304
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    1559,
+    10150,
+    410,
+    217
+   ],
+   "attache": [
+    319,
+    177
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    10506,
+    516,
+    249
+   ],
+   "attache": [
+    375,
+    200
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "nervures",
+   "planche": "x32",
+   "rect": [
+    517,
+    10506,
+    562,
+    115
+   ],
+   "attache": [
+    278,
+    57
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 20,
+   "inclinaison_deg": 30,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1080,
+    10506,
+    650,
+    118
+   ],
+   "attache": [
+    317,
+    70
+   ]
+  }
+ ]
+}

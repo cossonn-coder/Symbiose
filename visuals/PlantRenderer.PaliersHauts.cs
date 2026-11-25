@@ -167,7 +167,9 @@ namespace Symbiose
 		{
 			if (!AuPalier(PalierSymptomesZoom)) return;
 			DrawLeafDamage(c, r, i, j);
-			if (AuPalier(PalierIntimeZoom)) DrawSurfaceFeuille(c, r, i, j);
+			// RELIQUATS ③ : sur une feuille-pièce, poils / pruine / glandes sont des sur-couches
+			// cuites (PlantRenderer.SplatsDetails.cs) — plus de dessin vectoriel par-dessus.
+			if (AuPalier(PalierIntimeZoom) && !_feuillesSplat) DrawSurfaceFeuille(c, r, i, j);
 		}
 
 		// Marques de TEXTURE (canaux additifs de la sémiologie ③), par-dessus le

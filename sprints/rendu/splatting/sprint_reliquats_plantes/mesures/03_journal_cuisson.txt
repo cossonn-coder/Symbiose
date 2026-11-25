@@ -1,0 +1,338 @@
+feuille_coeur : 1296 pièces (32 vides), 6958147 ms au total
+  sculpture+bake : 1371, 3838, 2818, 1931, 1303, 847, 888, 762, 729 ms
+  ×2.8 : 1585.7 ms/pièce (72)
+  ×8 : 1268.4 ms/pièce (72)
+  ×16 : 3980.9 ms/pièce (144)
+  ×5.6 : 937.1 ms/pièce (72)
+  ×32 : 13964.4 ms/pièce (144)
+  ×11.2 : 2063.4 ms/pièce (72)
+  ×64 : 54581.0 ms/pièce (72)
+  assets/splats/feuille_coeur_details_x8_k35.png 4236 o
+  assets/splats/feuille_coeur_details_x8.png 23975 o
+  assets/splats/feuille_coeur_details_x8_k200.png 57173 o
+  assets/splats/feuille_coeur_details_x16_k35.png 15105 o
+  assets/splats/feuille_coeur_details_x16.png 57173 o
+  assets/splats/feuille_coeur_details_x16_k200.png 136910 o
+  assets/splats/feuille_coeur_details_x32_k35.png 36564 o
+  assets/splats/feuille_coeur_details_x32.png 136910 o
+  assets/splats/feuille_coeur_details_x32_k200.png 340574 o
+  assets/splats/feuille_coeur_details.json 343466 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_coeur_details.png 120857 o
+feuille_composee : 1296 pièces (23 vides), 7300108 ms au total
+  sculpture+bake : 9878, 18445, 14207, 11817, 11166, 8969, 11768, 6571, 6559 ms
+  ×2.8 : 2347.0 ms/pièce (72)
+  ×8 : 2077.0 ms/pièce (72)
+  ×11.28 : 3437.7 ms/pièce (72)
+  ×5.6 : 1534.4 ms/pièce (72)
+  ×16 : 6379.3 ms/pièce (72)
+  ×22.56 : 11968.2 ms/pièce (72)
+  ×11.2 : 3694.8 ms/pièce (72)
+  ×32 : 23744.3 ms/pièce (72)
+  ×45.12 : 44712.9 ms/pièce (72)
+  assets/splats/feuille_composee_details_x8_k35.png 8719 o
+  assets/splats/feuille_composee_details_x8.png 50777 o
+  assets/splats/feuille_composee_details_x8_k141.png 79222 o
+  assets/splats/feuille_composee_details_x16_k35.png 30237 o
+  assets/splats/feuille_composee_details_x16.png 119949 o
+  assets/splats/feuille_composee_details_x16_k141.png 177512 o
+  assets/splats/feuille_composee_details_x32_k35.png 78814 o
+  assets/splats/feuille_composee_details_x32.png 266073 o
+  assets/splats/feuille_composee_details_x32_k141.png 394431 o
+  assets/splats/feuille_composee_details.json 346473 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_composee_details.png 285139 o
+feuille_cuillere : 1296 pièces (29 vides), 1049017 ms au total
+  sculpture+bake : 508, 481, 611, 458, 1002, 672, 504, 451, 413 ms
+  ×5.68 : 165.4 ms/pièce (72)
+  ×8 : 263.0 ms/pièce (72)
+  ×11.28 : 568.7 ms/pièce (72)
+  ×11.36 : 492.3 ms/pièce (72)
+  ×16 : 843.8 ms/pièce (72)
+  ×22.56 : 1587.3 ms/pièce (72)
+  ×22.72 : 1678.2 ms/pièce (72)
+  ×32 : 3093.8 ms/pièce (72)
+  ×45.12 : 5761.2 ms/pièce (72)
+  assets/splats/feuille_cuillere_details_x8_k71.png 2342 o
+  assets/splats/feuille_cuillere_details_x8.png 3848 o
+  assets/splats/feuille_cuillere_details_x8_k141.png 6605 o
+  assets/splats/feuille_cuillere_details_x16_k71.png 6681 o
+  assets/splats/feuille_cuillere_details_x16.png 11760 o
+  assets/splats/feuille_cuillere_details_x16_k141.png 18074 o
+  assets/splats/feuille_cuillere_details_x32_k71.png 18129 o
+  assets/splats/feuille_cuillere_details_x32.png 29627 o
+  assets/splats/feuille_cuillere_details_x32_k141.png 48137 o
+  assets/splats/feuille_cuillere_details.json 343258 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_cuillere_details.png 26128 o
+feuille_dentee : 648 pièces (2 vides), 4282420 ms au total
+  sculpture+bake : 939, 2268, 1142, 1629, 1438, 1794, 1160, 1097, 809 ms
+  ×4 : 1881.2 ms/pièce (72)
+  ×5.68 : 1155.1 ms/pièce (72)
+  ×8 : 2007.7 ms/pièce (144)
+  ×11.36 : 3581.4 ms/pièce (72)
+  ×16 : 6401.8 ms/pièce (144)
+  ×22.72 : 12466.5 ms/pièce (72)
+  ×32 : 23341.6 ms/pièce (72)
+  assets/splats/feuille_dentee_details_x8_k50.png 5158 o
+  assets/splats/feuille_dentee_details_x8_k71.png 9844 o
+  assets/splats/feuille_dentee_details_x8.png 15211 o
+  assets/splats/feuille_dentee_details_x16_k50.png 15211 o
+  assets/splats/feuille_dentee_details_x16_k71.png 25432 o
+  assets/splats/feuille_dentee_details_x16.png 37892 o
+  assets/splats/feuille_dentee_details_x32_k50.png 37892 o
+  assets/splats/feuille_dentee_details_x32_k71.png 64928 o
+  assets/splats/feuille_dentee_details_x32.png 104047 o
+  assets/splats/feuille_dentee_details.json 173328 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_dentee_details.png 99783 o
+feuille_lanceolee_gaufree : 1296 pièces (29 vides), 8034367 ms au total
+  sculpture+bake : 1629, 2818, 1087, 2138, 992, 1079, 803, 919, 948 ms
+  ×4 : 1270.2 ms/pièce (72)
+  ×8 : 1326.2 ms/pièce (144)
+  ×16 : 4450.9 ms/pièce (216)
+  ×32 : 16912.4 ms/pièce (144)
+  ×64 : 60218.3 ms/pièce (72)
+  assets/splats/feuille_lanceolee_gaufree_details_x8_k50.png 9111 o
+  assets/splats/feuille_lanceolee_gaufree_details_x8.png 26107 o
+  assets/splats/feuille_lanceolee_gaufree_details_x8_k200.png 64785 o
+  assets/splats/feuille_lanceolee_gaufree_details_x16_k50.png 26107 o
+  assets/splats/feuille_lanceolee_gaufree_details_x16.png 64785 o
+  assets/splats/feuille_lanceolee_gaufree_details_x16_k200.png 161453 o
+  assets/splats/feuille_lanceolee_gaufree_details_x32_k50.png 64785 o
+  assets/splats/feuille_lanceolee_gaufree_details_x32.png 161453 o
+  assets/splats/feuille_lanceolee_gaufree_details_x32_k200.png 404314 o
+  assets/splats/feuille_lanceolee_gaufree_details.json 342722 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lanceolee_gaufree_details.png 125837 o
+feuille_lanceolee : 648 pièces (29 vides), 4256951 ms au total
+  sculpture+bake : 910, 3426, 1024, 1425, 1422, 1424, 1450, 1002, 675 ms
+  ×4 : 1819.7 ms/pièce (72)
+  ×5.68 : 1146.2 ms/pièce (72)
+  ×8 : 1974.2 ms/pièce (144)
+  ×11.36 : 3560.9 ms/pièce (72)
+  ×16 : 6591.8 ms/pièce (144)
+  ×22.72 : 11935.5 ms/pièce (72)
+  ×32 : 23291.7 ms/pièce (72)
+  assets/splats/feuille_lanceolee_details_x8_k50.png 4851 o
+  assets/splats/feuille_lanceolee_details_x8_k71.png 8472 o
+  assets/splats/feuille_lanceolee_details_x8.png 14648 o
+  assets/splats/feuille_lanceolee_details_x16_k50.png 14648 o
+  assets/splats/feuille_lanceolee_details_x16_k71.png 22750 o
+  assets/splats/feuille_lanceolee_details_x16.png 36775 o
+  assets/splats/feuille_lanceolee_details_x32_k50.png 36775 o
+  assets/splats/feuille_lanceolee_details_x32_k71.png 58664 o
+  assets/splats/feuille_lanceolee_details_x32.png 100400 o
+  assets/splats/feuille_lanceolee_details.json 172862 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lanceolee_details.png 93783 o
+feuille_lierre : 576 pièces (8 vides), 2582240 ms au total
+  sculpture+bake : 584, 1203, 2760, 2688, 1630, 1457, 1989, 1677, 1025 ms
+  ×2.84 : 1770.8 ms/pièce (72)
+  ×4 : 1400.6 ms/pièce (72)
+  ×5.68 : 826.8 ms/pièce (72)
+  ×8 : 1273.6 ms/pièce (72)
+  ×11.36 : 2214.6 ms/pièce (72)
+  ×16 : 4060.1 ms/pièce (72)
+  ×22.72 : 8306.1 ms/pièce (72)
+  ×32 : 15741.7 ms/pièce (72)
+  assets/splats/feuille_lierre_details_x4_k71.png 1754 o
+  assets/splats/feuille_lierre_details_x4.png 2846 o
+  assets/splats/feuille_lierre_details_x8_k71.png 5154 o
+  assets/splats/feuille_lierre_details_x8.png 8794 o
+  assets/splats/feuille_lierre_details_x16_k71.png 13053 o
+  assets/splats/feuille_lierre_details_x16.png 20277 o
+  assets/splats/feuille_lierre_details_x32_k71.png 31976 o
+  assets/splats/feuille_lierre_details_x32.png 49247 o
+  assets/splats/feuille_lierre_details.json 152636 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lierre_details.png 85592 o
+feuille_lobee : 2592 pièces (128 vides), 5161934 ms au total
+  sculpture+bake : 2522, 6353, 4879, 2286, 2455, 2677, 2766, 2192, 1512 ms
+  ×1.4 : 1405.5 ms/pièce (72)
+  ×2.84 : 2213.1 ms/pièce (72)
+  ×5.64 : 1317.5 ms/pièce (72)
+  ×2.8 : 2075.6 ms/pièce (72)
+  ×5.68 : 1165.5 ms/pièce (72)
+  ×11.28 : 3030.3 ms/pièce (72)
+  ×5.6 : 1437.7 ms/pièce (72)
+  ×11.36 : 2942.4 ms/pièce (72)
+  ×22.56 : 9874.6 ms/pièce (72)
+  ×11.2 : 2843.4 ms/pièce (72)
+  ×22.72 : 8989.9 ms/pièce (72)
+  ×45.12 : 33918.7 ms/pièce (72)
+  assets/splats/feuille_lobee_details_x4_k35.png 1089 o
+  assets/splats/feuille_lobee_details_x4_k71.png 6640 o
+  assets/splats/feuille_lobee_details_x4_k141.png 21945 o
+  assets/splats/feuille_lobee_details_x8_k35.png 6571 o
+  assets/splats/feuille_lobee_details_x8_k71.png 22396 o
+  assets/splats/feuille_lobee_details_x8_k141.png 56847 o
+  assets/splats/feuille_lobee_details_x16_k35.png 21679 o
+  assets/splats/feuille_lobee_details_x16_k71.png 57254 o
+  assets/splats/feuille_lobee_details_x16_k141.png 142719 o
+  assets/splats/feuille_lobee_details_x32_k35.png 56057 o
+  assets/splats/feuille_lobee_details_x32_k71.png 144014 o
+  assets/splats/feuille_lobee_details_x32_k141.png 358260 o
+  assets/splats/feuille_lobee_details.json 694487 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lobee_details.png 90752 o
+feuille_ovale : 4320 pièces (562 vides), 5753563 ms au total
+  sculpture+bake : 2165, 6690, 2462, 1427, 2413, 2109, 1568, 1084, 1858 ms
+  ×1.4 : 933.9 ms/pièce (72)
+  ×4 : 1230.5 ms/pièce (72)
+  ×8 : 1184.6 ms/pièce (144)
+  ×2.8 : 1349.6 ms/pièce (72)
+  ×16 : 3189.0 ms/pièce (144)
+  ×5.6 : 793.5 ms/pièce (72)
+  ×32 : 11260.3 ms/pièce (144)
+  ×11.2 : 1777.3 ms/pièce (72)
+  ×64 : 42087.5 ms/pièce (72)
+  assets/splats/feuille_ovale_details_x4_k35.png 798 o
+  assets/splats/feuille_ovale_details_x4.png 8819 o
+  assets/splats/feuille_ovale_details_x4_k200.png 29642 o
+  assets/splats/feuille_ovale_details_x8_k35.png 4833 o
+  assets/splats/feuille_ovale_details_x8.png 29642 o
+  assets/splats/feuille_ovale_details_x8_k200.png 71383 o
+  assets/splats/feuille_ovale_details_x16_k35.png 18091 o
+  assets/splats/feuille_ovale_details_x16.png 71383 o
+  assets/splats/feuille_ovale_details_x16_k200.png 171227 o
+  assets/splats/feuille_ovale_details_x32_k35.png 45473 o
+  assets/splats/feuille_ovale_details_x32.png 171227 o
+  assets/splats/feuille_ovale_details_x32_k200.png 423076 o
+  assets/splats/feuille_ovale_details.json 1132896 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_ovale_details.png 118403 o
+feuille_paume : 432 pièces (4 vides), 5951448 ms au total
+  sculpture+bake : 4113, 14800, 5336, 5340, 5938, 5081, 5133, 4280, 2605 ms
+  ×8 : 6173.8 ms/pièce (72)
+  ×16 : 17047.8 ms/pièce (72)
+  ×32 : 58580.8 ms/pièce (72)
+  assets/splats/feuille_paume_details_x8.png 55056 o
+  assets/splats/feuille_paume_details_x16.png 130560 o
+  assets/splats/feuille_paume_details_x32.png 328306 o
+  assets/splats/feuille_paume_details.json 114312 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_paume_details.png 335456 o
+feuille_ruban : 432 pièces (96 vides), 2754664 ms au total
+  sculpture+bake : 935, 2056, 1156, 2503, 1378, 1141, 1712, 1948, 1683 ms
+  ×2 : 6139.6 ms/pièce (72)
+  ×4 : 6169.5 ms/pièce (144)
+  ×5.6 : 3036.1 ms/pièce (72)
+  ×8 : 6353.2 ms/pièce (72)
+  ×11.2 : 10165.4 ms/pièce (72)
+  assets/splats/feuille_ruban_details_x16_k13.png 87 o
+  assets/splats/feuille_ruban_details_x16_k25.png 850 o
+  assets/splats/feuille_ruban_details_x16_k35.png 3182 o
+  assets/splats/feuille_ruban_details_x32_k13.png 850 o
+  assets/splats/feuille_ruban_details_x32_k25.png 5312 o
+  assets/splats/feuille_ruban_details_x32_k35.png 7694 o
+  assets/splats/feuille_ruban_details.json 115886 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_ruban_details.png 27995 o
+feuille_scie_gaufree : 1296 pièces (29 vides), 2440674 ms au total
+  sculpture+bake : 1067, 2107, 2955, 2625, 2993, 4013, 1494, 2340, 1705 ms
+  ×2 : 1872.9 ms/pièce (72)
+  ×4 : 1541.5 ms/pièce (144)
+  ×8 : 1428.0 ms/pièce (216)
+  ×16 : 4098.5 ms/pièce (144)
+  ×32 : 16108.9 ms/pièce (72)
+  assets/splats/feuille_scie_gaufree_details_x8_k25.png 924 o
+  assets/splats/feuille_scie_gaufree_details_x8_k50.png 6109 o
+  assets/splats/feuille_scie_gaufree_details_x8.png 18654 o
+  assets/splats/feuille_scie_gaufree_details_x16_k25.png 6109 o
+  assets/splats/feuille_scie_gaufree_details_x16_k50.png 18654 o
+  assets/splats/feuille_scie_gaufree_details_x16.png 42591 o
+  assets/splats/feuille_scie_gaufree_details_x32_k25.png 18654 o
+  assets/splats/feuille_scie_gaufree_details_x32_k50.png 42591 o
+  assets/splats/feuille_scie_gaufree_details_x32.png 99666 o
+  assets/splats/feuille_scie_gaufree_details.json 341808 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_scie_gaufree_details.png 91931 o
+feuille_scie : 1728 pièces (12 vides), 4598196 ms au total
+  sculpture+bake : 1699, 4178, 2704, 1494, 1900, 858, 1198, 853, 842 ms
+  ×2.84 : 1588.4 ms/pièce (72)
+  ×4 : 1330.6 ms/pièce (72)
+  ×5.64 : 907.7 ms/pièce (72)
+  ×5.68 : 936.1 ms/pièce (72)
+  ×8 : 1164.5 ms/pièce (72)
+  ×11.28 : 2037.9 ms/pièce (72)
+  ×11.36 : 2073.7 ms/pièce (72)
+  ×16 : 3770.3 ms/pièce (72)
+  ×22.56 : 6620.3 ms/pièce (72)
+  ×22.72 : 6599.4 ms/pièce (72)
+  ×32 : 12849.7 ms/pièce (72)
+  ×45.12 : 23685.9 ms/pièce (72)
+  assets/splats/feuille_scie_details_x4_k71.png 3081 o
+  assets/splats/feuille_scie_details_x4.png 5011 o
+  assets/splats/feuille_scie_details_x4_k141.png 9012 o
+  assets/splats/feuille_scie_details_x8_k71.png 9035 o
+  assets/splats/feuille_scie_details_x8.png 14786 o
+  assets/splats/feuille_scie_details_x8_k141.png 23552 o
+  assets/splats/feuille_scie_details_x16_k71.png 23959 o
+  assets/splats/feuille_scie_details_x16.png 36902 o
+  assets/splats/feuille_scie_details_x16_k141.png 58727 o
+  assets/splats/feuille_scie_details_x32_k71.png 59818 o
+  assets/splats/feuille_scie_details_x32.png 94223 o
+  assets/splats/feuille_scie_details_x32_k141.png 150600 o
+  assets/splats/feuille_scie_details.json 459448 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_scie_details.png 77690 o
+feuille_spatule : 648 pièces (1 vides), 1933587 ms au total
+  sculpture+bake : 658, 1388, 2064, 1203, 2736, 2072, 1110, 1346, 1211 ms
+  ×4 : 1152.4 ms/pièce (72)
+  ×5.68 : 721.4 ms/pièce (72)
+  ×8 : 991.3 ms/pièce (144)
+  ×11.36 : 1524.7 ms/pièce (72)
+  ×16 : 2959.2 ms/pièce (144)
+  ×22.72 : 5477.3 ms/pièce (72)
+  ×32 : 9836.9 ms/pièce (72)
+  assets/splats/feuille_spatule_details_x8_k50.png 2715 o
+  assets/splats/feuille_spatule_details_x8_k71.png 4883 o
+  assets/splats/feuille_spatule_details_x8.png 7994 o
+  assets/splats/feuille_spatule_details_x16_k50.png 7994 o
+  assets/splats/feuille_spatule_details_x16_k71.png 13816 o
+  assets/splats/feuille_spatule_details_x16.png 20717 o
+  assets/splats/feuille_spatule_details_x32_k50.png 20717 o
+  assets/splats/feuille_spatule_details_x32_k71.png 33514 o
+  assets/splats/feuille_spatule_details_x32.png 53286 o
+  assets/splats/feuille_spatule_details.json 171646 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_spatule_details.png 51745 o
+feuille_triade : 648 pièces (6 vides), 2475686 ms au total
+  sculpture+bake : 2522, 7059, 7391, 5133, 5901, 4583, 3063, 4388, 4865 ms
+  ×2.8 : 2714.7 ms/pièce (72)
+  ×4 : 2329.3 ms/pièce (72)
+  ×5.68 : 1803.1 ms/pièce (72)
+  ×5.6 : 1700.1 ms/pièce (72)
+  ×8 : 2084.6 ms/pièce (72)
+  ×11.36 : 3270.6 ms/pièce (72)
+  ×11.2 : 3623.6 ms/pièce (72)
+  ×16 : 5767.9 ms/pièce (72)
+  ×22.72 : 10402.9 ms/pièce (72)
+  assets/splats/feuille_triade_details_x8_k35.png 3619 o
+  assets/splats/feuille_triade_details_x8_k50.png 6167 o
+  assets/splats/feuille_triade_details_x8_k71.png 11819 o
+  assets/splats/feuille_triade_details_x16_k35.png 11543 o
+  assets/splats/feuille_triade_details_x16_k50.png 18352 o
+  assets/splats/feuille_triade_details_x16_k71.png 30140 o
+  assets/splats/feuille_triade_details_x32_k35.png 29849 o
+  assets/splats/feuille_triade_details_x32_k50.png 47904 o
+  assets/splats/feuille_triade_details_x32_k71.png 77975 o
+  assets/splats/feuille_triade_details.json 174513 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_triade_details.png 95235 o
+fruit_globe : 18 pièces (0 vides), 14565 ms au total
+  sculpture+bake : 923, 569, 672 ms
+  ×4 : 463.2 ms/pièce (3)
+  ×8 : 385.2 ms/pièce (6)
+  ×16 : 589.0 ms/pièce (6)
+  ×32 : 1280.0 ms/pièce (3)
+  assets/splats/fruit_globe_details_x16_k25.png 162 o
+  assets/splats/fruit_globe_details_x16_k50.png 296 o
+  assets/splats/fruit_globe_details_x16.png 570 o
+  assets/splats/fruit_globe_details_x32_k25.png 296 o
+  assets/splats/fruit_globe_details_x32_k50.png 570 o
+  assets/splats/fruit_globe_details_x32.png 1153 o
+  assets/splats/fruit_globe_details.json 5649 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_fruit_globe_details.png 1435 o
+tete_corolle : 432 pièces (0 vides), 96832 ms au total
+  sculpture+bake : 554, 309, 236, 211, 238, 460, 205, 436, 420 ms
+  ×4 : 160.0 ms/pièce (72)
+  ×5.68 : 92.4 ms/pièce (72)
+  ×8 : 137.6 ms/pièce (72)
+  ×11.36 : 162.9 ms/pièce (72)
+  ×16 : 261.0 ms/pièce (72)
+  ×22.72 : 464.0 ms/pièce (72)
+  assets/splats/tete_corolle_details_x8_k50.png 582 o
+  assets/splats/tete_corolle_details_x8_k71.png 1056 o
+  assets/splats/tete_corolle_details_x16_k50.png 1645 o
+  assets/splats/tete_corolle_details_x16_k71.png 2926 o
+  assets/splats/tete_corolle_details_x32_k50.png 4677 o
+  assets/splats/tete_corolle_details_x32_k71.png 8049 o
+  assets/splats/tete_corolle_details.json 115098 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_tete_corolle_details.png 11647 o

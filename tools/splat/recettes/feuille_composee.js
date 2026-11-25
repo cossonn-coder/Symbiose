@@ -87,5 +87,6 @@ module.exports = {
     sites.push({ c: add(R(add(fin, mul(out, 0.18))), mul(axT[0], -0.22)), U: axT[0], V: axT[2], W: axT[1],
       long: 0.44, large: 0.12, moitie: ELLIPSE });
     percer({ S, K, M }, trou, sites, variante);
+    return sites;   // RELIQUATS ③ : sites des détails (lib/details.js)
   }
 };

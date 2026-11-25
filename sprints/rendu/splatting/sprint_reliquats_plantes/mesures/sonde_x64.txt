@@ -1,0 +1,10 @@
+feuille_composee : 36 pièces (0 vides), 2823644 ms au total
+  sculpture+bake : 9748, 32120, 14904 ms
+  ×22.4 : 19456.5 ms/pièce (6)
+  ×64 : 143969.8 ms/pièce (6)
+  ×90.24 : 297155.1 ms/pièce (6)
+feuille_composee : 18 pièces (0 vides), 1735538 ms au total
+  sculpture+bake : 810, 829, 633 ms
+  ×22.4 : 14782.7 ms/pièce (6)
+  ×64 : 93665.6 ms/pièce (6)
+  ×90.24 : 180201.6 ms/pièce (6)

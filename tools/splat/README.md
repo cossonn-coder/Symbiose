@@ -41,6 +41,12 @@ Classes de taille (RELIQUATS ②) : `lib/classes.js` fixe, par recette, 1 à 3 �
 sinon) ; `node tools/splat/inventaire_tailles.js` relit les fiches de la vue et propose les k.
 Une classe retirée efface ses planches ; une planche neuve reçoit son `.png.import` (« keep »).
 
+Détails (RELIQUATS ③) : `node tools/splat/cuire.js <recette> --details [--controle DOSSIER]` cuit les
+SUR-COUCHES de détail de la recette (`lib/details.js` : nervures, duvet, poils, éclat, revers, pruine,
+glandes, gouttes, étamines) → `<recette>_details.json` + `<recette>_details_x<z>[_k…].png`, mêmes vues
+et classes que la pièce de base, sans la recuire. Toute la table (17 recettes, ~12 processus) :
+`node -e "console.log(Object.keys(require('./tools/splat/lib/details').DETAILS).join('\n'))" | xargs -P 12 -I{} node tools/splat/cuire.js {} --details`.
+
 Options de `cuire.js` : `--sortie` (défaut `assets/splats`), `--controle DOSSIER`
 (planche de contrôle humaine), `--lacets N` (défaut : la recette, sinon 8),
 `--inclinaisons` (défaut : la recette, sinon `-30,0,30`),
@@ -59,6 +65,7 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `lib/planche.js` | rangement en planches (une par palier) + manifeste JSON |
 | `lib/classes.js` | RELIQUATS ② : classes de taille par recette (k, taille nominale dans la mesure de la vue, correction √2 des organes ronds) |
 | `inventaire_tailles.js` | RELIQUATS ② : tailles réelles demandées par la vue (fiches lues par `portraits/table_cs.js`) → k proposés |
+| `lib/details.js` | RELIQUATS ③ : détails des feuilles et organes en sur-couches (table recette → détails + paliers, un sculpteur par détail posé sur les sites des limbes) |
 | `lib/controle.js` | planche de contrôle : rampe 5 tons + soleil fixe (règle du shader) |
 | `controle_feuilles.js` | planche de contrôle de toute la bibliothèque (relue sur disque) |
 | `lib/limbe.js` | un limbe en volume depuis un contour 2D de la vue (pli, gaufrage, pétiole) |

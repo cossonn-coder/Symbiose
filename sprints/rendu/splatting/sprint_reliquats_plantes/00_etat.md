@@ -13,7 +13,7 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 |---|---|---|
 | ① | `01_memoire_x32.md` — budget de précuisson 1 Go, plafonds relevés, ×32 cuit | **fait 2026-11-25** (non commité) |
 | ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** (non commité) |
-| ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | à faire |
+| ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** (non commité) |
 | ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | à faire |
 | ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | à faire |
 | ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | à faire |
@@ -125,6 +125,58 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
 - Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : SplatPlanches 229 · Splats 163 ·
   SplatsOrganes 68 · cuire.js 170 · planche.js 69 · classes.js 50 · inventaire 60 (tous 🟢).
 
+### ③ Détails cuits — fait 2026-11-25
+- **Mécanisme = SUR-COUCHES** (écart au kickoff, (6)) : pas de couche ajoutée DANS la recette (une couche
+  « vole » ses pixels au limbe → trous chez les espèces sans le détail, et recuisson de la base). Neuf
+  `tools/splat/lib/details.js` : table recette → détails + paliers, un sculpteur par détail posé sur les
+  SITES des limbes (ceux des trous D5 ; `limbe.js` rend aussi `pli`, `epais` ; `fruit_globe`, `tete_corolle`,
+  `feuille_composee` rendent leurs sites). `cuire.js <recette> --details` sculpte la recette + ses détails
+  (flux de hash 2000+variante, la feuille n'en dépend pas), photographie aux MÊMES vues/classes et n'extrait
+  que les couches de détail (`codes.piece(…, part = 1/3)` : un poil fin n'est jamais majoritaire) →
+  `<recette>_details.json` + planches. **Aucune planche de base recuite** (git : 0 fichier de base modifié ;
+  non-régression `tete_corolle` recuit hors dépôt = octets identiques avec COUCHES 3 → 8).
+- **Vue** : neuf `visuals/PlantRenderer.SplatsDetails.cs` (93 LDC) — table unique `SeuilsDetails`, qui porte
+  quoi (marque de fiche + surface d'espèce), couleur par détail ; `SplatPlanches.Trouver(…, out classe,
+  exacte)` (la sur-couche tombe sur la classe RÉELLEMENT posée, sans remonter). Crochets : `PoserPieceFeuille`
+  (feuilles saines seulement ; revers : 1 feuille sur 3 posée en ton clair dès ×4, comme l'ancien `Ton(col,4)`)
+  et `PoserCouches` (étamines, pruine du fruit). `DrawSurfaceFeuille` (poils/pruine/glandes vectoriels en
+  anneau) n'est plus tracé sur une feuille-pièce (il l'était encore : visible sur `03_bourrache_x32_avant`).
+- **Inventaire (grep)** — détail → espèces → palier ancien → fichier:ligne (HEAD) :
+  | Détail | Espèces | Ancien | Source | Recettes cuites | Seuil retenu |
+  |---|---|---|---|---|---|
+  | nervures médiane + secondaires | toutes les feuilles à contour | ×8 médiane, ×16 sec., ×32 5 paires | PortTigeFormes:46-47, PortRosette:138-139, PortVolubile:175-176, PortTapis:93, PortRampante:66, FleurSnes:84 (`DetaillerLimbe`), Leaf:188/222, LeafOutline:180 | ovale, scie(+gaufrée), lancéolée(+gaufrée), dentée, spatule, lobée, cœur, lierre, paume, composée, triade | ×16 |
+  | Nervures pâles (marque) | lierre | ×8 | PortTigeFormes:48 / Lianes:181 | lierre (palmées) | ×8 |
+  | Duvet (marque) | molène, bourrache | ×8 | PortRosette:140, PortTigeFormes:49 | ovale | ×8 |
+  | Éclat (marque) | basilic, poivron | ×4 | PortTigeFormes:43 | ovale | ×4 |
+  | Revers (marque) | armoise, framboisier | ×4 | PortTigeFormes:41 | lobée, scie | ×4 (+ 1/3 retournées) |
+  | Gouttes (marque) | drosera | ×8 | PortRosette:187 | cuillère | ×8 |
+  | Poils (surface) | consoude, bourrache, tournesol, tomate, courgette, armoise, fraisier (+ phacélie, lavande, thym : non cuits) | ×32 | PaliersHauts:170/244 | ovale, lancéolée gaufrée, cœur, composée, paume, lobée, scie gaufrée | ×32 |
+  | Pruine feuille (surface) | ail | ×32 | PaliersHauts:247 | ruban | ×32 |
+  | Glandes (surface) | drosera | ×32 | PaliersHauts:249 | cuillère | ×16 |
+  | Pruine fruit | myrtille | ×32 | PaliersHauts:148 | fruit_globe | ×32 |
+  | Étamines | (`DrawEtamines`, Flower:122 : **code mort**, `DrawFlowerShape` n'est plus appelé) | ×32 | PaliersHauts:303 | tete_corolle | ×32 |
+  Non cuits : poils de la phacélie (plume : lanières de 1-2 mm, aucun site de limbe), lavande et thym (masses
+  dessinées, ④). Couleurs de santé (nécrose, taches, givre, criblage hors pièce) : peintes (D5).
+- **Seuils** : lus sur `mesures/controle_<recette>_details.png` (base verte + détails en couleurs) — nervures
+  secondaires sous le pixel à ×8, nettes dès ×16 ; poils lisibles à ×32 seulement (×16 : grésillent) ;
+  étamines = une tache à ×8-×16 qui couvre le cœur, rayonnantes à ×32 ; glandes et perles lisibles dès ×16,
+  perles seules dès ×8. Paliers cuits = un cran sous le seuil (choix possible au ⑥ sans recuire).
+- **Mesures** (VM, charge 4-43 pendant la cuisson : machine partagée + captures) : 17 recettes, `xargs -P 12` +
+  `-P 5`, **2 h 14 de mur** (16:42 → 18:56), **1 094 min CPU**, 19 602 pièces (990 vides). **Poids
+  `assets/splats/` 50 → 63 Mo** (sur-couches 14 Mo, 146 planches) ; seuil 200 non atteint.
+- **Captures** ×8/×16/×32 avant/après (`-l 2`, `planche_especes`) : `mesures/03_<espèce>_x<z>_{avant,apres}.png`
+  pour bourrache, lierre, drosera, armoise, ail, fraisier (fleur), tomate. Lues : bourrache ×32 nervures +
+  duvet + poils (avant : anneau de soies vectorielles autour de chaque pièce), lierre ×16 nervures pâles,
+  drosera ×16 couronne de perles. Journal : `mesures/03_journal_cuisson.txt`.
+- **Sonde ×64** (`feuille_composee` + poils, hors dépôt, 2 lacets × 3 variantes × 3 classes, VM chargée ~25) :
+  base 94 s/pièce (k 1), 180 s (k 1,41 = ×90), 15 s (k 0,35) ; avec détails 144 / 297 / 19 s. Pièce k 1 =
+  520×358 px, k 1,41 = 732×504. Planches pour 6 vues : base 87 Ko (k 1) / 132 Ko (k 1,41), détails 50 / 83 Ko
+  → une recette complète (72 vues) ≈ 1-1,6 Mo par classe et par couche [extrapolé, n=6]. **Les splats se
+  voient un par un** : bords en perles, rachis en anneaux, poils en points (`mesures/sonde_x64.png`, txt
+  à côté). Rien dans la vue. Pour le chanvre ×64 : prévoir le coût d'une ×32 × ~4.
+- Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : details.js 139 · cuire.js 185 · codes.js 86 ·
+  controle.js 81 · SplatsDetails 93 · Splats 167 · SplatPlanches 234 · PaliersHauts 221 (tous 🟢).
+
 ## F5 (à remplir par les tronçons, consolidé au ⑥)
 - ① À ×32 sur un tournesol et un pommier : les feuilles et les fleurs sont en volume (splats).
   L'à-coup au premier passage à ×32 (gel d'environ 1-2 s par grande plante sur la VM) est-il
@@ -133,13 +185,22 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
   carotte, un pommier fruité. Les pièces ont-elles la taille de l'ancien dessin ? Les sauts de classe
   (une feuille qui grandit passe d'une classe à l'autre, ×1,4 à ×2,8 d'un coup) se voient-ils ?
   Feuilles de courgette (une seule classe, jusqu'à −33 %) : assez grandes ? Épi de la molène trop court.
+- ③ Chaque détail apparaît-il au bon zoom, sans « sauter » ni surcharger ? Nervures ×16 (toutes les
+  feuilles), nervures pâles du lierre ×8, duvet molène/bourrache ×8, éclat basilic/poivron ×4, revers
+  armoise/framboisier ×4 (1 feuille sur 3 claire + liseré), perles du drosera ×8, tentacules ×16, poils ×32
+  (bourrache, consoude, tomate, tournesol, courgette, fraisier), pruine de l'ail et des baies ×32, étamines
+  ×32. Bourrache ×32 trop chargée (nervures + duvet + poils) ? Maj+F11 compare à l'ancien dessin.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire »
-(①② faits : prochain = ③ `03_details_cuits.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
+(①②③ faits : prochain = ④ `04_recettes_neuves.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
 Classes de taille : `tools/splat/lib/classes.js` (+ `inventaire_tailles.js`) ; toute recette neuve ou
 recuite (③④) passe par elle — y ajouter son entrée (sinon k = 1 seule). Une recuisson complète coûte
 ~3 h de mur [VM, n=1] : ne recuire que les recettes touchées.
+Détails (③) : toute recette neuve ou recuite qui porte un détail (④ : trèfle, thym, lavande…) ajoute
+son entrée à `DETAILS` (`tools/splat/lib/details.js`) et recuit ses sur-couches (`cuire.js <r> --details`) ;
+seuils et « qui porte quoi » dans `visuals/PlantRenderer.SplatsDetails.cs`. Une recette dont la base est
+recuite DOIT recuire ses détails (même sculpture, sinon décalage).
 Outils hérités du sprint (a) : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`,
 `PoserPieceFeuille`, `PoserOrganeSplat`, `PoserFoliolesSplat`, `TouffeGerbe`,
 `tools/splat/cuire.js`, `cuire_portraits.js`.

@@ -124,9 +124,17 @@ namespace Symbiose
 		/// la classe au-dessus la remplace — comme l'ancien dessin, borné à un pixel.
 		/// `trou` : 0 sain, 1-2 morsure, 3-4 grêle (degré 1-2).</summary>
 		internal static bool Trouver(string recette, float palier, int echelle, int couche, int inclinaison, int lacetDeg,
-									 int variante, int trou, out Piece piece)
+									 int variante, int trou, out Piece piece) =>
+			Trouver(recette, palier, echelle, couche, inclinaison, lacetDeg, variante, trou, out piece, out _);
+
+		/// <summary>Idem, et rend la classe réellement posée (`classe`, échelle ×100). `exacte` : la
+		/// classe demandée seule, sans remonter (RELIQUATS ③ : une sur-couche de détail doit tomber
+		/// sur SA pièce de base, à la même échelle — vide = pas de détail).</summary>
+		internal static bool Trouver(string recette, float palier, int echelle, int couche, int inclinaison, int lacetDeg,
+									 int variante, int trou, out Piece piece, out int classe, bool exacte = false)
 		{
 			piece = default;
+			classe = echelle;
 			var r = RecetteDe(recette);
 			int p2 = Mathf.RoundToInt(palier * 2f);
 			if (r == null) return false;
@@ -134,8 +142,9 @@ namespace Symbiose
 			bool trouvee = false;
 			foreach (var (e, _) in r.Tailles)
 			{
-				if (e < echelle || !r.Pieces.TryGetValue(new Cle(p2, e, couche, inclinaison, lacetDeg, variante, trou), out b)) continue;
-				if (b.Rect.Size.X > 0 && b.Rect.Size.Y > 0) { trouvee = true; break; }
+				if (e < echelle || (exacte && e != echelle)
+					|| !r.Pieces.TryGetValue(new Cle(p2, e, couche, inclinaison, lacetDeg, variante, trou), out b)) continue;
+				if (b.Rect.Size.X > 0 && b.Rect.Size.Y > 0) { trouvee = true; classe = e; break; }
 			}
 			if (!trouvee) return false;
 			OublierAutresPaliers(p2);
