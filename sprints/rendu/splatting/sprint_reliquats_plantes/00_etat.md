@@ -16,7 +16,7 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 | ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** (non commité) |
 | ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | **fait 2026-11-25** (non commité) |
 | ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | **fait 2026-11-25** (non commité) |
-| ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | à faire |
+| ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | **fait 2026-11-25** (non commité) |
 
 ## Décisions (Nico, 2026-11-25)
 - E1 Trois sprints en séquence, sans F5 entre eux.
@@ -261,30 +261,105 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
 - Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : ports_bas 145 · ports_hauts 118 · cuire_portraits
   137 · organes 91 · etats 56 · arbres 81 · PortsFiches 169 (tous 🟢).
 
-## F5 (à remplir par les tronçons, consolidé au ⑥)
-- ① À ×32 sur un tournesol et un pommier : les feuilles et les fleurs sont en volume (splats).
-  L'à-coup au premier passage à ×32 (gel d'environ 1-2 s par grande plante sur la VM) est-il
-  gênant sur le PC ? Touche C : lire `précuisson X/1024 Mo` sur la HD 4600.
-- ② Maj+F11 pour comparer : fraisier ×8, courgette ×16, myrtille et haricot ×1/×2, molène ×2, une
-  carotte, un pommier fruité. Les pièces ont-elles la taille de l'ancien dessin ? Les sauts de classe
-  (une feuille qui grandit passe d'une classe à l'autre, ×1,4 à ×2,8 d'un coup) se voient-ils ?
-  Feuilles de courgette (une seule classe, jusqu'à −33 %) : assez grandes ? Épi de la molène trop court.
-- ③ Chaque détail apparaît-il au bon zoom, sans « sauter » ni surcharger ? Nervures ×16 (toutes les
-  feuilles), nervures pâles du lierre ×8, duvet molène/bourrache ×8, éclat basilic/poivron ×4, revers
-  armoise/framboisier ×4 (1 feuille sur 3 claire + liseré), perles du drosera ×8, tentacules ×16, poils ×32
-  (bourrache, consoude, tomate, tournesol, courgette, fraisier), pruine de l'ail et des baies ×32, étamines
-  ×32. Bourrache ×32 trop chargée (nervures + duvet + poils) ? Maj+F11 compare à l'ancien dessin.
-- ④ Prairie : trèfle en pièces (3 folioles) à tous les paliers — même densité de tapis ? marque claire en V à ×16 ?
-  Un pied `quatre_feuilles` montre-t-il bien ses feuilles en X ? Thym : les rameaux font-ils un coussin, ou le
-  dôme sombre se voit-il trop entre eux ? Lavande : touffes de lames trop sombres face au gris-vert d'avant ?
-  Fétuque : panicules rousses lisibles ×2-×16 ? Blé EN FLEUR (vert) ×8-×32 : anthères pâles visibles ?
-  Fleurons des plantes sans fiche ×1-×2 : le cœur jaune revient-il ?
-- ⑤ Encyclopédie → Plantes : tournesol (tête de face), molène (grande hampe jaune), drosera (rouge, tentacules,
-  perles — trop chargé ?), thym (coussin : cœur trop lisse ?), lavande, myrtille (baies bleues au portrait mûr, mais
-  JAMAIS en jeu : le moteur ne la noue pas), haricot/jasmin/lierre (tuteur effacé), chanvre (toujours une perche).
-  Hampes plus hautes chez carotte, ail, bourse ; épis plus longs chez plantain, basilic, menthe : trop ?
+### ⑥ Revue des paliers — fait 2026-11-25
+- **Revue** : 16 espèces × 7 paliers × avant (`SYMBIOSE_SPLATS=0`) / après, `planche_especes -l 2 -n 170`
+  (tomate, tournesol, fraisier, courgette, carotte, trèfle, plantain, blé, thym, lavande, lierre, haricot,
+  drosera, bourrache, myrtille, molène) + monde `full`. 3 files Xvfb en parallèle, ~2 min par capture
+  (VM, charge 4-12). Planches lues en montages (×0,5-×4 / ×8-×32, avant en haut) — hors dépôt :
+  `/tmp/claude-1000/-home-nico-Nextcloud-projects-symbiose/6235938d-c586-4e51-a29a-fb714fef2dba/scratchpad/mont/`.
+  **Aucun retour au dessin direct** sur la planche (0 repli sur 16 runs) ; pas de pièce vide vue.
+- **3 finitions** (vue seule, `visuals/`) :
+  1. **Tête du tournesol de face** (`PlantRenderer.Splats.cs`, `PoserTeteSplat`) : le lacet tiré au hasard la
+     montrait de PROFIL (anneau pâle, cœur gris-brun) de ×2 à ×32, alors que l'ancien `PoserSoleil` et le
+     portrait (⑤) la montrent de face. Lacet = direction caméra. `mesures/06_tournesol_tete_{avant,apres}.png`
+     (×4 et ×2 : dessin | splat).
+  2. **Poils et pruine de feuille fondus sur le limbe** (`PlantRenderer.SplatsDetails.cs`, `CouleurDetail`) :
+     posés en blanc OPAQUE, les poils ×32 (tomate, fraisier, bourrache, tournesol…) lisaient comme l'**oïdium**
+     (signe « blanc farineux » du moteur, philo #5). Couleur = limbe → blanc à l'alpha de l'ancien voile (0,55 ;
+     pruine 0,5). Pruine du FRUIT inchangée. `mesures/06_tomate_poils_x32_avant_apres.png`.
+  3. **Épi long empilé** (`PlantRenderer.Splats.cs`, `PoserEpiEmpile`) : une seule pièce `tete_epi` (8 cm × classe)
+     laissait l'épi de la molène 3-4 fois trop court (constat ②) ; on empile les pièces sur le tiers haut de la
+     hampe (pas 0,8 longueur, affinées vers la pointe, ≤ 24), comme `epiLong` du portrait (⑤). Épis courts
+     (basilic, menthe, lavande) : 1 pièce, inchangés. `mesures/06_molene_epi_x8_dessin_avant_apres.png`
+     (dessin | 1 pièce | empilé).
+- **Mémoire de précuisson** (dernière ligne `[Cuisson] file vidée` de chaque palier, VM llvmpipe, n=1 run/cas) :
+  planche, une espèce visée : ×4 ≤ 85 Mo · ×8 57-161 · ×16 55-416 · ×32 103-689 Mo (max tournesol ×32 689,
+  bourrache ×32 671), **0 repli, 0 éviction**. Monde `full` : ×8 265 · ×16 693 · ×32 **927/1024 Mo, 2 replis
+  + 2 évincées** (menthe, noyer hors champ). Planche molène après l'empilement : ×32 934 Mo, 4 replis (bambous,
+  dactyle hors champ). Le budget ① fait son travail à ×32 ; il est presque plein.
+- **ms par image** (médiane `[perf]` du palier, VM llvmpipe, charge 4-12 [n=1 run/cas] — non transposable au PC) :
+  planche 370-630 ms (×8-×32), `full` 449-763 ms ; avant/après `full` du même ordre (×32 637 contre 670).
+- **Vus, non corrigés** (pas de recette neuve au ⑥) → section F5 et S2/S3 : feuille du **plantain** trop large
+  (pièce `feuille_lanceolee` générique, nervures pennées ; le plantain a des feuilles étroites à nervures
+  parallèles — recette dédiée à prévoir) ; **thym** ×16-×32 : le dôme sombre plat domine, rameaux clairsemés ;
+  **courgette** paume pâle et plate, 2 feuilles vues par la tranche à ×8 ; **bourrache** ×8-×32 feuilles
+  bicolores (pli très contrasté) ; fraises **brunes** et ombelle de **carotte orange** (avant ET après : moteur ou
+  fiche, pas le ⑥) ; tige du tournesol ×32 : **pas de décalage visible** sur cette planche (constat ① non
+  reproduit) ; **drosera** : `-c` au pied vise le plantain voisin (2 essais) — revue faite au ③.
+- **Dette** : myrtille non fruitière ajoutée à **D134** (déjà « myrtille et lierre fruitiers ») — pas de dette
+  neuve (règle du tri). **Framboisier persistant au moteur** (caduc en vrai, portrait d'hiver feuillé) : candidat
+  NON ouvert (règle « pas de nouvelle dette sans en fermer une ») → à l'orchestrateur.
+- Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : Splats 184 · SplatsDetails 98 (🟢).
+  `assets/splats/` **65 Mo** (inchangé, rien recuit).
+
+## F5 consolidé (S1, à jouer au F5 complet APRÈS S3 — base de la liste exhaustive de S3)
+Mode d'emploi : banc `planche_especes` (40 adultes, fleurs et fruits posés), touche **L** = planche des
+paliers ×0,5→×32 sur la plante visée ; **Maj+F11** compare à l'ancien dessin ; **C** (rapport) / **F4** donnent
+`précuisson X/1024 Mo`. Monde `full` pour l'ensemble. Cocher espèce par espèce.
+
+**Général (tous paliers)**
+- [ ] Aucune bascule laide d'un palier au suivant (taille, détail qui apparaît/disparaît d'un coup).
+- [ ] Sauts de classe de taille (feuille qui grandit : ×1,4 à ×2,8 d'un coup) : visibles ? gênants ?
+- [ ] ×32 : tout est en volume (aucune plante en dessin plat) ; à-coup au 1ᵉʳ passage à ×32 (VM : 1-2 s par
+      grande plante, une fois) acceptable sur le PC ?
+- [ ] Mémoire (C) sur la HD 4600 : `full` ×32 ≈ 930/1024 Mo sur la VM, quelques plantes hors champ en repli —
+      voit-on une plante PLATE à l'écran ? Le budget de 1 Go tient-il en VRAM ?
+- [ ] Monde `full` ×1 : ensemble homogène, aucune plante qui « détonne ».
+
+**Par espèce** (palier où regarder → ce qu'on vérifie)
+- [ ] **Tomate** ×8-×32 : folioles en volume ; ×32 poils fins vert pâle (PAS de points blancs façon oïdium).
+- [ ] **Tournesol** ×2-×32 : tête **de face**, cœur brun foncé, taille de l'ancien disque ; ×16-×32 nervures +
+      poils ; tige ×32 non décalée des feuilles (constat ① non reproduit au ⑥).
+- [ ] **Fraisier** ×8 : taille des feuilles et des fleurs ; ×32 poils discrets ; fraises : **brunes** sur la
+      planche avant comme après — teinte de maturité voulue ?
+- [ ] **Courgette** ×16 : paume (1 classe, jusqu'à −33 %) assez grande ? pâle et plate ? feuilles vues par la
+      tranche ; fleur-trompette ×32.
+- [ ] **Carotte** ×2-×16 : rosette plume, ombelle en pièce ; ombelle **orange** (avant comme après) : voulu ?
+- [ ] **Trèfle** tous paliers : tapis de 3 folioles même densité ; V clair ×16 ; un pied `quatre_feuilles` en X.
+- [ ] **Plantain** ×4-×32 : feuilles **trop larges et pennées** (pièce lancéolée générique) — recette dédiée ?
+      épi plus long que le vrai.
+- [ ] **Blé** ×8-×32 en fleur (vert) : anthères pâles ; brins et rubans encore dessinés (S2).
+- [ ] **Fétuque** ×2-×16 : panicules rousses lisibles.
+- [ ] **Thym** ×8-×32 : coussin de rameaux, ou **dôme sombre plat** trop visible entre eux ?
+- [ ] **Lavande** ×8-×32 : touffes de lames trop sombres face au gris-vert d'avant ? épis.
+- [ ] **Lierre** ×8 nervures pâles ; baies.
+- [ ] **Haricot** ×1-×32 : triades, gousses, fleurs-papillons.
+- [ ] **Drosera** ×8 perles, ×16 tentacules : trop chargé ? (revue faite au ③ ; le banc vise mal son pied).
+- [ ] **Bourrache** ×8 duvet, ×32 nervures + duvet + poils : trop chargé ? feuilles **bicolores** (pli) trop
+      contrastées ?
+- [ ] **Molène** ×2-×16 : épi jaune **sur tout le tiers haut** de la hampe (empilé au ⑥) ; rosette à la taille
+      du dessin ; duvet ×8.
+- [ ] **Armoise / framboisier** ×4 : revers (1 feuille sur 3 claire). **Basilic / poivron** ×4 : éclat.
+      **Ail** ×32 pruine. **Consoude** ×32 poils.
+- [ ] **Myrtille** : baies JAMAIS en jeu (moteur, D134) — seulement au portrait.
+- [ ] Fleurons des plantes sans fiche ×1-×2 : cœur jaune.
+
+**Encyclopédie → Plantes (portraits, ⑤)**
+- [ ] Tournesol de face ; molène grande hampe jaune ; drosera rouge (trop chargé ?) ; thym (cœur trop lisse ?) ;
+      lavande ; myrtille baies bleues ; haricot/jasmin/lierre (tuteur effacé) ; chanvre (toujours une perche) ;
+      hampes de carotte, ail, bourse et épis de plantain, basilic, menthe : trop hauts/longs ?
+
+**Restes connus, hors S1** : bois, brins et rubans des graminées, portraits d'arbres (S2) ; lisière, écran de
+chargement (S3) ; recette dédiée plantain (à placer) ; framboisier caduc au moteur (candidat dette).
 
 ## §REPRISE
+**①→⑥ faits : sprint S1 terminé côté code** (clôture : journal, mémoire, commit/push, refactor = orchestrateur).
+Prochaine étape : `/conception` de **S2 (arbres : bois lissé sans joint, écorce cuite, brins de graminées,
+portraits d'arbres)**. F5 complet après S3, avec la section « F5 consolidé » ci-dessus.
+Repères ⑥ : tête du tournesol de face et épi empilé (`PoserTeteSplat` / `PoserEpiEmpile`,
+`visuals/PlantRenderer.Splats.cs`) ; couleur des poils/pruine (`CouleurDetail`, `PlantRenderer.SplatsDetails.cs`).
+
+(ancienne reprise, toujours valable pour les outils)
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire »
 (①②③④⑤ faits : prochain = ⑥ `06_revue_paliers.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
 Classes de taille : `tools/splat/lib/classes.js` (+ `inventaire_tailles.js`) ; toute recette neuve ou

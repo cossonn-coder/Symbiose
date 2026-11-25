@@ -168,7 +168,31 @@ namespace Symbiose
 				_ => sommet,
 			};
 			int lacet = (int)(Hash01(605, graine, 0) * lacets) % Mathf.Max(lacets, 1) * 360 / Mathf.Max(lacets, 1);
+			// Tournesol : la tête regarde la caméra, comme le disque de face de l'ancien PoserSoleil et
+			// le portrait (⑤) ; un lacet au hasard la montrait souvent de profil (RELIQUATS ⑥).
+			if (f.Tete == FormeTete.Soleil) lacet = LacetEcran(new Vector2(0f, 1f), lacets);
+			if (f.Tete == FormeTete.Epi) return PoserEpiEmpile(recette, ancre, sommet, k, PlusProche(incs, 0f), lacet, lacets, variantes, graine, c, fleur, rayonCm);
 			return PoserCouches(recette, ancre, PlusProche(incs, 0f), lacet, Variante(graine, variantes), c, fleur, rayonCm);
+		}
+
+		// Épi long (molène, basilic, menthe…) : l'ancien PoserEpi remplissait tout le tiers haut de la
+		// hampe ; UNE pièce (épi cuit de 8 cm × la classe) le laissait 3-4 fois trop court à la molène.
+		// On empile les pièces de `bas` au sommet, un pas = 0,8 longueur (recouvrement), en s'affinant
+		// vers la pointe — même empilement que le portrait (`epiLong`, ⑤). RELIQUATS ⑥.
+		private bool PoserEpiEmpile(string recette, Vector2 bas, Vector2 sommet, float k, int inc, int lacet, int lacets,
+			int variantes, int graine, Color c, bool fleur, float rayonCm)
+		{
+			float pas = 8f * k * 0.8f * WorldView.PxPerCmZ;
+			int n = Mathf.Clamp(Mathf.RoundToInt(bas.DistanceTo(sommet) / Mathf.Max(pas, 1f)), 1, 24);
+			int pasLacet = 360 / Mathf.Max(lacets, 1);
+			bool posee = false;
+			for (int i = 0; i < n; i++)
+			{
+				float t = i / (float)n;
+				int li = (lacet + i * 3 * pasLacet) % 360;   // chaque étage tourné, pas de motif répété
+				posee |= PoserCouches(recette, bas.Lerp(sommet, t), inc, li, Variante(graine + i, variantes), c, fleur, rayonCm * (1f - 0.3f * t));
+			}
+			return posee;
 		}
 
 		/// <summary>Fruit de port en pièce splat (globe, ou long et couché), classe de taille la plus

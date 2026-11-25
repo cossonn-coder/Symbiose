@@ -138,8 +138,10 @@ namespace Symbiose
 			"nervures" => m == MarqueFeuille.Nervures ? Clair(col) : HueShift(col, NervureShift),
 			"duvet" or "eclat" or "revers" or "chevron" => Clair(col),
 			"antheres" => Clair(PaletteIndividu().Flower),
-			"poils" => Opaque(PoilColor),
-			"pruine" => Opaque(PruineColor),
+			// Poils et pruine de feuille : le voile translucide de l'ancien dessin (alpha 0,55 / 0,5) fondu
+			// sur le limbe. Blancs opaques, ils lisaient comme l'oïdium (« blanc farineux ») — RELIQUATS ⑥.
+			"poils" => Opaque(col.Lerp(PoilColor, PoilColor.A)),
+			"pruine" => col == default ? Opaque(PruineColor) : Opaque(col.Lerp(PruineColor, PruineColor.A)),
 			"gouttes" => Opaque(GluColor),
 			"glandes" => PaletteIndividu().FruitRipe,
 			"etamines" => FruitRotten.Darkened(0.35f),
