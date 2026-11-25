@@ -24,7 +24,12 @@ retombe alors en dessin direct, sans splats (constat vérifié par capture, conc
 3. Vérifier ce que coûte le pinceau à ×32 : 729 ms pour une tomate au journal du
    2026-11-25 [n=1]. Une cuisson longue ne doit pas geler l'image : vérifier qu'elle passe
    par la file (`BakeQueue`, budget par image) et mesurer l'à-coup.
-4. Journaliser au F4 ou au rapport : mémoire de précuisson courante / budget, et nombre de
+4. **Machine du F5 actuelle** (rapport perf de Nico du 2026-11-25) : i5-4200H, GPU intégré
+   Intel HD 4600 (mémoire vidéo PRISE SUR LA RAM), ×1 à 30 FPS, 116 draw calls. Le budget
+   de 1 Go reste la décision ; il doit être une constante unique, facile à régler, et la
+   mémoire de précuisson doit apparaître dans le rapport perf (ligne `[client]` ou `[rendu]`)
+   pour qu'on la lise sur ce PC comme sur le prochain (carte 8 Go probable).
+5. Journaliser au F4 ou au rapport : mémoire de précuisson courante / budget, et nombre de
    plantes en repli.
 
 ## Mesures attendues (captures lues au Read)
