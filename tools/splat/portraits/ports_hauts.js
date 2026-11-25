@@ -13,7 +13,8 @@
 
 'use strict';
 
-const { OR, dirA, polaire, add, lerp } = require('./ports_bas');
+const { OR, dirA, polaire, add, lerp, matFeuille, trouverVue } = require('./ports_bas');
+const { CLASSES } = require('../lib/classes');
 
 // Un axe : pied → sommet, légèrement courbé (s'écarte en montant de `evase`).
 function axe(pied, sommet) {
@@ -34,7 +35,10 @@ function tige(o, f) {
     for (let j = 0; j < n; j++) {
       const u = t.BasNu + (1 - t.BasNu - t.HautNu) * (j + 0.5) / n, p = A.at(u);
       const long = lerp(t.FeuilleBasCm, t.FeuilleHautCm, u) * Math.sqrt(E);
-      const a = t.Opposees ? j * Math.PI / 2 + a0 : j * OR + a0, m = 0.35 + 1.4 * t.Penche;
+      // Palmée (chanvre) : tenue presque à plat, la caméra la voit par la tranche → relevée vers
+      // elle (RELIQUATS ⑤), sinon ses doigts ne font qu'un trait.
+      const a = t.Opposees ? j * Math.PI / 2 + a0 : j * OR + a0;
+      const m = f.Feuille === 'Palmee' ? Math.max(0.6, 0.35 + 1.4 * t.Penche) : 0.35 + 1.4 * t.Penche;
       if (h(j, 3 + i) < o.etat.densite || j === n - 1) o.feuille(f, p, a, m, long, i * 40 + j * 2);
       if (t.Opposees && h(j, 13 + i) < o.etat.densite) o.feuille(f, p, a + Math.PI, m, long, i * 40 + j * 2 + 1);
       if (j >= n - t.TetesAisselle && j < n - 1) o.tete(f, add(p, dirA(a + 1.2, 0.3).map(v => v * 3 * E)), a, 100 + i * 10 + j);
@@ -49,9 +53,11 @@ function tige(o, f) {
           lerp(t.FeuilleBasCm, t.FeuilleHautCm, 0.7) * Math.sqrt(E), 200 + r * 9 + k);
       o.tete(f, bout, a, 300 + i * 20 + r);
     }
-    const sommet = A.at(1);
-    if (t.EpiCm > 0 && o.etat.fleurs) P.tube([sommet, add(sommet, [0, t.EpiCm * 0.4 * E, 0])], rTige * 0.4, rTige * 0.3, M.tige);
-    o.tete(f, t.EpiCm > 0 ? add(sommet, [0, t.EpiCm * 0.4 * E, 0]) : sommet, a0, 400 + i);
+    const sommet = A.at(1), bout = add(sommet, [0, t.EpiCm * 0.4 * E, 0]);
+    if (t.EpiCm > 0 && o.etat.fleurs) P.tube([sommet, bout], rTige * 0.4, rTige * 0.3, M.tige);
+    if (f.Tete === 'Soleil') o.teteFace(f, sommet, 400 + i);                  // RELIQUATS ⑤ : de face
+    else if (t.EpiCm > 0) o.epiLong(f, sommet, bout, a0, 400 + i);           // épi empilé sur sa longueur
+    else o.tete(f, sommet, a0, 400 + i);
   }
 }
 
@@ -84,33 +90,54 @@ function chaume(o, f) {
 // feuilles, têtes en surface ou au bout des cannes.
 function buisson(o, f) {
   const { P, M, h, E } = o, b = f.Buisson, R = f.RayonCm * E, H = f.HautFeuillesCm * E;
+  // Bois (bas, cannes) à la couleur `Bois` de la fiche (M.tige, cf. tigeDe) : la lavande a des
+  // hampes gris-vert, la myrtille des rameaux verts ; le brun commun écrasait tout (RELIQUATS ⑤).
   for (let k = 0; k < b.BoisBas; k++) {
     const a = k * OR, bout = polaire(R * 0.5, a, H * 0.45);
-    P.tube([[0, 0, 0], polaire(R * 0.15, a, H * 0.2), bout], f.EpaisseurTigeCm * 0.5 * E + 0.2, 0.2, M.bois);
+    P.tube([[0, 0, 0], polaire(R * 0.15, a, H * 0.2), bout], f.EpaisseurTigeCm * 0.5 * E + 0.2, 0.2, M.tige);
   }
-  // masse : petites feuilles serrées en dôme — absente si Grains = 0 (framboisier, myrtille) :
-  // nb() rend au moins 1, et une feuille de 0 cm fait boucler le puff d'ink (pas nul).
-  for (let k = 0; b.Grains > 0 && k < o.nb(b.Grains * 1.5); k++) {
-    const u = Math.sqrt(h(k, 1)), a = k * OR, p = polaire(R * 0.9 * u, a, H * (0.35 + 0.65 * Math.sqrt(1 - u * u)) * (0.8 + 0.2 * h(k, 2)));
-    o.feuille(f, p, a, 0.5 + 0.6 * (1 - u), b.GrainCm * Math.sqrt(E), k);
+  if (b.Grains > 0) masse(o, f, b, R, H);
+
+  for (let k = 0; k < b.FleursMasse; k++) {           // posées SUR le coussin (dôme 0,62 R × 0,6 H + pièces)
+    const u = 0.7 * Math.sqrt(h(k, 3));
+    const y = b.Grains > 0 ? H * 0.6 * Math.sqrt(Math.max(0.15, 1 - (u / 0.75) ** 2)) + 2 * Math.sqrt(E) : H * 0.95;
+    o.tete(f, polaire(R * u, k * OR + 1, y), k * OR, 100 + k);
   }
-  for (let k = 0; k < b.FleursMasse; k++)
-    o.tete(f, polaire(R * 0.7 * Math.sqrt(h(k, 3)), k * OR + 1, H * 0.95), k * OR, 100 + k);
   const cannes = Math.max(1, Math.round(b.Cannes * lerp(0.5, 1, E)));
   for (let i = 0; b.Cannes > 0 && i < cannes; i++) {
     const a = i * OR + h(i, 4), pied = polaire(b.Ecart * R * h(i, 5), a);
     const haut = b.EpiCm > 0 ? H + b.EpiCm * E : H * (0.8 + 0.2 * h(i, 6));
     const loin = b.Ecart * R + b.Evase * R;
     const at = u => add(pied, polaire(loin * u, a, haut * (u - b.Arc * 0.6 * u * u * u)));
-    P.tube([0, 0.25, 0.5, 0.75, 1].map(at), Math.max(0.2, f.EpaisseurTigeCm * 0.5 * Math.sqrt(E)), 0.15, M.bois);
+    P.tube([0, 0.25, 0.5, 0.75, 1].map(at), Math.max(0.2, f.EpaisseurTigeCm * 0.5 * Math.sqrt(E)), 0.15, M.tige);
     for (let j = 0; j < b.FeuillesCanne; j++) {
       const u = b.BasNu + (1 - b.BasNu) * (j + 0.5) / b.FeuillesCanne;
       o.feuille(f, at(u), a + (j % 2 ? 1.4 : -1.4), 0.3 + b.Penche, lerp(b.FeuilleBasCm, b.FeuilleHautCm, u) * Math.sqrt(E), 200 + i * 20 + j);
       if (b.Rameaux && j % 2 === 1) o.feuille(f, at(u), a + 2.5, 0.5, b.FeuilleHautCm * Math.sqrt(E), 600 + i * 20 + j);
     }
-    o.tete(f, at(1), a, 300 + i);
-    if (f.Fruit && b.FeuillesCanne) for (let j = 0; j < 2; j++)
-      o.fruit(f.Fruit, add(at(0.6 + 0.3 * j), [0, -2, 0]), a, 400 + i * 2 + j);
+    if (b.EpiCm > 0) o.epiLong(f, at(1 - Math.min(0.5, b.EpiCm * E / (3 * haut))), at(1), a, 300 + i);
+    else o.tete(f, at(1), a, 300 + i);
+    if (f.Fruit && b.FeuillesCanne) for (let j = 0; j < 2; j++)   // pendu sous la canne (≤ 2 cm, baie de myrtille)
+      o.fruit(f.Fruit, add(at(0.6 + 0.3 * j), [0, -Math.min(2, 3 * f.Fruit.RayonCm), 0]), a, 400 + i * 2 + j);
+  }
+}
+
+// MASSE du buisson (thym, lavande) : la pièce du jardin (④) — rameau de thym ou touffe de lames
+// de lavande, comme `PoserGrainSplat` de la vue (feuille Ruban → lames) — posée tout autour d'un
+// DÔME sombre qui fait le coussin (la vue pose aussi ce dôme, `PoserMasse`). Avant : des feuilles
+// isolées qui flottaient au-dessus de bois nus. Autant de pièces qu'il en faut pour couvrir le dôme.
+function masse(o, f, b, R, H) {
+  const { P, M, h, E } = o;
+  if (o.etat.densite <= 0) return;                                  // hiver nu : le bois seul
+  const r = trouverVue(f.Feuille === 'Ruban' ? 'FicheBuisson.Grains (lavande' : 'FicheBuisson.Grains (thym)');
+  const nominal = CLASSES[r.nom].nominalCm, s = (b.GrainCm / nominal) * Math.sqrt(E);
+  const L = (r.rayonCm - 1) * s;                                  // longueur d'une pièce (cm)
+  // cœur ombré EN RETRAIT : les pièces dépassent de lui, il ne fait que boucher les jours
+  P.boule([0, 0, 0], R * 0.62, M.creux, (H * 0.6) / (R * 0.62));
+  const n = o.nb(Math.max(b.Grains * 1.5, (2 * Math.PI * R * H * 0.6) / (L * L)));
+  for (let k = 0; k < n; k++) {
+    const u = Math.sqrt(h(k, 1)), a = k * OR, p = polaire(R * 0.62 * u, a, H * 0.6 * Math.sqrt(1 - u * u) * (0.9 + 0.1 * h(k, 2)));
+    P.poser(r, p, dirA(a, 0.15 * (1 - u)), s, [matFeuille(M, h, k)], k);
   }
 }
 
@@ -118,7 +145,7 @@ function buisson(o, f) {
 // gousses aux aisselles du haut.
 function volubile(o, f) {
   const { P, M, h, E } = o, t = f.Tige, H = f.HauteurAdulteCm * E;
-  P.tube([[3, -2, 0], [3, H + 8 * E, 0]], 0.9, 0.8, M.bois);           // tuteur
+  P.tube([[3, -2, 0], [3, H + 8 * E, 0]], 0.45, 0.4, M.tuteur);       // tuteur, effacé (RELIQUATS ⑤)
   const spire = u => [3 + 2.2 * Math.cos(u * H / 18), u * H, 2.2 * Math.sin(u * H / 18)];
   P.tube(Array.from({ length: 25 }, (_, i) => spire(i / 24)), 0.3, 0.2, M.tige);
   const n = Math.round(f.Feuilles * Math.sqrt(E));

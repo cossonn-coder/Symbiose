@@ -45,6 +45,7 @@ const RACINE = path.resolve(__dirname, '..', '..');
 const TAILLE = 240;                                   // px d'art, carré
 const LACET = 5.31, TANGAGE = 0.3;                    // caméra du prototype (trois quarts)
 const FOV = (38 * Math.PI) / 180;                     // vendor/ink/cli/render.js
+const FACE = Math.atan2(Math.cos(LACET), Math.sin(LACET));   // azimut (dirA) tourné vers la caméra (RELIQUATS ⑤)
 // La plante tient dans ~6 unités ink (échelle du prototype). Un ARBRE est sculpté plus grand :
 // la grille d'ink-studio a des cellules d'au moins 0,9 unité, une couronne de 1 400 feuilles
 // dans 6 unités en entasse des centaines par cellule (cuisson > 5 min) ; à 36 unités, ~1 min.
@@ -69,7 +70,12 @@ function sorte(table, moteur, esp) {
     const hCm = Math.max(...moteur[esp].stades.map(s => s.hauteur_cm || 0));
     return { genre: 'port', fiche: bas.fichePrairie(pr, table.constPrairie, {}, hCm) };
   }
-  if (table.ports[esp]) return { genre: 'port', fiche: table.ports[esp] };
+  const f = table.ports[esp];
+  if (f && f.Forme === 'Rosette' && f.StadesHampe) {   // hampe levée = hauteur MOTEUR de ses stades (vue)
+    const hs = moteur[esp].stades.filter(s => f.StadesHampe.includes(s.nom)).map(s => s.hauteur_cm || 0);
+    return { genre: 'port', fiche: { ...f, HauteurHampeCm: Math.max(f.HauteurAdulteCm, ...hs) } };
+  }
+  if (f) return { genre: 'port', fiche: f };
   throw new Error('aucune ligne de vue pour ' + esp);
 }
 
@@ -94,7 +100,7 @@ function etendueCm(s, table, moteur, esp, etat) {
     return Math.max(30, st.footprint.height_cm, 2 * st.footprint.canopy_radius_cm);
   }
   const f = s.fiche;
-  return Math.max(10, Math.max(f.HauteurAdulteCm, f.HautFeuillesCm, 2 * f.RayonCm) * etat.echelle);
+  return Math.max(10, Math.max(f.HauteurHampeCm || 0, f.HauteurAdulteCm, f.HautFeuillesCm, 2 * f.RayonCm) * etat.echelle);
 }
 
 // Base écran (droite, haut) de la caméra — même calcul que lib/iso.js, tangage libre.
@@ -118,7 +124,8 @@ function cadrer(boite) {
 
 function portrait(L, s, table, moteur, esp, etat, k) {
   const pal = table.palettes[esp] || table.paletteDefaut;
-  const coul = { ...couleurs(etat, pal, tigeDe(s.fiche || {}) || (table.lianes[esp] && table.lianes[esp].Organes.Tige.Tige), table.automneDefaut),
+  const coul = { ...couleurs(etat, pal, tigeDe(s.fiche || {}) || (table.lianes[esp] && table.lianes[esp].Organes.Tige.Tige), table.automneDefaut,
+    (s.fiche && s.fiche.MelangeFruit) || 0),
     ...(s.fiche && s.fiche.Pied ? { pied: s.fiche.Pied } : {}),
     ...(s.fiche && s.fiche.Tapis && s.fiche.Tapis.Stolon ? { stolon: s.fiche.Tapis.Stolon } : {}) };
   const { pal: hex, M } = palette(coul);
@@ -127,10 +134,10 @@ function portrait(L, s, table, moteur, esp, etat, k) {
   const u = UNITES[s.genre], g = u / etendueCm(s, table, moteur, esp, etat);
   const P = new Portrait(S, L.KIT, M, g, 0.8 * u * 1.2 / TAILLE);   // pas plancher ≈ 0,8 px d'art
   const h = (i, j) => L.KIT.hash(1000 + k, i, j);
-  sculpter(bas.outils(P, M, h, etat), s, table, moteur, esp, etat);
+  sculpter(bas.outils(P, M, h, etat, FACE), s, table, moteur, esp, etat);
   const b = P.boite, R = Math.max(b[1][0] - b[0][0], b[1][2] - b[0][2]) * 0.5;
   P.noter([0, 0, 0], 0);
-  S.ground(M.sol, { rad: Math.max(R * 0.8, 3) * g, res: Math.max(P.resMin * 1.5, 0.02) });
+  S.ground(M.sol, { rad: Math.max(R * 0.8, 1.5) * g, res: Math.max(P.resMin * 1.5, 0.02) });
   P.noter([R * 0.8, 0, R * 0.8]); P.noter([-R * 0.8, 0, -R * 0.8]);
   S.bake();
   const cad = cadrer(P.boite.map(c => c.map(v => v * g)));

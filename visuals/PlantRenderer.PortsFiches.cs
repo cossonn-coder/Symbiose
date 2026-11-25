@@ -185,7 +185,11 @@ namespace Symbiose
 			["Vaccinium"] = new(FormePort.Buisson, RayonCm: 30f, HautFeuillesCm: 40f, HauteurAdulteCm: 40f, Feuilles: 0,
 				FormeFeuille.Ovale, LargeurFeuille: 0.5f, Dressee: 1f, FormeTete.Pendante, TeteCm: 0.8f, Hampes: 0, EpaisseurTigeCm: 0.5f,
 				Buisson: new(new Color("5f9048"), Cannes: 5, Ecart: 0.2f, Evase: 0.45f, FeuillesCanne: 4, FeuilleBasCm: 4.5f, FeuilleHautCm: 3.5f,
-					Penche: 0.05f, BasNu: 0.2f, Rameaux: 3, RameauLong: 0.4f)),
+					Penche: 0.05f, BasNu: 0.2f, Rameaux: 3, RameauLong: 0.4f),
+				// Baie de 0,9 cm (RELIQUATS ⑤). Le moteur ne la noue pas encore (`fruitier` absent de
+				// Vaccinium) : sans fruit au snapshot, la vue n'en pose aucun ; la ligne sert au portrait
+				// et donnera la bonne taille le jour où le moteur la rendra fruitière.
+				Fruit: new(0.45f)),
 			["Raspberry"] = new(FormePort.Buisson, RayonCm: 30f, HautFeuillesCm: 150f, HauteurAdulteCm: 150f, Feuilles: 0,
 				FormeFeuille.Scie, LargeurFeuille: 0.5f, Dressee: 1f, FormeTete.Corolle, TeteCm: 1f, Hampes: 0, EpaisseurTigeCm: 0.9f, Marque: MarqueFeuille.Revers,
 				Buisson: new(new Color("7a5a3a"), Cannes: 6, Ecart: 0.2f, Evase: 0.78f, Arc: 1f, FeuillesCanne: 7, FeuilleBasCm: 13f, FeuilleHautCm: 6f,

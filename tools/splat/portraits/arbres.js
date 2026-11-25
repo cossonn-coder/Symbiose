@@ -90,7 +90,7 @@ function liane(o, st, l) {
   const { P, M, h, etat } = o, f = l.Organes;
   const segs = versPortrait(st);
   const H = Math.max(...segs.map(s => s.bout[1]));
-  P.tube([[4, -2, 2], [4, H + 10, 2]], 0.6, 0.5, M.bois);             // tuteur (support de la vue : treillis, mur)
+  P.tube([[4, -2, 2], [4, H + 10, 2]], 0.35, 0.3, M.tuteur);         // tuteur (treillis, mur de la vue), effacé (RELIQUATS ⑤)
   bois(o, segs, M.tige, Math.min(l.TigeMaxCm, 0.6) * 0.5);
   let noeud = 0;
   for (const s of segs) {

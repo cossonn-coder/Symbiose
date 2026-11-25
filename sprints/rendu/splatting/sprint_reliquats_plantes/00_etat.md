@@ -15,7 +15,7 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 | ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** (non commité) |
 | ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** (non commité) |
 | ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | **fait 2026-11-25** (non commité) |
-| ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | à faire |
+| ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | **fait 2026-11-25** (non commité) |
 | ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | à faire |
 
 ## Décisions (Nico, 2026-11-25)
@@ -220,6 +220,47 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
 - Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : SplatsHerbes 21 · Prairie 304 (🟡 préexistant, 303
   avant) · Graminees 208 · PortBuisson 149 · SplatsDetails 98 · KitSplats 179 · details.js 151 (tous 🟢 sauf Prairie).
 
+### ⑤ Portraits — fait 2026-11-25
+- **Outil seul** (`tools/splat/portraits/`, `cuire_portraits.js`) + 1 ligne de vue (fiche myrtille). Refaits :
+  - **Tournesol** : la tête regarde la caméra (`teteFace`, azimut `FACE` tiré du lacet) — elle était de profil,
+    pas trop petite (12,5 cm vrais sur 250 cm, s = 1 : le bornage n'y était pour rien).
+  - **Échelle des têtes** = rayon nominal de `lib/classes.js` (rayon des FLEURS) au lieu de `rayonCm / 1,75`,
+    qui pour une recette allongée englobe sa longueur (épi 5,1 au lieu de 1,4 ; grappe, chapelet, papillon,
+    pendante) → ces têtes étaient toutes rabattues au plancher 0,5.
+  - **Épi long** (`epiLong`) : `tete_epi` empilée sur le segment que la vue étire (tiers haut de la hampe,
+    bout `EpiCm` de la tige, haut des cannes de lavande). **Molène** : hampe à la hauteur MOTEUR de ses
+    `StadesHampe` (160 cm, comme `_hauteurLisseeCm` de la vue) + épi jaune. S'applique aussi aux rosettes
+    à hampe (carotte 60, ail 50, bourse 40, mâche 18) et aux épis de basilic, menthe, armoise, plantain.
+  - **Drosera** : limbe tiré vers le rouge (`MelangeFruit` 0,8, comme la vue) + sur-couches ③ `glandes` et
+    `gouttes` sculptées sur les sites du limbe (`Portrait.poser(…, dmats)`) ; sol minimal 3 → 1,5 cm (jeune).
+  - **Thym, lavande** : la masse = pièces ④ (`feuille_thym` / `feuille_lavande`, choix « Ruban → lames » de
+    la vue) autour d'un cœur sombre en retrait (`creux`) ; fleurs du thym posées sur le coussin.
+  - **Bois des buissons** à la couleur `Bois` de la fiche (lavande gris-vert, myrtille verte) au lieu du brun
+    commun. **Tuteurs** (haricot, lianes) amincis et gris pâle. **Hiver nu** : tige aoûtée (jasmin).
+  - **Chanvre** : feuilles palmées relevées vers la caméra (m ≥ 0,6) + épi empilé.
+- **Myrtille — prémisse du kickoff fausse** : le moteur ne la noue PAS (`fruitier` absent de `Vaccinium`,
+  `sim/engine/decompo.py:331` : non fruitière → `feconder` seul, aucun `Fruit` au snapshot). Ajouter `Fruit` à la
+  fiche (`PortsFiches.cs`, `Fruit: new(0.45f)`) est **inerte en jeu** (la vue ne pose que les fruits du moteur ;
+  sans ligne, `FruitParDefaut` 1,5 cm aurait servi) — ligne gardée pour le portrait et pour le jour où le moteur la
+  rendra fruitière. Pas de capture en jeu avant/après (rien ne change). **Candidat dette** : myrtille non
+  fruitière au moteur (docstring « baies comestibles », gène `appetence_fruit`) → baies jamais en jeu.
+- **Candidat dette framboisier** : `Raspberry` persistant au moteur → portrait d'hiver feuillé ; le framboisier
+  réel est caduc. Moteur non touché.
+- **Encore faibles** : **chanvre** (300 cm dans 240 px : feuille de 20 cm = 14 px, doigts < 2 px — illisible tant
+  que le portrait est cadré sur la plante entière) ; **thym** (le cœur ink est rendu en grands aplats lisses, les
+  rameaux restent petits : coussin lisible mais pas fin) ; **plantain** (épi = tiers de la hampe comme la vue, plus
+  long que le vrai) ; haricot (fleurs-papillons peu visibles). Arbres : S2.
+- **Recuisson complète** 156/156, `xargs -P 10`, **21 min 07 s** de mur (20:57:00 → 21:18:07, charge 3-14) ;
+  plus longs Fig mûre 873 s, Thyme mûre ~300-390 s [n=2]. Tous les PNG changent (palette élargie de 4 couleurs →
+  quantification). **Déterminisme** : 15/15 portraits identiques à l'octet entre 2 cuissons (molène, drosera,
+  chanvre, haricot, lavande). `portraits.json` régénéré : identique. Godot `--import` refait (156 `.import`
+  inchangés) ; 340 `.import` parasites dans `docs/`/`sprints/` supprimés.
+- **Mesures** : planches `mesures/controle_portraits_{1..6}.png` (relues espèce par espèce), journal
+  `mesures/05_journal_portraits.txt`, encyclopédie `mesures/05_encyclo_{molene,drosera,thym}.png` (`-Z encyclo:… -P`).
+  Poids : `assets/splats/` **65 Mo** (inchangé), `assets/portraits/` 2,1 Mo.
+- Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : ports_bas 145 · ports_hauts 118 · cuire_portraits
+  137 · organes 91 · etats 56 · arbres 81 · PortsFiches 169 (tous 🟢).
+
 ## F5 (à remplir par les tronçons, consolidé au ⑥)
 - ① À ×32 sur un tournesol et un pommier : les feuilles et les fleurs sont en volume (splats).
   L'à-coup au premier passage à ×32 (gel d'environ 1-2 s par grande plante sur la VM) est-il
@@ -238,10 +279,14 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
   dôme sombre se voit-il trop entre eux ? Lavande : touffes de lames trop sombres face au gris-vert d'avant ?
   Fétuque : panicules rousses lisibles ×2-×16 ? Blé EN FLEUR (vert) ×8-×32 : anthères pâles visibles ?
   Fleurons des plantes sans fiche ×1-×2 : le cœur jaune revient-il ?
+- ⑤ Encyclopédie → Plantes : tournesol (tête de face), molène (grande hampe jaune), drosera (rouge, tentacules,
+  perles — trop chargé ?), thym (coussin : cœur trop lisse ?), lavande, myrtille (baies bleues au portrait mûr, mais
+  JAMAIS en jeu : le moteur ne la noue pas), haricot/jasmin/lierre (tuteur effacé), chanvre (toujours une perche).
+  Hampes plus hautes chez carotte, ail, bourse ; épis plus longs chez plantain, basilic, menthe : trop ?
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire »
-(①②③④ faits : prochain = ⑤ `05_portraits.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
+(①②③④⑤ faits : prochain = ⑥ `06_revue_paliers.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
 Classes de taille : `tools/splat/lib/classes.js` (+ `inventaire_tailles.js`) ; toute recette neuve ou
 recuite (③④) passe par elle — y ajouter son entrée (sinon k = 1 seule). Une recuisson complète coûte
 ~3 h de mur [VM, n=1] : ne recuire que les recettes touchées.
@@ -250,7 +295,9 @@ son entrée à `DETAILS` (`tools/splat/lib/details.js`) et recuit ses sur-couche
 seuils et « qui porte quoi » dans `visuals/PlantRenderer.SplatsDetails.cs`. Une recette dont la base est
 recuite DOIT recuire ses détails (même sculpture, sinon décalage).
 Recettes neuves du ④ : `feuille_trefle(4)`, `feuille_thym`, `feuille_lavande`, `panicule_fetuque` (crochets :
-`visuals/PlantRenderer.SplatsHerbes.cs`). Les portraits du ⑤ peuvent les utiliser (thym, lavande, trèfle, fétuque).
+`visuals/PlantRenderer.SplatsHerbes.cs`). Les portraits du ⑤ les utilisent (thym, lavande ; trèfle et fétuque via leurs fiches).
+Portraits (⑤) : recuisson complète ~21 min [VM, n=1] ; après toute recuisson, `godot --headless --import` puis
+supprimer les `.import` parasites de `docs/` et `sprints/`.
 Outils hérités du sprint (a) : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`,
 `PoserPieceFeuille`, `PoserOrganeSplat`, `PoserFoliolesSplat`, `TouffeGerbe`,
 `tools/splat/cuire.js`, `cuire_portraits.js`.

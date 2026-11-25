@@ -11,9 +11,9 @@
 //
 // Tailles : une recette est cuite à sa taille NOMINALE (②③). Feuilles : longueur
 // nominale = `spec.longCm`, sinon (rayonCm − 1) / 1,08 (la marge que lib/feuille.js
-// ajoute au rayon). Têtes et fruits : rayon nominal ≈ rayonCm / 1,75 (soleil 22 →
-// 12,5 cm, globe 3,5 → 2 cm), mise à l'échelle bornée [0,5 ; 2] (une tête de 1 cm
-// sur une plante de 2 m resterait sinon invisible).
+// ajoute au rayon). Têtes : rayon nominal des fleurs = table des classes (lib/classes.js,
+// RELIQUATS ⑤), sinon ≈ rayonCm / 1,75 ; mise à l'échelle bornée [0,5 ; 2] (une tête de
+// 1 cm sur une plante de 2 m resterait sinon invisible).
 //
 // 📖 Pédagogie : « index inversé » — au lieu d'écrire à la main quelle recette sert
 // quelle forme, on demande à chaque recette ce qu'elle sert et on retourne la liste.
@@ -24,6 +24,8 @@
 const fs = require('fs');
 const path = require('path');
 const { place, repere } = require('./sculpteur');
+const details = require('../lib/details');
+const { CLASSES } = require('../lib/classes');
 
 const DOSSIER = path.join(__dirname, '..', 'recettes');
 
@@ -68,6 +70,11 @@ function recetteTete(forme, mure = false) {
 
 const longueurNominale = r => (r.spec && r.spec.longCm) || (r.rayonCm - 1) / 1.08;
 const rayonNominal = r => r.rayonCm / 1.75;
+// RELIQUATS ⑤ : rayon nominal de la table des classes (lib/classes.js, rayon des FLEURS) quand il
+// existe — `rayonCm` d'une recette allongée (épi, grappe, chapelet) englobe sa LONGUEUR, et
+// rapportait sa tête à 0,5 (molène sans épi jaune, papillons du haricot minuscules).
+const echelleTete = (r, tailleCm) =>
+  Math.max(0.5, Math.min(2, tailleCm / ((CLASSES[r.nom] && CLASSES[r.nom].nominalCm) || rayonNominal(r))));
 
 // Le contexte d'un portrait : sculpteur, matériaux, échelle, boîte englobante.
 class Portrait {
@@ -98,23 +105,26 @@ class Portrait {
       { res: Math.max(this.resMin, r * this.g * 0.3) });
   }
   // Pose une recette : attache en `at` (cm), organe vers `dir` (3D), échelle `s`.
-  poser(r, at, dir, s, mats, k = 0, haut = [0, 1, 0]) {
+  // `dmats` (RELIQUATS ⑤) : une couleur par détail cuit de la recette (lib/details.js),
+  // sculptés sur les sites que rend la recette, dans le même mandataire (drosera).
+  poser(r, at, dir, s, mats, k = 0, haut = [0, 1, 0], dmats = null) {
     const Q = repere(dir, haut);
     const S = this.mandataire(Q, at, s, r.trous === false);   // organes ③ : verticale tassée
     this.noter(at, r.rayonCm * s * 0.6);   // rayonCm englobe large (marge de cuisson)
-    r.sculpter({ S, K: this.K, M: { organe: mats[0], couches: mats }, variante: k % (r.variantes || 1),
-      inclinaison: 0, trou: null });
+    const ctx = { S, K: this.K, M: { organe: mats[0], couches: dmats ? [...mats, ...dmats] : mats },
+      variante: k % (r.variantes || 1), inclinaison: 0, trou: null };
+    const sites = r.sculpter(ctx);
+    if (dmats) details.sculpter(ctx, r, sites, mats.length);
   }
-  feuille(forme, marque, at, dir, longCm, mat, k) {
+  feuille(forme, marque, at, dir, longCm, mat, k, dmats = null) {
     const r = recetteFeuille(forme, marque);
-    this.poser(r, at, dir, longCm / longueurNominale(r), [mat], k);
+    this.poser(r, at, dir, longCm / longueurNominale(r), [mat], k, undefined, dmats);
   }
   // Tête : `tailleCm` = TeteCm de la fiche. mats = une couleur par couche de la recette.
   tete(forme, at, dir, tailleCm, mats, k, mure = false) {
     const r = recetteTete(forme, mure);
     if (!r) return;
-    const s = Math.max(0.5, Math.min(2, tailleCm / rayonNominal(r)));
-    this.poser(r, at, dir, s, mats, k);
+    this.poser(r, at, dir, echelleTete(r, tailleCm), mats, k);
     return r;
   }
   fruit(rayonCm, allonge, at, dir, mats, k) {
@@ -123,4 +133,4 @@ class Portrait {
   }
 }
 
-module.exports = { Portrait, recetteFeuille, recetteTete, trouver, INDEX };
+module.exports = { Portrait, recetteFeuille, recetteTete, echelleTete, trouver, INDEX };

@@ -23,6 +23,7 @@
 
 const { melange } = require('./sculpteur');
 
+const BOIS = '#5a4430', TUTEUR = '#8a8478', GOUTTE = '#e8f0ec';
 const SEC = '#8a7048', HIVER = '#4a5048', SOMBRE = '#1f3a1f', CLAIR = '#c8e070', GRAINE = '#7a6040';
 
 // Les 3 états d'une espèce (fiche moteur de moteur.py).
@@ -46,8 +47,10 @@ function etats(moteur) {
 const dieze = c => (String(c).startsWith('#') ? c : '#' + c);
 
 // Couleurs nommées d'un portrait (→ sculpteur.palette). `pal` = OrganPalette de la vue.
-function couleurs(etat, pal, tigeHex, automneDefaut) {
-  const leaf = dieze(pal.leaf), tige = tigeHex ? dieze(tigeHex) : melange(leaf, '#5a4a30', 0.3);
+// `melangeFruit` (fiche, drosera) tire le limbe vers le fruit mûr de la palette, comme la vue.
+function couleurs(etat, pal, tigeHex, automneDefaut, melangeFruit = 0) {
+  const leaf = melange(dieze(pal.leaf), dieze(pal.ripe), melangeFruit);
+  const tige = tigeHex ? dieze(tigeHex) : melange(leaf, '#5a4a30', 0.3);
   const aut = (pal.automne && pal.automne.length ? pal.automne : automneDefaut).map(dieze);
   const f = {
     ete: [leaf, melange(leaf, SOMBRE, 0.2), melange(leaf, CLAIR, 0.15)],
@@ -55,11 +58,15 @@ function couleurs(etat, pal, tigeHex, automneDefaut) {
     sec: [melange(aut[0], SEC, 0.35), melange(aut[1 % aut.length], SEC, 0.5), melange(leaf, SEC, 0.6)],
     nu: [leaf, leaf, leaf]
   }[etat.feuillage];
-  const sec = etat.feuillage === 'sec';
+  const sec = etat.feuillage === 'sec', nu = etat.feuillage === 'nu';
   return {
     sol: '#4a3426', f0: f[0], f1: f[1], f2: f[2],
-    tige: sec ? melange(tige, SEC, 0.5) : tige,
-    bois: '#5a4430',
+    // hiver nu : la tige verte s'aoûte (jasmin, sarments) — sinon un trait vert sans feuille
+    tige: sec ? melange(tige, SEC, 0.5) : nu ? melange(tige, BOIS, 0.45) : tige,
+    bois: BOIS,
+    creux: melange(f[1], SOMBRE, 0.6),               // RELIQUATS ⑤ : cœur ombré du coussin (thym, lavande)
+    tuteur: TUTEUR,                                   // RELIQUATS ⑤ : support effacé, la plante d'abord
+    glande: dieze(pal.ripe), goutte: melange(GOUTTE, dieze(pal.ripe), 0.3),          // RELIQUATS ⑤ : tentacules et glu du drosera
     fleur: dieze(pal.flower), coeur: '#d8a830',
     graine: melange(dieze(pal.ripe), GRAINE, 0.3),
     vert: dieze(pal.unripe), mur: dieze(pal.ripe)

@@ -24,7 +24,7 @@
 'use strict';
 
 const { matsTete, matsFruit } = require('./etats');
-const { recetteTete, INDEX } = require('./organes');
+const { recetteTete, echelleTete, INDEX } = require('./organes');
 
 const trouverVue = mot => [...INDEX].find(([v]) => v.includes(mot))[1];
 
@@ -35,14 +35,31 @@ const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const lerp = (a, b, t) => a + (b - a) * t;
 const matFeuille = (M, h, k) => [M.f0, M.f1, M.f2][Math.min(2, Math.floor(h(k, 97) * 3))];
 
-// Les outils d'un port : contexte du portrait, matériaux, aléa, état.
-function outils(P, M, h, etat) {
-  return {
-    P, M, h, etat, E: etat.echelle,
+// Les outils d'un port : contexte du portrait, matériaux, aléa, état. `face` = azimut qui
+// regarde la caméra (cuire_portraits.js) : une tête de tournesol de profil ne se lit pas.
+function outils(P, M, h, etat, face = 0) {
+  const o = {
+    P, M, h, etat, E: etat.echelle, face,
     nb: n => Math.max(etat.densite > 0 ? 1 : 0, Math.round(n * etat.densite)),
+    // Marque « Gouttes » (drosera) : tentacules rouges et perles de glu, détails cuits du ③.
     feuille(f, at, a, m, longCm, k) {
       if (etat.densite <= 0) return;
-      P.feuille(f.Feuille, f.Marque, at, dirA(a, m - etat.retombe), longCm, matFeuille(M, h, k), k);
+      P.feuille(f.Feuille, f.Marque, at, dirA(a, m - etat.retombe), longCm, matFeuille(M, h, k), k,
+        f.Marque === 'Gouttes' ? [M.glande, M.goutte] : null);
+    },
+    // ÉPI LONG (RELIQUATS ⑤) : la vue étire l'épi sur un segment (tiers haut de la hampe de la
+    // molène, bout du chanvre, de la lavande — PoserEpi) ; la pièce `tete_epi` fait 8 cm à
+    // l'échelle 1 → on l'EMPILE de `bas` à `haut`, un peu plus fine vers le sommet.
+    epiLong(f, bas, haut, a, k) {
+      if (f.Tete !== 'Epi' || !etat.fleurs) return o.tete(f, haut, a, k);
+      const r = recetteTete('Epi', etat.graines), taille = f.TeteCm * Math.sqrt(etat.echelle);
+      const pas = (r.rayonCm - 1) * echelleTete(r, taille) * 0.8;        // rayonCm = longueur + 1 cm de marge
+      const L = Math.hypot(haut[0] - bas[0], haut[1] - bas[1], haut[2] - bas[2]);
+      const n = Math.max(1, Math.round(L / pas));
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        o.tete(f, bas.map((v, j) => v + (haut[j] - v) * t), a + i * OR, k * 50 + i, f.TeteCm * (1 - 0.3 * t));
+      }
     },
     // `mure` : la tête mûre de la vue (graines, gousses) — en fin de cycle, ou forcée
     // (gousses vertes du haricot en pleine saison).
@@ -53,6 +70,8 @@ function outils(P, M, h, etat) {
       const mats = mure && !etat.graines ? (r.couches || [0]).map((_, i) => (i ? M.tige : M.vert)) : matsTete(M, r, etat, f.Tete);
       P.tete(f.Tete, at, dirA(a), taille * Math.sqrt(etat.echelle), mats, k, mure);
     },
+    // Tête qui REGARDE la caméra (tournesol), au lieu d'un azimut tiré.
+    teteFace(f, at, k) { o.tete(f, at, face, k); },
     // Épi / panicule du chaume (recettes « FicheChaume.* » du ③), à sa longueur `EpiCm`.
     epi(c, sorte, at, a, k) {
       const r = trouverVue(sorte === 'Panicule' ? 'FicheChaume.Panicule' : sorte === 'Barbu' ? 'BarbeCm' : 'EpiLargeCm');
@@ -65,6 +84,7 @@ function outils(P, M, h, etat) {
     },
     hampe(base, haut, rCm) { P.tube([base, add(base, [0.04 * (haut[0] - base[0]), 0.55 * (haut[1] - base[1]), 0.04 * (haut[2] - base[2])]), haut], rCm, rCm * 0.7, M.tige); }
   };
+  return o;
 }
 
 // Les stades de la vue où la hampe est montée (`StadesHampe`) → l'état la montre-t-il ?
@@ -82,7 +102,9 @@ function rosette(o, f) {
   }
   if (f.Pied) P.boule([0, 0.2, 0], Math.max(0.8, f.EpaisseurTigeCm * 2.2) * E, M.pied, 0.8);
   if (!hampeVisible(f, o.etat) || f.Hampes <= 0) return;
-  const H = f.HauteurAdulteCm * E;
+  // Hampe à la hauteur du MOTEUR quand la vue la lève (`HauteurHampeCm`, cuire_portraits.sorte) :
+  // la vue suit la hauteur lissée du moteur (molène 160 cm), pas la hauteur de la rosette.
+  const H = (f.HauteurHampeCm || f.HauteurAdulteCm) * E;
   for (let j = 0; j < f.Hampes; j++) {
     const a = j * OR + 0.7, ecart = f.Hampes > 1 ? 0.18 * f.RayonCm * E : 0.02 * f.RayonCm;
     const haut = polaire(ecart, a, H * (0.85 + 0.3 * h(j, 5)));
@@ -91,7 +113,7 @@ function rosette(o, f) {
       const t = (i + 1) / (f.FeuillesHampe + 1);
       o.feuille(f, [haut[0] * t, haut[1] * t * 0.85, haut[2] * t], a + i * OR, 0.5, long * 0.45 * (1 - 0.6 * t), 50 + i);
     }
-    o.tete(f, haut, a, 10 + j);
+    o.epiLong(f, [haut[0] * 0.66, haut[1] * 0.66, haut[2] * 0.66], haut, a, 10 + j);   // épi = tiers haut (vue)
   }
 }
 
@@ -173,4 +195,4 @@ function fichePrairie(port, C, base, hCm) {
       Panicule: !dactyle, Noeuds: 0, Panaches: 0, PanacheCm: 0 } };
 }
 
-module.exports = { OR, dirA, polaire, add, lerp, matFeuille, outils, rosette, tapis, rampante, fichePrairie };
+module.exports = { OR, dirA, polaire, add, lerp, matFeuille, trouverVue, outils, rosette, tapis, rampante, fichePrairie };
