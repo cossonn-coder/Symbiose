@@ -144,7 +144,7 @@ function manifeste(table, moteur, sortie) {
   const especes = {};
   for (const esp of Object.keys(moteur).sort()) {
     const s = sorte(table, moteur, esp);
-    especes[esp] = { port: s.genre === 'port' ? s.fiche.Forme : s.genre,
+    especes[esp] = { cle: moteur[esp].cle, port: s.genre === 'port' ? s.fiche.Forme : s.genre,
       ...Object.fromEntries(etats(moteur[esp]).map(e => [e.nom, { fichier: `${esp}_${e.nom}.png`, libelle: e.libelle }])) };
   }
   const doc = { taille_px: TAILLE, fond: 'transparent', ordre: ['jeune', 'mure', 'fin'],

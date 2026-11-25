@@ -78,6 +78,8 @@
 //                            journal `[AccesGestes]` — ACCÈS AUX GESTES ④
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
+//   --capture-portraits=encyclo:<clé>|magazine:<clé>  fiche ouverte et ses portraits
+//                            (PRÉCUISSON SPLATS ⑦, WorldView.BancPortraits.cs)
 
 using Godot;
 using System.Globalization;
@@ -301,6 +303,7 @@ namespace Symbiose
 			LancerBancObjetEnMain();  // objet en main, récolte au fruit (WorldView.BancObjetEnMain.cs)
 			LancerTesteurCapture();   // mode testeur : plan de test du banc (WorldView.Testeur.cs, ⑤)
 			LancerBancClicMur();      // D118 (c) : le bois devant la maison est-il vu par le clic ? (WorldView.BancClicMur.cs)
+			LancerBancPortraits();    // fiche encyclopédie / magazine et ses portraits (WorldView.BancPortraits.cs, splats ⑦)
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
 				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };

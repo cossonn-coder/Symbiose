@@ -75,6 +75,9 @@ namespace Symbiose
 		// FICHE PRODUIT — argument de vente verbatim + bouton Acheter
 		// ---------------------------------------------------------------------
 
+		// Ouvre directement une fiche produit (banc de capture des portraits, ⑦).
+		internal void OuvrirFiche(string espece) => AfficherFiche(espece);
+
 		private void AfficherFiche(string espece)
 		{
 			ViderContenu();
@@ -99,6 +102,10 @@ namespace Symbiose
 			var titre = new Label { Text = f["espece"].AsString() };
 			titre.AddThemeFontSizeOverride("font_size", 22);
 			Contenu.AddChild(titre);
+
+			// Portrait mûr de l'espèce offerte (D6, splats ⑦).
+			if (Portraits.Magazine(espece) is Control portrait)
+				Contenu.AddChild(portrait);
 
 			// Niveaux 1..niveau_max, dans l'ordre. Clés JSON en chaîne ("1"…) —
 			// VERBATIM, aucune synthèse (comme EncyclopediePanel).

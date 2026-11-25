@@ -14,7 +14,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20** (`aba3663`, partiel) **+ ④bis fait 2026-11-20** (non commité) : couverture complétée là où une recette existe ; reste dessiné listé au compte rendu ④bis |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | **fait 2026-11-20** (non commité) — prémisse réfutée : le kit ne sert plus qu'aux plantes SANS fiche ; effet réel = gerbes des arbres (cf. compte rendu ⑤) **+ ⑤bis fait 2026-11-20** (non commité) : ports des herbacées/prairie/lianes en pièces sous ×4 (feuilles à tous les paliers, organes dès ×2) |
 | ⑥ | `06_portraits.md` — 162 portraits | **fait 2026-11-25** (non commité) — 156 portraits (52 espèces, pas 54), cf. compte rendu ⑥ |
-| ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
+| ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | **fait 2026-11-25** (non commité) — clôture journal/BACKLOG/DETTE laissée à l'orchestrateur |
 
 ## Règles du sprint
 - Si la porte du ① échoue (pièce illisible à 3-9 px, ou ton/orientation non
@@ -498,6 +498,36 @@ fraisier, piment, achillée, bourrache, trèfle, noyer, chêne, pommier, noiseti
 **Vérif.** Golden `bce813af…` **INTACT**. Pas de C# touché (pas de build). LDC : cuire_portraits 130,
 controle 33, modules `portraits/` ≤ 166 LDC (table_cs) (tous 🟢).
 
+### ⑦ Portraits dans l'encyclopédie et le magazine (2026-11-25) — FAIT
+**Fait.** `visuals/Portraits.cs` (lit `assets/portraits/portraits.json` une fois ; `Rangee(clé,
+niveau)` / `Magazine(clé)` → vignettes 240×240 à ×1, Nearest, libellé du manifeste dessous).
+`EncyclopediePanel` : fiche de type `plante` → rangée des portraits DÉVOILÉS, du niveau 1 au
+`niveau_max` de la fiche (1 = jeune ; 2 = jeune + mûre ; 3 = les trois) — **choix : les trois
+côte à côte au niveau 3** (728 px, tient dans les 752 px du panneau ; montrer seulement « fin »
+cachait la plante mûre au niveau le plus savant). `MagazinePanel` : portrait mûr sous le titre.
+Espèce jamais vue = pas de fiche (pont) = pas de portrait. **Aucune clé de pont nouvelle**
+(`niveau_max` existait), golden et pont intacts.
+
+**Prémisse corrigée.** Le pont nomme les plantes par leur **clé catalogue** (`tomate`,
+`bourse_pasteur`), les portraits sont rangés par **classe** (`Tomato`) : le manifeste ⑥ n'avait
+pas la correspondance. → `moteur.py` exporte `cle` (depuis `PLANT_CATALOGUE`/`PERENNIAL_CATALOGUE`,
+bijection 52/52 vérifiée contre les `FICHES` de l'encyclopédie) et `cuire_portraits.js --manifeste`
+l'écrit : `portraits.json` régénéré, **seul ajout = 52 lignes `"cle"`** ; aucun PNG recuit.
+
+**Chargement (export).** `GD.Load<Texture2D>` sur des textures IMPORTÉES, comme `SpriteLoader` :
+156 `assets/portraits/*.png.import` créés par `godot --headless --import` (`compress/mode=0` sans
+perte, sans mipmap) — **à committer**. Pas d'`Image.LoadFromFile` (aucun avertissement « will not
+work on export » au journal). L'import a semé ~210 `.import` parasites dans `docs/` et `sprints/`
+→ supprimés. Le manifeste JSON est lu par `FileAccess` comme celui des splats (même filtre
+d'export à prévoir au t7).
+
+**Banc VM.** `world/WorldView.BancPortraits.cs` + `tools/capture_vm.sh -Z encyclo:CLÉ|magazine:CLÉ`
+(avec `-P` : niveau 3). Captures relues : tomate N3 (3 portraits), magazine pommier et sapin.
+Niveaux 1 et 2 non capturables au banc (pas de debug « palier 1/2 ») → F5.
+
+**Vérif.** Golden `bce813af…` **INTACT**. `dotnet build` vert, **0 avertissement**. LDC :
+Portraits 68, BancPortraits 24, EncyclopediePanel 140, MagazinePanel 142, Capture 190 (tous 🟢).
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 **④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
 fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
@@ -531,6 +561,16 @@ fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
   bascule ×1 → ×2 se voit-elle trop ?
 - **À calibrer** : la taille des feuilles de loin (myrtille, haricot nettement plus feuillus ;
   rosette de la molène plus petite) — même réglage que le point TAILLE du ④.
+
+**⑦ (encyclopédie, magazine)** — ouvrir la maison → Encyclopédie → Plantes, une espèce vue
+(niveau 1 : un portrait « jeune »), puis après maîtrise (debug `palier3`) : les trois.
+Magazine (après `palier3`) : chaque offre montre le portrait mûr.
+- Le portrait change-t-il bien avec le niveau ? Reste-t-il net (pas flou) sur le PC ?
+- **À juger** : trois portraits côte à côte au niveau 3 (vs le seul le plus avancé) ; libellés
+  sous les portraits (« hiver (nu) ») utiles ou à retirer ; ratés du ⑥ (sapin, bouleau, tournesol,
+  thym…) bien visibles ici — à reprendre ou non.
+- Premier lancement de l'éditeur Windows : il importe les 156 portraits (fichiers `.import` déjà
+  fournis, rien à régler).
 
 # Carnet de conception (historique)
 
@@ -610,5 +650,5 @@ Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
 quels : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`, `PoserPieceFeuille`,
 `PoserOrganeSplat`, `TouffeGerbe`. **⑤bis fait** (non commité) : ports en pièces sous ×4 (feuilles à tous les paliers, organes dès
 ×2, dessinés à ×0,5/×1). `PoserFoliolesSplat`, `OrganesSplatMinZoom` (SplatsBas.cs) s'ajoutent aux outils.
-**⑥ fait** (portraits `assets/portraits/` + `portraits.json`, cuisson `tools/splat/cuire_portraits.js`). **Prochain : ⑦** (`07_vue_encyclopedie.md`). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
+**⑥ fait** (portraits `assets/portraits/` + `portraits.json`, cuisson `tools/splat/cuire_portraits.js`). **⑦ fait** (`visuals/Portraits.cs`, encyclopédie + magazine, banc `capture_vm.sh -Z`) : **tous les tronçons faits** ; reste la clôture du sprint (journal, BACKLOG, DETTE) puis le F5 de Nico (④⑤⑦). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
 sans cœur, taille des feuilles de loin (⑤bis) = points F5 ouverts. Golden `bce813af…` intact.

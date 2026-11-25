@@ -121,6 +121,9 @@ namespace Symbiose
 		// FICHE — dispatchée par type : 3-niveaux OU mono-niveau + graphe
 		// ---------------------------------------------------------------------
 
+		// Ouvre directement une fiche (banc de capture des portraits, ⑦).
+		internal void OuvrirFiche(string cle) => AfficherFiche(cle);
+
 		private void AfficherFiche(string cle)
 		{
 			ViderContenu();
@@ -161,6 +164,11 @@ namespace Symbiose
 		{
 			int niveauMax = f["niveau_max"].AsInt32();
 			var niveaux = f["niveaux"].AsGodotDictionary();
+
+			// Portraits des niveaux atteints (D6, splats ⑦) — plantes seulement.
+			if (f["type"].AsString() == "plante"
+				&& Portraits.Rangee(f["cle"].AsString(), niveauMax) is Control rangee)
+				Contenu.AddChild(rangee);
 
 			for (int n = 1; n <= niveauMax; n++)
 			{

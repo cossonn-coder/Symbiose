@@ -3,7 +3,7 @@ SYMBIOSE — tools/splat/portraits/moteur.py (sprint PRÉCUISSON SPLATS ⑥)
 Ce que le MOTEUR sait d'une espèce, pour ses portraits (lecture seule, golden intact).
 
 Sortie JSON (stdout) : pour chaque classe du catalogue (`plants/catalogue.py`, toutes
-tables) → cycle de vie (`life_cycle`, `deciduous`), stades (nom, hauteur, rayon de
+tables) → clé du catalogue (⑦), cycle de vie (`life_cycle`, `deciduous`), stades (nom, hauteur, rayon de
 canopée) ; et pour les espèces demandées en argument (`Espece:sem1,sem2`), la
 STRUCTURE de segments rejouée par `tools.export_structure._grow` à ces âges — le
 squelette du portrait (lianes et arbres, comme le prototype tomate).
@@ -40,8 +40,20 @@ def especes() -> dict[str, type]:
     return out
 
 
-def fiche(cls) -> dict:
+def cles_catalogue() -> dict[str, str]:
+    """Classe → clé du catalogue (`tomate`, `bourse_pasteur`…) : la clé que le pont
+    donne aux fiches d'encyclopédie et aux offres du magazine (⑦). Tables à clés
+    d'espèce seulement (WEED_CATALOGUE est indexée par archétype)."""
+    out: dict[str, str] = {}
+    for table in (C.PLANT_CATALOGUE, C.PERENNIAL_CATALOGUE):
+        for cle, cls in table.items():
+            out.setdefault(cls.__name__, cle)
+    return out
+
+
+def fiche(cls, cle: str | None) -> dict:
     return {
+        "cle": cle,
         "life_cycle": cls.life_cycle,
         "deciduous": bool(cls.deciduous),
         "stades": [{"nom": g.name, "hauteur_cm": g.canopy_height, "rayon_cm": g.canopy_radius}
@@ -51,7 +63,8 @@ def fiche(cls) -> dict:
 
 def main(args: list[str]) -> None:
     table = especes()
-    doc = {nom: fiche(cls) for nom, cls in sorted(table.items())}
+    cles = cles_catalogue()
+    doc = {nom: fiche(cls, cles.get(nom)) for nom, cls in sorted(table.items())}
     for arg in args:
         nom, ages = arg.split(':')
         structures = []
