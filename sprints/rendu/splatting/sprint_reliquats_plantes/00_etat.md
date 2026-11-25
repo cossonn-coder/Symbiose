@@ -11,12 +11,12 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 ## Carte des tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_memoire_x32.md` — budget de précuisson 1 Go, plafonds relevés, ×32 cuit | **fait 2026-11-25** (non commité) |
-| ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** (non commité) |
-| ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** (non commité) |
-| ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | **fait 2026-11-25** (non commité) |
-| ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | **fait 2026-11-25** (non commité) |
-| ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | **fait 2026-11-25** (non commité) |
+| ① | `01_memoire_x32.md` — budget de précuisson 1 Go, plafonds relevés, ×32 cuit | **fait 2026-11-25** `b5509b1d` |
+| ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** `60d40f99` |
+| ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** `c90e304c` |
+| ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | **fait 2026-11-25** `fca98c1a` |
+| ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | **fait 2026-11-25** `1175e338` |
+| ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | **fait 2026-11-25** `03e792db` |
 
 ## Décisions (Nico, 2026-11-25)
 - E1 Trois sprints en séquence, sans F5 entre eux.
@@ -353,7 +353,7 @@ paliers ×0,5→×32 sur la plante visée ; **Maj+F11** compare à l'ancien dess
 chargement (S3) ; recette dédiée plantain (à placer) ; framboisier caduc au moteur (candidat dette).
 
 ## §REPRISE
-**①→⑥ faits : sprint S1 terminé côté code** (clôture : journal, mémoire, commit/push, refactor = orchestrateur).
+**SPRINT S1 CLOS côté code le 2026-11-25** (①→⑥, golden `bce813af…` intact, refactor : rien à scinder, journal 201).
 Prochaine étape : `/conception` de **S2 (arbres : bois lissé sans joint, écorce cuite, brins de graminées,
 portraits d'arbres)**. F5 complet après S3, avec la section « F5 consolidé » ci-dessus.
 Repères ⑥ : tête du tournesol de face et épi empilé (`PoserTeteSplat` / `PoserEpiEmpile`,

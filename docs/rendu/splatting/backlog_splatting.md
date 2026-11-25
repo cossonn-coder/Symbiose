@@ -29,10 +29,10 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
     de ce qu'il faut vérifier.
 - **Séquence « style homogène »** (conçue le 2026-11-25, `conception_reliquats_plantes.md`) —
   trois sprints sans F5 intermédiaire, F5 complet de Nico à la fin :
-  - **S1 reliquats plantes** — **CONÇU, prêt** → `sprints/rendu/splatting/sprint_reliquats_plantes/`
+  - **S1 reliquats plantes** — **CLOS côté code le 2026-11-25** (①→⑥, golden intact, F5 consolidé dans son `00_etat.md`, à jouer après S3 ; restes : recette dédiée plantain, framboisier caduc au moteur, myrtille fruitière = D134) → `sprints/rendu/splatting/sprint_reliquats_plantes/`
     (×32 confirmé par capture puis corrigé sous un budget de précuisson de 1 Go, 3 classes de
     taille, tous les détails des feuilles cuits, trèfle/thym/lavande/fétuque, portraits non-arbres) ;
-  - **S2 arbres** — à concevoir : RENDU seul (moteur intact), tube lissé sans angles abrupts +
+  - **S2 arbres** — **PROCHAIN, à concevoir** (`/conception`) : RENDU seul (moteur intact), tube lissé sans angles abrupts +
     écorce cuite par essence, brins/rubans des graminées (même technique), masses ×4 des
     arbres, portraits d'arbres (sapin, bouleau, cerisier, figuier), fleurs d'arbre ×4 clairsemées ;
   - **S3 = (b) + (g)** — à concevoir après S2 : lisière sur le bois de S2, puis écran de chargement.
