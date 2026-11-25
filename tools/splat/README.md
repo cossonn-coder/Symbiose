@@ -36,6 +36,11 @@ Ne recuire que les recettes modifiées (D2 : chaque régénération grossit l'hi
 Organes (③, 22 recettes) : même commande filtrée par
 `grep -E '^(tete_|fruit_|gousse|chaton|epi_|panicule|bouton|fleuron)'`.
 
+Classes de taille (RELIQUATS ②) : `lib/classes.js` fixe, par recette, 1 à 3 échelles k
+(planche `<recette>_x<z>.png` pour k = 1, inchangée à l'octet ; `<recette>_x<z>_k<100·k>.png`
+sinon) ; `node tools/splat/inventaire_tailles.js` relit les fiches de la vue et propose les k.
+Une classe retirée efface ses planches ; une planche neuve reçoit son `.png.import` (« keep »).
+
 Options de `cuire.js` : `--sortie` (défaut `assets/splats`), `--controle DOSSIER`
 (planche de contrôle humaine), `--lacets N` (défaut : la recette, sinon 8),
 `--inclinaisons` (défaut : la recette, sinon `-30,0,30`),
@@ -52,6 +57,8 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `lib/iso.js` | caméra de cuisson calée sur `WorldView.Projection.cs` (0,39 px/cm × palier) |
 | `lib/codes.js` | passes ink-studio → codes de palette indexée (ton + orientation) |
 | `lib/planche.js` | rangement en planches (une par palier) + manifeste JSON |
+| `lib/classes.js` | RELIQUATS ② : classes de taille par recette (k, taille nominale dans la mesure de la vue, correction √2 des organes ronds) |
+| `inventaire_tailles.js` | RELIQUATS ② : tailles réelles demandées par la vue (fiches lues par `portraits/table_cs.js`) → k proposés |
 | `lib/controle.js` | planche de contrôle : rampe 5 tons + soleil fixe (règle du shader) |
 | `controle_feuilles.js` | planche de contrôle de toute la bibliothèque (relue sur disque) |
 | `lib/limbe.js` | un limbe en volume depuis un contour 2D de la vue (pli, gaufrage, pétiole) |
@@ -83,5 +90,7 @@ recette »), `trous` (paliers, variantes et degrés cuits) ; par pièce `palier`
 `taille_px` (touffes du kit, planche `kit`), `trou` + `degre` (pièces trouées), `inclinaison_deg`, `variante`, `lacet_deg`
 (0 = organe vers l'est, sens trigo vu du dessus), `planche`, `rect` [x, y, w, h],
 `attache` [x, y] en px de la pièce (là où l'organe tient à sa tige).
+RELIQUATS ② : `classes` [{ `echelle`, `taille_cm` }], `taille_nominale_cm`, `rond` (manifeste) et
+`echelle` + `taille_cm` (pièce) — `taille_cm` est dans la MESURE DE LA VUE (cf. `lib/classes.js`).
 ③ : `couches` (manifeste) et `couche` (pièce) — un organe multicolore donne une pièce
 PAR COUCHE et par vue, même attache ; la vue pose une palette par couche.

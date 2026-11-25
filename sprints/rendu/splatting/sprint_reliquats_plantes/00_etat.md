@@ -12,7 +12,7 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_memoire_x32.md` — budget de précuisson 1 Go, plafonds relevés, ×32 cuit | **fait 2026-11-25** (non commité) |
-| ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | à faire |
+| ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** (non commité) |
 | ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | à faire |
 | ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | à faire |
 | ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | à faire |
@@ -75,14 +75,71 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
   `mesures/01_pommier_x32_{avant,apres}.png`, `mesures/01_pommier_x16_apres.png`, `mesures/01_journal.txt`.
 - Golden `bce813af…` INTACT ; build vert, 0 avertissement ; `assets/splats/` 26 Mo.
 
+### ② Classes de taille — fait 2026-11-25
+- **Neuf `tools/splat/lib/classes.js`** : par recette, `nominalCm` (dans la MESURE DE LA VUE : longueur
+  `FeuillePosee.Long`, rayon du disque d'une tête/fruit, longueur d'un épi), `rond`, et 1-3 échelles k
+  sur l'échelle ×√2. Une classe = la MÊME recette photographiée au zoom z·k (aucune resculpture) →
+  la classe k = 1 garde ses planches **à l'octet** (vérifié : aucun PNG k = 1 modifié au `git status`) ;
+  les autres vont dans `<recette>_x<z>_k<100k>.png`. Manifeste : `classes`, `taille_nominale_cm`, `rond`,
+  et `echelle` + `taille_cm` par pièce. **√2 corrigé une fois, dans l'outil** : pour un organe `rond`,
+  `taille_cm` = rayon sculpté × k × √2 (la taille du disque de l'ancien dessin qui a la même emprise).
+- **Neuf `tools/splat/inventaire_tailles.js`** : relit les fiches (via `portraits/table_cs.js`) avec les
+  formules recopiées des ports et propose les k ; sortie : `mesures/02_inventaire_tailles.txt`.
+- `cuire.js` (axe des classes), `lib/planche.js` (champs, `.png.import` « keep » écrit pour toute planche
+  neuve, planches d'une classe retirée effacées — motif strict), `lib/controle.js` (clé de fusion des
+  couches + classe ; 1ʳᵉ ligne de la planche de contrôle = les classes à ×8).
+- **Vue** : `SplatPlanches.Classe(recette, tailleCm)` (plus proche EN RAPPORT ; 0 = nominale) ; clé de pièce
+  + échelle ; pièce VIDE (organe sous le pixel) → la classe au-dessus (comme le plancher d'un pixel de
+  l'ancien dessin). Crochets : feuilles `fe.Long` ; limbe générique `2·rx/(PxPerCmX·√2)` ; têtes `r/pxx`
+  (aigrette ×1,3) ; fruits `r/PxPerCmX` (ports, lianes, arbres) ; boule `r` ; corolle `FleurRayonCm` ;
+  épi/panicule `len` ; épi du plantain 1,2 cm. Attaches qui dépendaient de la taille (boule 1,8 cm,
+  ombelle 2,75 cm) × k. Fruits génériques (PaliersHauts), gousse, chaton, bouton : classe nominale.
+- **Table recette → k (taille vue en cm)** : ovale 0,35/1/2 (3,2/9/18) · scie 0,71/1/1,41 · scie_gaufrée
+  0,25/0,5/1 (2,3/4,5/9) · lancéolée 0,5/0,71/1 · lancéolée_gaufrée 0,5/1/2 · dentée 0,5/0,71/1 · spatule
+  0,5/0,71/1 · lobée 0,35/0,71/1,41 (4,2/8,5/17) · cœur 0,35/1/2 · lierre 0,71/1 · palmée 0,5/1/1,41 · triade
+  0,35/0,5/0,71 (4,9/7/9,9) · plume 0,18/0,35/0,71 (3,2/6,3/12,8) · ruban 0,125/0,25/0,35 (3,8/7,5/10,5) ·
+  cuillère 0,71/1/1,41 · composée 0,35/1/1,41 (6,3/18/25) · paume, aiguille 1 ; têtes (rayon vu) :
+  capitule, chapelet, ombelle, papillon, soleil, trompette 0,71 seule (√2 seul, une espèce) · bouquet
+  0,71/1,41 · épi 0,5/0,71/1,41 · boule 0,35/0,71/1,41 · grappe 0,35/1,41 (2 espèces) · étoile 0,25/0,5/1 ·
+  pendante 0,5/0,71/1 · corolle 0,5/0,71 ; fruit_globe 0,25/0,5/1 (0,7/1,4/2,8) · fruit_long 0,35/0,5/0,71 ;
+  épis, panicule 0,71/1 ; gousse, chaton, bouton 1. Moins de 3 classes = plage étroite (≤ 2 espèces ou
+  rapport < 1,6), justifié dans l'inventaire.
+- **Écarts au kickoff (6)** : (a) **paume gardée à 1 classe** (courgette 21,6-30 cm contre 20) : sa planche
+  ×32 est déjà à 2042×17 394 px, ×1,41 la doublerait (≈ 140 Mo RGBA en jeu) pour −33 % d'écart → F5 ;
+  (b) les classes k = 0,5 / 0,25 / 2 donnent les MÊMES octets que la classe 1 d'un autre palier
+  (ex. `x16_k50` = `x8`) : doublons acceptés (poids faible), dédoublonnage possible plus tard ;
+  (c) 16 recettes n'ont plus de k = 1 (toutes les têtes rondes à une espèce, lobée, triade, plume, ruban,
+  fruit_long, corolle) : leurs planches d'avant sont effacées (112 PNG + `.import`).
+- **Mesures** (VM, charge 6-20 pendant la cuisson, n=1) : 34 recettes recuites, `xargs -P 10`, **3 h 02 de mur**,
+  1 352 min CPU, 53 430 pièces ; plus long : `tete_soleil` 35 min, palmée et lancéolée gaufrée (k=2/1,41)
+  les dernières. Déterminisme : 2 cuissons `tete_etoile` et `fruit_globe` identiques à l'octet, k = 1 =
+  planches d'avant. **Poids `assets/splats/` 26 → 50 Mo** (47,5 Mo ; seuil 200). Journal :
+  `mesures/02_journal_cuisson.txt`.
+- Captures avant (`SYMBIOSE_SPLATS=0`) / après, `mesures/02_<espèce>_x<z>_{avant,apres}.png` (fraisier ×8,
+  courgette ×16, myrtille et haricot ×1/×2, molène ×2) : courgettes à la taille du dessin (avant ~×2),
+  fraises et fleurs du fraisier ramenées à celle du dessin (fleurs un peu plus petites), rosette de la
+  molène à la taille du dessin (avant ~½), triades du haricot en k 0,35-0,71. **Restent** : l'épi de
+  la molène, que l'ancien dessin étire le long de la hampe, est bien plus court en pièce (même cause
+  qu'au ③ du sprint (a), la taille ne règle pas la FORME) ; paume de courgette pâle et plate (③ ancien).
+  Planches de contrôle : `mesures/02_controle_{fruit_globe,feuille_ovale}.png` (1ʳᵉ ligne = classes).
+- Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : SplatPlanches 229 · Splats 163 ·
+  SplatsOrganes 68 · cuire.js 170 · planche.js 69 · classes.js 50 · inventaire 60 (tous 🟢).
+
 ## F5 (à remplir par les tronçons, consolidé au ⑥)
 - ① À ×32 sur un tournesol et un pommier : les feuilles et les fleurs sont en volume (splats).
   L'à-coup au premier passage à ×32 (gel d'environ 1-2 s par grande plante sur la VM) est-il
   gênant sur le PC ? Touche C : lire `précuisson X/1024 Mo` sur la HD 4600.
+- ② Maj+F11 pour comparer : fraisier ×8, courgette ×16, myrtille et haricot ×1/×2, molène ×2, une
+  carotte, un pommier fruité. Les pièces ont-elles la taille de l'ancien dessin ? Les sauts de classe
+  (une feuille qui grandit passe d'une classe à l'autre, ×1,4 à ×2,8 d'un coup) se voient-ils ?
+  Feuilles de courgette (une seule classe, jusqu'à −33 %) : assez grandes ? Épi de la molène trop court.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire »
-(① fait : prochain = ② `02_classes_taille.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
+(①② faits : prochain = ③ `03_details_cuits.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
+Classes de taille : `tools/splat/lib/classes.js` (+ `inventaire_tailles.js`) ; toute recette neuve ou
+recuite (③④) passe par elle — y ajouter son entrée (sinon k = 1 seule). Une recuisson complète coûte
+~3 h de mur [VM, n=1] : ne recuire que les recettes touchées.
 Outils hérités du sprint (a) : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`,
 `PoserPieceFeuille`, `PoserOrganeSplat`, `PoserFoliolesSplat`, `TouffeGerbe`,
 `tools/splat/cuire.js`, `cuire_portraits.js`.

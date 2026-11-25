@@ -18,8 +18,11 @@
 // (capture « avant » sur la VM). Éteint, ou hors palette indexée (F11 OFF, dessin
 // direct), ou pièce absente : l'ANCIEN dessin vectoriel est tracé, inchangé.
 //
-// TAILLE : une pièce est cuite à la taille NOMINALE de sa recette (zooms entiers, pas
-// de mise à l'échelle) — la longueur de feuille de la vue n'est pas suivie (point F5).
+// TAILLE (RELIQUATS ②) : chaque recette est cuite en 1-3 CLASSES de taille ; le crochet
+// passe la taille réelle de l'organe, celle que l'ancien dessin utilisait (longueur
+// `FeuillePosee.Long` d'une feuille, rayon du disque d'une tête ou d'un fruit, longueur
+// d'un épi), et SplatPlanches.Classe prend la classe la plus proche. Taille 0 = non
+// suivie (gousse, chaton, bouton…) → la classe nominale.
 //
 // 📖 Pédagogie Godot : un port accumule ses triangles dans un LOT (un seul envoi,
 // LotTriangles) peint à la fin. Une pièce est une TEXTURE, hors du lot : pour garder
@@ -108,13 +111,14 @@ namespace Symbiose
 			// Inclinaison au repos : montée du bout (HautZ) sur l'emprise au sol (PointFeuille).
 			float sol = Mathf.Max(fe.Long * (1f - 0.6f * fe.Dressee), 0.01f);
 			return PoserPieceFeuille(recette, PointFeuille(fe, 0f, 0f), Mathf.RadToDeg(Mathf.Atan2(fe.HautZ, sol)),
-				WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y), fe.K, col);
+				WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y), fe.K, col, fe.Long);
 		}
 
 		/// <summary>Pose une feuille-pièce à son attache `ancre` : inclinaison cuite la plus proche
-		/// de `incDeg`, lacet de la direction ÉCRAN `dirEcran`, variante et trou au hash de `k`.
+		/// de `incDeg`, lacet de la direction ÉCRAN `dirEcran`, variante et trou au hash de `k`,
+		/// classe de taille la plus proche de `longCm` (longueur de la feuille, cm au sol).
 		/// Partagé par les ports (PoserFeuilleSplat) et le chemin générique (④bis).</summary>
-		private bool PoserPieceFeuille(string recette, Vector2 ancre, float incDeg, Vector2 dirEcran, int k, Color col)
+		private bool PoserPieceFeuille(string recette, Vector2 ancre, float incDeg, Vector2 dirEcran, int k, Color col, float longCm)
 		{
 			if (!SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes)) return false;
 			int inc = PlusProche(incs, incDeg);
@@ -122,8 +126,9 @@ namespace Symbiose
 			int trou = TrouFeuille(k);
 			int v = trou > 0 ? 0 : Variante(k, variantes);   // trous cuits sur la variante 0 (②)
 			float z = WorldView.CurrentZoom;
-			if (!SplatPlanches.Trouver(recette, z, 0, inc, lacet, v, trou, out var p)
-				&& (trou == 0 || !SplatPlanches.Trouver(recette, z, 0, inc, lacet, v, 0, out p))) return false;
+			int e = SplatPlanches.Classe(recette, longCm);
+			if (!SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, trou, out var p)
+				&& (trou == 0 || !SplatPlanches.Trouver(recette, z, e, 0, inc, lacet, v, 0, out p))) return false;
 			PoserPieceSplat(p, ancre, PaletteIndexee.Palette(col));
 			_feuillesSplat = true;
 			return true;
@@ -141,48 +146,56 @@ namespace Symbiose
 
 		// --- Têtes et fruits ------------------------------------------------------
 
-		/// <summary>Tête de port en pièce splat, une palette par couche (③) ; false = rien posé.</summary>
-		private bool PoserTeteSplat(FichePort f, Vector2 pied, Vector2 sommet, Color c, bool fleur, int graine)
+		/// <summary>Tête de port en pièce splat, une palette par couche (③), classe de taille la plus
+		/// proche de `rayonCm` (rayon du disque de l'ancien dessin) ; false = rien posé.</summary>
+		private bool PoserTeteSplat(FichePort f, Vector2 pied, Vector2 sommet, Color c, bool fleur, int graine, float rayonCm)
 		{
 			string recette = RecetteTete(f.Tete, fleur);
 			if (!SplatsIci || recette == null || !SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes))
 				return false;
+			// Aigrette du capitule : l'ancien dessin en faisait une boule de 1,3 × le rayon.
+			if (f.Tete == FormeTete.Capitule && !fleur) rayonCm *= 1.3f;
 			// Attache de la recette : la base de l'épi (tiers haut de la hampe dans la vue), le
-			// foyer des rayons de l'ombelle (≈ 2,75 cm sous le plateau), le sommet ailleurs.
+			// foyer des rayons de l'ombelle (≈ 2,75 cm sous le plateau À LA CLASSE 1, donc × la
+			// classe posée), le sommet ailleurs.
+			float k = SplatPlanches.Classe(recette, rayonCm) / 100f;
 			Vector2 ancre = f.Tete switch
 			{
 				FormeTete.Epi => pied.Lerp(sommet, 0.66f),
-				FormeTete.Ombelle => sommet + new Vector2(0f, 2.75f * WorldView.PxPerCmZ),
+				FormeTete.Ombelle => sommet + new Vector2(0f, 2.75f * k * WorldView.PxPerCmZ),
 				_ => sommet,
 			};
 			int lacet = (int)(Hash01(605, graine, 0) * lacets) % Mathf.Max(lacets, 1) * 360 / Mathf.Max(lacets, 1);
-			return PoserCouches(recette, ancre, PlusProche(incs, 0f), lacet, Variante(graine, variantes), c, fleur);
+			return PoserCouches(recette, ancre, PlusProche(incs, 0f), lacet, Variante(graine, variantes), c, fleur, rayonCm);
 		}
 
-		/// <summary>Fruit de port en pièce splat (globe, ou long et couché) ; false = rien posé.</summary>
-		private bool PoserFruitSplat(Vector2 c, float allonge, Color col, int i)
+		/// <summary>Fruit de port en pièce splat (globe, ou long et couché), classe de taille la plus
+		/// proche de `rayonCm` (0 = non suivi) ; false = rien posé.</summary>
+		private bool PoserFruitSplat(Vector2 c, float allonge, Color col, int i, float rayonCm)
 		{
 			string recette = allonge <= 1f ? "fruit_globe" : "fruit_long";
 			if (!SplatsIci || !SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes)) return false;
 			// Même direction que la capsule vectorielle (PoserFruit) : angle au hash du fruit.
 			float a = Mathf.Tau * Hash01(359, GraineIndividu, i);
 			int lacet = LacetEcran(new Vector2(Mathf.Cos(a), Mathf.Sin(a) * 0.5f), lacets);
-			return PoserCouches(recette, c, PlusProche(incs, 0f), lacet, Variante(i + GraineIndividu, variantes), col, true);
+			return PoserCouches(recette, c, PlusProche(incs, 0f), lacet, Variante(i + GraineIndividu, variantes), col, true, rayonCm);
 		}
 
-		// Toutes les couches d'une pièce d'organe, chacune avec sa palette.
-		private bool PoserCouches(string recette, Vector2 ancre, int inc, int lacet, int v, Color c, bool fleur)
+		// Toutes les couches d'une pièce d'organe, chacune avec sa palette, à la classe de taille
+		// la plus proche de `tailleCm` (0 = classe nominale).
+		private bool PoserCouches(string recette, Vector2 ancre, int inc, int lacet, int v, Color c, bool fleur, float tailleCm)
 		{
 			if (!OrganesSplatIci) return false;   // ⑤bis : têtes et fruits dessinés sous ×2 (SplatsBas.cs)
 			string[] couches = SplatPlanches.Couches(recette);
 			var pal = PaletteIndividu();
 			float z = WorldView.CurrentZoom;
+			int e = SplatPlanches.Classe(recette, tailleCm);
 			bool posee = false;
 			for (int k = 0; k < couches.Length; k++)
 			{
 				// Tournesol fané : seul le disque de graines reste (comme PoserSoleil).
 				if (recette == "tete_soleil" && !fleur && couches[k] != "coeur") continue;
-				if (!SplatPlanches.Trouver(recette, z, k, inc, lacet, v, 0, out var p)) continue;
+				if (!SplatPlanches.Trouver(recette, z, e, k, inc, lacet, v, 0, out var p)) continue;
 				PoserPieceSplat(p, ancre, PaletteIndexee.Palette(CouleurCouche(recette, couches[k], c, pal)));
 				posee = true;
 			}

@@ -154,8 +154,8 @@ namespace Symbiose
 				if (c.Panicule) { PoserPanicule(cime, c.EpiCm * Mathf.Lerp(0.6f, 1f, g), pal, a + ig); continue; }
 				float t = c.Penche * AngleEpiMax * Mathf.Lerp(0.8f, 1.1f, Hash01(413, ig, a));
 				var dir = new Vector3(u.X * Mathf.Sin(t), u.Y * Mathf.Sin(t), Mathf.Cos(t));
-				if (PoserEpiSplat(c, cime, u, teinte, a + ig)) continue;   // PRÉCUISSON SPLATS ④bis
 				float len = c.EpiCm * Mathf.Lerp(0.6f, 1f, g);
+				if (PoserEpiSplat(c, cime, u, teinte, a + ig, len)) continue;   // PRÉCUISSON SPLATS ④bis
 				PoserEpiChaume(c, cime, dir, u, len, teinte, anthese ? pal.Flower : default);
 			}
 		}
@@ -191,7 +191,7 @@ namespace Symbiose
 		// Panicule en triangle ajouré du pâturin : des branches plus longues vers le bas.
 		private void PoserPanicule(Vector3 cime, float len, OrganPalette pal, int graine)
 		{
-			if (PoserPaniculeSplat(cime, pal.FruitUnripe, graine)) return;   // PRÉCUISSON SPLATS ④bis
+			if (PoserPaniculeSplat(cime, pal.FruitUnripe, graine, len)) return;   // PRÉCUISSON SPLATS ④bis
 			float pix = PixelInterne, pxx = WorldView.PxPerCmX;
 			Vector2 haut = Iso(cime.X, cime.Y, cime.Z + len), bas = Iso(cime.X, cime.Y, cime.Z);
 			Color fil = Ton(pal.FruitUnripe, 3), grain = Ton(pal.Flower, 3);

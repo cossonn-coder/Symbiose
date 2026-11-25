@@ -53,6 +53,7 @@ function ranger(pieces) {
         rgba.set(p.rgba.subarray(j * p.w * 4, (j + 1) * p.w * 4), ((py + j) * w + px) * 4);
       entrees.push({
         palier: p.palier, ...(p.taille ? { taille_px: p.taille } : {}),
+        ...(p.tailleCm ? { echelle: p.k, taille_cm: p.tailleCm } : {}),   // RELIQUATS ② (lib/classes.js)
         inclinaison_deg: p.inclinaison, variante: p.variante,
         ...(p.trou ? { trou: p.trou.type, degre: p.trou.degre } : {}), lacet_deg: p.lacet,
         ...(p.couche ? { couche: p.couche } : {}),
@@ -65,7 +66,13 @@ function ranger(pieces) {
   return { planches, entrees };
 }
 
-// Écrit `<dossier>/<recette>_<planche>.png` et `<dossier>/<recette>.json`.
+// Sidecar Godot d'une planche : « keep » = le PNG est copié tel quel (SplatPlanches.cs).
+const IMPORT = '[remap]\n\nimporter="keep"\n';
+
+// Écrit `<dossier>/<recette>_<planche>.png` (+ son `.import` s'il manque) et
+// `<dossier>/<recette>.json`. RELIQUATS ② : les planches de CETTE recette qui ne sont
+// plus produites (classe de taille retirée) sont effacées avec leur `.import` — motif
+// strict, une autre recette au nom plus long (`…_gaufree`) n'est jamais touchée.
 // Retourne la liste des fichiers écrits (chemins absolus).
 function ecrire(png, dossier, recette, meta, pieces) {
   fs.mkdirSync(dossier, { recursive: true });
@@ -75,9 +82,16 @@ function ecrire(png, dossier, recette, meta, pieces) {
   for (const [z, pl] of planches) {
     const f = path.join(dossier, `${recette}_${z}.png`);
     fs.writeFileSync(f, png.encode(pl.w, pl.h, pl.rgba, 4));
+    if (!fs.existsSync(f + '.import')) fs.writeFileSync(f + '.import', IMPORT);
     noms[z] = path.basename(f);
     fichiers.push(f);
   }
+  const motif = new RegExp(`^${recette}_(x[0-9_]+(_k\\d+)?|kit)\\.png$`);
+  for (const f of fs.readdirSync(dossier))
+    if (motif.test(f) && !Object.values(noms).includes(f)) {
+      fs.rmSync(path.join(dossier, f));
+      fs.rmSync(path.join(dossier, f + '.import'), { force: true });
+    }
   const manifeste = { recette, ...meta, planches: noms, pieces: entrees };
   const fj = path.join(dossier, `${recette}.json`);
   fs.writeFileSync(fj, JSON.stringify(manifeste, null, 1) + '\n');

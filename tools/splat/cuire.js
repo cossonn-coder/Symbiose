@@ -29,6 +29,10 @@
 //   • `tailles: [3, 5, 7, 9]` (touffes du kit des paliers bas, D4) → la pièce est
 //     cuite à ces largeurs en px internes au lieu des paliers (zoom déduit de
 //     `empriseCm`, la largeur vue de la pièce, sinon du rayon), rangée dans la planche « kit » ; `lacets`, `inclinaisons` propres.
+// RELIQUATS ② : CLASSES DE TAILLE (lib/classes.js, décision E8) — chaque palier est
+//   cuit à 1-3 échelles k de la recette : photo au zoom z·k, même monde sculpté ; la
+//   classe k = 1 garde ses planches et ses octets, les autres vont dans
+//   `<recette>_x<z>_k<100·k>.png` ; chaque pièce porte `echelle` et `taille_cm`.
 // ③ : `paliers` propres (le bois ne se cuit qu'aux paliers où il est large) et
 //   `couches: ['petales', 'coeur']` → une pièce PAR COUCHE et par vue (même
 //   cadrage, champ `couche` du manifeste ; lib/organe.js, lib/codes.js).
@@ -47,6 +51,7 @@ const { TROUS } = require('./lib/trous');
 const codes = require('./lib/codes');
 const planche = require('./lib/planche');
 const controle = require('./lib/controle');
+const { CLASSES, classesDe, suffixe } = require('./lib/classes');
 
 const RACINE = path.resolve(__dirname, '..', '..');
 const GRAINE = 7;
@@ -97,11 +102,12 @@ function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null) {
 }
 
 // Les prises de vue d'une recette : [{ trou, variante, inclinaison, zooms }],
-// zooms = [{ z, planche, taille? }]. Pièces saines d'abord, trouées ensuite.
+// zooms = [{ z, k, planche, taille?, tailleCm? }]. Pièces saines d'abord, trouées ensuite.
 function plan(recette, o) {
   const zooms = recette.tailles
-    ? recette.tailles.map(t => ({ z: t / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), planche: 'kit', taille: t }))
-    : o.paliers.map(z => ({ z, planche: planche.nomPalier(z) }));
+    ? recette.tailles.map(t => ({ z: t / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), k: 1, planche: 'kit', taille: t }))
+    : o.paliers.flatMap(z => classesDe(recette.nom).map(({ k, tailleCm }) =>
+      ({ z, k, tailleCm, planche: planche.nomPalier(z) + suffixe(k) })));
   const prises = [];
   for (const inclinaison of o.inclinaisons)
     for (let variante = 0; variante < recette.variantes; variante++)
@@ -129,14 +135,14 @@ function cuireRecette(recette, o) {
       for (let k = 0; k < o.lacets; k++) {
         const lacetDeg = (360 * k) / o.lacets;
         t = process.hrtime.bigint();
-        const photo = iso.photographier(ink, monde, recette.rayonCm, q.z, (lacetDeg * Math.PI) / 180);
+        const photo = iso.photographier(ink, monde, recette.rayonCm, q.z * q.k, (lacetDeg * Math.PI) / 180);
         const couches = recette.couches || [null];
         const ps = couches.map((_, c) => codes.piece(photo, monde, tons, c));
         const dt = Number(process.hrtime.bigint() - t) / 1e6;
-        const cle = q.taille ? 't' + q.taille : q.z;
+        const cle = q.taille ? 't' + q.taille : q.z * q.k;
         const [n, s] = temps.photo.get(cle) || [0, 0];
         temps.photo.set(cle, [n + 1, s + dt]);
-        ps.forEach((p, c) => pieces.push({ palier: q.z, planche: q.planche, taille: q.taille, trou, inclinaison,
+        ps.forEach((p, c) => pieces.push({ palier: q.z, planche: q.planche, taille: q.taille, k: q.k, tailleCm: q.tailleCm, trou, inclinaison,
           variante, lacet: lacetDeg, ...(couches[c] ? { couche: couches[c], ic: c } : {}), ...p }));
       }
   }
@@ -155,7 +161,14 @@ function recadrer(spec) {
 function ecrireControle(dossier, nom, pieces, o) {
   pieces = controle.fusionner(pieces);   // ③ : couches d'une même vue superposées
   if (pieces.some(p => p.taille)) return ecrireControleKit(dossier, nom, pieces);
-  const lignes = [], zooms = [];
+  // RELIQUATS ② : une ligne par classe de taille (×8, vue de face), puis les lignes
+  // d'avant sur la classe la plus proche de k = 1.
+  const ks = [...new Set(pieces.map(p => p.k))];
+  const kRef = ks.reduce((b, k) => (Math.abs(Math.log(k)) < Math.abs(Math.log(b)) ? k : b));
+  const classes = ks.map(k => pieces.find(p => p.k === k && p.palier === 8 && p.lacet === 0 && p.inclinaison === 0
+    && p.variante === 0 && !p.trou && p.w > 0)).filter(Boolean);
+  pieces = pieces.filter(p => p.k === kRef);
+  const lignes = [classes], zooms = [8];
   for (const z of o.paliers)
     for (const inc of o.inclinaisons) {
       lignes.push(pieces.filter(p => p.palier === z && p.inclinaison === inc && p.variante === 0 && !p.trou && p.w > 0));
@@ -205,6 +218,8 @@ function principal() {
     lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
     ...(recette.vue ? { vue: recette.vue } : {}), ...(recette.notes ? { notes: recette.notes } : {}),
     ...(recette.couches ? { couches: recette.couches } : {}),
+    ...(CLASSES[recette.nom] && !recette.tailles ? { classes: classesDe(recette.nom).map(c => ({ echelle: c.k, taille_cm: c.tailleCm })),
+      taille_nominale_cm: CLASSES[recette.nom].nominalCm, rond: !!CLASSES[recette.nom].rond } : {}),
     ...(recette.trous ? { trous: { paliers: PALIERS_TROUS, variantes: TROUS_VARIANTES,
       degres: TROUS.filter(Boolean) } } : {}),
     attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'

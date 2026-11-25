@@ -29,6 +29,12 @@
 //    AtlasPages) : on ne garde que celles du palier courant (×16/×32 = 225 et
 //    835 Mo RGBA si tout était chargé [somme des planches, mesurée au ④]).
 //
+// CLASSES DE TAILLE (RELIQUATS ②, tools/splat/lib/classes.js) : une recette est cuite
+// à 1-3 échelles (champ `echelle` ×100 et `taille_cm` de chaque pièce, dans la MESURE
+// de la vue : longueur de feuille, rayon du disque d'une tête). `Classe` rend l'échelle
+// cuite la plus proche (en rapport) de la taille réelle que le crochet passe ; un
+// manifeste sans classes a une seule échelle, 100.
+//
 // 📖 Pédagogie (embarqué) : c'est un chargeur de « tuiles » depuis une flash
 // externe, à la demande, avec un cache borné à la page utile — on ne monte pas
 // toute la ROM en RAM pour afficher un écran.
@@ -49,8 +55,9 @@ namespace Symbiose
 		/// point d'attache (px de la pièce, coin haut-gauche = 0,0).</summary>
 		internal readonly record struct Piece(Texture2D Tex, Rect2I Rect, Vector2I Attache);
 
-		// Clé d'une pièce dans SA recette : palier ×2 (0,5 → 1), couche, vue, variante, trou.
-		private readonly record struct Cle(int Palier2, int Couche, int Inclinaison, int Lacet, int Variante, int Trou);
+		// Clé d'une pièce dans SA recette : palier ×2 (0,5 → 1), classe de taille (échelle ×100),
+		// couche, vue, variante, trou.
+		private readonly record struct Cle(int Palier2, int Echelle, int Couche, int Inclinaison, int Lacet, int Variante, int Trou);
 		private readonly record struct Brute(string Planche, Rect2I Rect, Vector2I Attache);
 
 		private sealed class Recette
@@ -59,6 +66,8 @@ namespace Symbiose
 			public string[] NomsCouches = { "" };
 			public int Lacets = 1, Variantes = 1;
 			public int[] Inclinaisons = { 0 };
+			// Classes de taille, croissantes : (échelle ×100, taille vue en cm ; 0 = inconnue).
+			public (int Echelle, float TailleCm)[] Tailles = { (100, 0f) };
 		}
 
 		// Une planche chargée = ses bandes (y0 de la bande dans la planche, texture).
@@ -92,17 +101,43 @@ namespace Symbiose
 		/// <summary>Noms des couches de la recette (un nom vide si une seule).</summary>
 		internal static string[] Couches(string recette) => RecetteDe(recette)?.NomsCouches;
 
+		/// <summary>Classe de taille (échelle ×100) la plus proche, EN RAPPORT, de `tailleCm` (mesure
+		/// de la vue) ; `tailleCm` ≤ 0 (taille non suivie par le crochet) → la classe la plus
+		/// proche de l'échelle nominale 100.</summary>
+		internal static int Classe(string recette, float tailleCm)
+		{
+			var t = RecetteDe(recette)?.Tailles;
+			if (t == null) return 100;
+			int best = t[0].Echelle;
+			float ecart = float.MaxValue;
+			foreach (var (e, cm) in t)
+			{
+				float d = tailleCm > 0f && cm > 0f ? Mathf.Abs(Mathf.Log(cm / tailleCm)) : Mathf.Abs(Mathf.Log(e / 100f));
+				if (d < ecart) { ecart = d; best = e; }
+			}
+			return best;
+		}
+
 		/// <summary>La pièce demandée, chargée au besoin ; false si elle n'existe pas ou
 		/// est vide (couche effacée à ce palier, profil d'une feuille fine…).
+		/// `echelle` : classe de taille (Classe) ; si sa pièce est VIDE (organe sous le pixel),
+		/// la classe au-dessus la remplace — comme l'ancien dessin, borné à un pixel.
 		/// `trou` : 0 sain, 1-2 morsure, 3-4 grêle (degré 1-2).</summary>
-		internal static bool Trouver(string recette, float palier, int couche, int inclinaison, int lacetDeg,
+		internal static bool Trouver(string recette, float palier, int echelle, int couche, int inclinaison, int lacetDeg,
 									 int variante, int trou, out Piece piece)
 		{
 			piece = default;
 			var r = RecetteDe(recette);
 			int p2 = Mathf.RoundToInt(palier * 2f);
-			if (r == null || !r.Pieces.TryGetValue(new Cle(p2, couche, inclinaison, lacetDeg, variante, trou), out var b)
-				|| b.Rect.Size.X <= 0 || b.Rect.Size.Y <= 0) return false;
+			if (r == null) return false;
+			Brute b = default;
+			bool trouvee = false;
+			foreach (var (e, _) in r.Tailles)
+			{
+				if (e < echelle || !r.Pieces.TryGetValue(new Cle(p2, e, couche, inclinaison, lacetDeg, variante, trou), out b)) continue;
+				if (b.Rect.Size.X > 0 && b.Rect.Size.Y > 0) { trouvee = true; break; }
+			}
+			if (!trouvee) return false;
 			OublierAutresPaliers(p2);
 			var pl = PlancheDe(recette, b.Planche, p2, r);
 			if (pl == null) return false;
@@ -137,6 +172,17 @@ namespace Symbiose
 			var r = new Recette { Lacets = m["lacets"].AsInt32(), Variantes = m["variantes"].AsInt32() };
 			if (m.TryGetValue("inclinaisons_deg", out var inc)) r.Inclinaisons = inc.AsInt32Array();
 			if (m.TryGetValue("couches", out var cs)) r.NomsCouches = cs.AsStringArray();
+			if (m.TryGetValue("classes", out var cl))
+			{
+				var tailles = new List<(int, float)>();
+				foreach (var v in cl.AsGodotArray())
+				{
+					var c = v.AsGodotDictionary();
+					tailles.Add((Mathf.RoundToInt(c["echelle"].AsSingle() * 100f), c["taille_cm"].AsSingle()));
+				}
+				tailles.Sort();   // croissantes : Trouver remonte vers la classe au-dessus
+				r.Tailles = tailles.ToArray();
+			}
 			foreach (var v in m["pieces"].AsGodotArray())
 			{
 				var p = v.AsGodotDictionary();
@@ -145,7 +191,8 @@ namespace Symbiose
 				int trou = 0;
 				if (p.TryGetValue("trou", out var t))
 					trou = p["degre"].AsInt32() + (t.AsString() == "grele" ? 2 : 0);
-				var cle = new Cle(Mathf.RoundToInt(p["palier"].AsSingle() * 2f), Mathf.Max(couche, 0),
+				int echelle = p.TryGetValue("echelle", out var e) ? Mathf.RoundToInt(e.AsSingle() * 100f) : 100;
+				var cle = new Cle(Mathf.RoundToInt(p["palier"].AsSingle() * 2f), echelle, Mathf.Max(couche, 0),
 					p["inclinaison_deg"].AsInt32(), p["lacet_deg"].AsInt32(), p["variante"].AsInt32(), trou);
 				r.Pieces[cle] = new Brute(p["planche"].AsString(), new Rect2I(rect[0], rect[1], rect[2], rect[3]),
 					new Vector2I(att[0], att[1]));

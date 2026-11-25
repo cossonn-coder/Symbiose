@@ -137,7 +137,7 @@ namespace Symbiose
 				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
 				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
 				Color col = FruitColor(pal, f.Maturite);
-				if (PoserFruitSplat(c, 1f, col, k)) continue;   // PRÉCUISSON SPLATS ④bis (fruit_globe)
+				if (PoserFruitSplat(c, 1f, col, k, 0f)) continue;   // PRÉCUISSON SPLATS ④bis (fruit_globe, taille non suivie)
 				if (!organes) { DrawPoint(c, rad * PointFruitPart, col); continue; }
 				// SS② : globe en 2 valeurs, PUIS le reflet spéculaire blanc. ④ indexé :
 				// le globe est un dôme qui s'éclaire côté soleil — pas de reflet fixe.

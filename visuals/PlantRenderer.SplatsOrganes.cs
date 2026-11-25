@@ -30,12 +30,13 @@ namespace Symbiose
 		private const float BouleSurAttacheCm = 1.8f;
 
 		/// <summary>Toutes les couches de `recette` en `ancre` : lacet de la direction ÉCRAN `dirEcran`
-		/// (au hash de `graine` si nulle), inclinaison la plus proche de 0, variante au hash.</summary>
-		private bool PoserOrganeSplat(string recette, Vector2 ancre, Vector2 dirEcran, Color c, int graine)
+		/// (au hash de `graine` si nulle), inclinaison la plus proche de 0, variante au hash, classe
+		/// de taille la plus proche de `tailleCm` (RELIQUATS ② ; 0 = taille non suivie → nominale).</summary>
+		private bool PoserOrganeSplat(string recette, Vector2 ancre, Vector2 dirEcran, Color c, int graine, float tailleCm = 0f)
 		{
 			if (!SplatsIci || !SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes)) return false;
 			int lacet = dirEcran == Vector2.Zero ? LacetHash(graine, lacets) : LacetEcran(dirEcran, lacets);
-			return PoserCouches(recette, ancre, PlusProche(incs, 0f), lacet, Variante(graine, variantes), c, true);
+			return PoserCouches(recette, ancre, PlusProche(incs, 0f), lacet, Variante(graine, variantes), c, true, tailleCm);
 		}
 
 		private int LacetHash(int graine, int lacets)
@@ -46,18 +47,18 @@ namespace Symbiose
 
 		// --- Chaume ---------------------------------------------------------------------
 
-		/// <summary>Épi de chaume posé à sa base, tourné vers le côté où penche son brin. Le seigle
-		/// est cuit retombant (Penche 0,7 dans la recette) ; sans barbe ni largeur : rien.</summary>
-		private bool PoserEpiSplat(FicheChaume c, Vector3 base3, Vector2 u, Color teinte, int graine)
+		/// <summary>Épi de chaume de `lenCm` posé à sa base, tourné vers le côté où penche son brin. Le
+		/// seigle est cuit retombant (Penche 0,7 dans la recette) ; sans barbe ni largeur : rien.</summary>
+		private bool PoserEpiSplat(FicheChaume c, Vector3 base3, Vector2 u, Color teinte, int graine, float lenCm)
 		{
 			string recette = c.BarbeCm > 0f ? "epi_barbu" : c.EpiLargeCm >= 1f ? "epi_ble" : null;
 			return recette != null && PoserOrganeSplat(recette, Iso(base3.X, base3.Y, base3.Z),
-				WorldView.WorldToScreenOffset(u.X, u.Y), teinte, graine);
+				WorldView.WorldToScreenOffset(u.X, u.Y), teinte, graine, lenCm);
 		}
 
-		/// <summary>Panicule du pâturin, posée au sommet du chaume, teinte des épillets verts.</summary>
-		private bool PoserPaniculeSplat(Vector3 cime, Color teinte, int graine) =>
-			PoserOrganeSplat("panicule", Iso(cime.X, cime.Y, cime.Z), Vector2.Zero, teinte, graine);
+		/// <summary>Panicule du pâturin de `lenCm`, posée au sommet du chaume, teinte des épillets verts.</summary>
+		private bool PoserPaniculeSplat(Vector3 cime, Color teinte, int graine, float lenCm) =>
+			PoserOrganeSplat("panicule", Iso(cime.X, cime.Y, cime.Z), Vector2.Zero, teinte, graine, lenCm);
 
 		// --- Gousses, chatons, fleurs ---------------------------------------------------------
 
@@ -73,19 +74,24 @@ namespace Symbiose
 		private bool PoserChatonSplat(Vector2 c, Color col, int k) =>
 			PoserOrganeSplat("chaton", c, Vector2.Zero, col, k);
 
-		/// <summary>Corolle à 5 pétales et cœur (tete_corolle : fleur SNES, fleur d'arbre).</summary>
+		/// <summary>Corolle à 5 pétales et cœur (tete_corolle : fleur SNES, fleur d'arbre), au rayon
+		/// de la fleur SNES de l'ancien dessin (FleurRayonCm).</summary>
 		private bool PoserCorolleSplat(Vector2 c, Color col, int k) =>
-			PoserOrganeSplat("tete_corolle", c, Vector2.Zero, col, k);
+			PoserOrganeSplat("tete_corolle", c, Vector2.Zero, col, k, FleurRayonCm);
 
 		/// <summary>Une fleur d'arbre des bouquets : bouton fermé (teinte de bouton de l'espèce,
 		/// sépales du feuillage) ou corolle ouverte.</summary>
 		private bool PoserFleurArbreSplat(Vector2 pos, in FleurArbre f, Color fleur, Color bouton) =>
 			f.Bouton ? PoserOrganeSplat("bouton", pos, Vector2.Zero, bouton, f.K) : PoserCorolleSplat(pos, fleur, f.K);
 
-		/// <summary>Boule de fleurons (pompon du trèfle, glomérule du dactyle) centrée en `c` : la
-		/// recette a sa tige sous la boule, on l'attache donc 1,8 cm plus bas.</summary>
-		private bool PoserBouleSplat(Vector2 c, Color col, int graine) =>
-			PoserOrganeSplat("tete_boule", c + new Vector2(0f, BouleSurAttacheCm * WorldView.PxPerCmZ), Vector2.Zero, col, graine);
+		/// <summary>Boule de fleurons (pompon du trèfle, glomérule du dactyle) de `rayonCm`, centrée en
+		/// `c` : la recette a sa tige sous la boule, on l'attache donc 1,8 cm × la classe plus bas.</summary>
+		private bool PoserBouleSplat(Vector2 c, Color col, int graine, float rayonCm)
+		{
+			float k = SplatPlanches.Classe("tete_boule", rayonCm) / 100f;
+			return PoserOrganeSplat("tete_boule", c + new Vector2(0f, BouleSurAttacheCm * k * WorldView.PxPerCmZ), Vector2.Zero,
+				col, graine, rayonCm);
+		}
 
 		// --- Prairie : plantain ---------------------------------------------------------------
 
@@ -116,7 +122,11 @@ namespace Symbiose
 		{
 			if (!SplatsIci || rx < LeafFloorRadiusPx / WorldView.CurrentZoom) return false;
 			if (!LeafProfiles.TryGetValue(_structure.SpeciesName, out var prof)) prof = DefaultLeaf;
-			return PoserPieceFeuille(RecetteLimbe(prof.Shape), insert, 0f, c - insert, Melange(i, j) & 0xFFFFF, col);
+			// Longueur : l'ancien limbe est une ellipse de demi-grand axe `rx` tracée à PxPerCmX dans
+			// TOUTES les directions, la pièce suit le losange du sol (jusqu'à √2 × PxPerCmX) : même
+			// correction √2 que les organes ronds (tools/splat/lib/classes.js).
+			float longCm = 2f * rx / (WorldView.PxPerCmX * Mathf.Sqrt2);
+			return PoserPieceFeuille(RecetteLimbe(prof.Shape), insert, 0f, c - insert, Melange(i, j) & 0xFFFFF, col, longCm);
 		}
 	}
 }

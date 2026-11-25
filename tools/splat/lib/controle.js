@@ -77,7 +77,7 @@ function fusionner(pieces) {
   const sortie = [], groupes = new Map();
   for (const p of pieces) {
     if (p.couche === undefined) { sortie.push(p); continue; }
-    const cle = [p.palier, p.taille, p.inclinaison, p.variante, p.lacet].join('|');
+    const cle = [p.palier, p.taille, p.k, p.inclinaison, p.variante, p.lacet].join('|');   // RELIQUATS ② : + classe
     if (!groupes.has(cle)) { groupes.set(cle, []); sortie.push(cle); }
     groupes.get(cle).push(p);
   }

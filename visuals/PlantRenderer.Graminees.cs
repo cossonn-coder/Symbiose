@@ -244,7 +244,7 @@ namespace Symbiose
 				_lotPrairie.Ligne(Iso(0f, 0f, 0f), tete, Ton(pal.Leaf, 1), PixelInterne);
 				// Épi court et trapu, plus sombre vers le bas.
 				float rx = Mathf.Max(1.2f * pxx, PixelInterne), ry = Mathf.Max(2.4f * pxx, PixelInterne);
-				if (PoserOrganeSplat("tete_epi", tete + new Vector2(0f, ry), Vector2.Zero, pal.Flower, ig + k)) continue;   // PRÉCUISSON SPLATS ④bis
+				if (PoserOrganeSplat("tete_epi", tete + new Vector2(0f, ry), Vector2.Zero, pal.Flower, ig + k, 1.2f)) continue;   // PRÉCUISSON SPLATS ④bis
 				_lotPrairie.Ellipse(tete, rx, ry, Ton(pal.Flower, 1));
 				_lotPrairie.Ellipse(tete - new Vector2(0f, ry * 0.3f), rx * 0.7f, ry * 0.65f,
 					Ton(pal.Flower, PaletteIndexee.TonBase));
