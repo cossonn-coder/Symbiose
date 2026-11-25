@@ -56,6 +56,14 @@ const DETAILS = {
   feuille_ruban: { couches: ['pruine'], paliers: [16, 32] },
   fruit_globe: { couches: ['pruine'], paliers: [16, 32] },
   tete_corolle: { couches: ['etamines'], paliers: [8, 16, 32] },
+  // RELIQUATS ④ : recettes neuves. Trèfle : nervure + marque claire en V (ancien ×16) ; thym et
+  // lavande : poils (Surface.Poils), soies à l'échelle de leurs feuilles minuscules (`poilsCm`) ;
+  // blé : anthères pendantes de l'épi en fleur (ancien ×8).
+  feuille_trefle: { couches: ['nervures', 'chevron'], paliers: [8, 16, 32] },
+  feuille_trefle4: { couches: ['nervures', 'chevron'], paliers: [8, 16, 32] },
+  feuille_thym: { couches: ['poils'], paliers: [16, 32], poilsCm: 0.1 },
+  feuille_lavande: { couches: ['poils'], paliers: [16, 32], poilsCm: 0.12 },
+  epi_ble: { couches: ['antheres'], paliers: [4, 8, 16, 32] },
 };
 
 // --- Géométrie d'un site de limbe ----------------------------------------------------
@@ -115,11 +123,11 @@ const LIMBE = {
   poils(ctx, s, i, h, k) {
     for (let j = 0; j < 22; j++) {
       const { p, n, lat } = surLimbe(s, 0.1 + 0.82 * h(i, 80 + j), (h(i, 120 + j) - 0.5) * 1.8, 0.6);
-      soie(ctx, p, norm(add(mul(n, 0.8), mul(lat, 0.5))), 0.3, k);
+      soie(ctx, p, norm(add(mul(n, 0.8), mul(lat, 0.5))), 0.3 * ctx.ech, k, 0.03 * ctx.ech);
     }
     for (let j = 0; j < 18; j++) {
       const x = 0.08 + 0.86 * (j + 0.5) / 18, { p, n, lat } = surLimbe(s, x, j % 2 ? 1 : -1, 0.2);
-      soie(ctx, p, norm(add(lat, mul(n, 0.4))), 0.28, k);
+      soie(ctx, p, norm(add(lat, mul(n, 0.4))), 0.28 * ctx.ech, k, 0.03 * ctx.ech);
     }
   },
   // Éclat (basilic, poivron) : un reflet allongé sur une moitié, à plat sur le limbe.
@@ -148,6 +156,11 @@ const LIMBE = {
   },
   // Glandes du drosera : tentacules au bord du disque et sur le dessus.
   glandes(ctx, s, i, h, k) { tentacules(ctx, s, h, (p, d) => soie(ctx, p, d, 0.3, k, 0.035)); },
+  // Marque claire en V du trèfle blanc (PoserMarqueFoliole de la vue : de (0,68 ; ±0,28) à
+  // (0,38 ; 0) en part de la foliole), une bande pâle posée sur le dessus de chaque foliole.
+  chevron(ctx, s, i, h, k) {
+    for (const sg of [1, -1]) veine(ctx, s, [0.65, sg * 0.7], [0.33, 0], 0.07, k);
+  },
   // Gouttes de glu : une perle au bout de chaque tentacule.
   gouttes(ctx, s, i, h, k) {
     tentacules(ctx, s, h, (p, d) => ctx.S.ball(add(p, mul(d, 0.32 * CM)), 0.07 * CM, ctx.couche(k), { res: 0.005 }));
@@ -187,6 +200,12 @@ const ORGANE = {
       ctx.S.ball(add(s.c, mul(d, s.r * 1.02)), s.r * 0.05, ctx.couche(k), { res: 0.004 });
     }
   },
+  // Anthères du blé en fleur (RELIQUATS ④) : site = { c, bout, pend } (recettes/epi_ble.js) — un
+  // filet sort de l'épillet, l'anthère jaune pâle pend au bout.
+  antheres(ctx, s, i, h, k) {
+    ctx.S.tube([s.c, s.bout], 0.02 * CM, 0.015 * CM, ctx.couche(k), { res: 0.003 });
+    ctx.S.ball(s.pend, [0.06 * CM, 0.2 * CM * (0.85 + 0.3 * h(i, 0)), 0.06 * CM], ctx.couche(k), { res: 0.004 });
+  },
   // Étamines de la corolle : filets qui rayonnent du cœur, anthère au bout.
   etamines(ctx, s, i, h, k) {
     const a0 = [1, 0, 0], u = norm(cross(s.haut, Math.abs(s.haut[0]) < 0.9 ? a0 : [0, 0, 1])), w = cross(s.haut, u);
@@ -206,7 +225,7 @@ function sculpter(ctx, recette, sites, base) {
   const d = DETAILS[recette.nom];
   if (!d || !sites) return;
   const h = (i, j) => ctx.K.hash(2000 + ctx.variante, i, j);
-  const c = { ...ctx, palmee: !!d.palmee, couche: k => ctx.M.couches[base + k] };
+  const c = { ...ctx, palmee: !!d.palmee, ech: (d.poilsCm || 0.3) / 0.3, couche: k => ctx.M.couches[base + k] };
   const table = sites[0] && sites[0].U ? LIMBE : ORGANE;
   d.couches.forEach((nom, k) => sites.forEach((s, i) => table[nom](c, s, i, h, k)));
 }

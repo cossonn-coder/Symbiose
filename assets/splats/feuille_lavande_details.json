@@ -1,0 +1,1018 @@
+{
+ "recette": "feuille_lavande_details",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 8,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "FicheBuisson.Grains (lavande, FormeFeuille.Ruban)"
+ ],
+ "couches": [
+  "poils"
+ ],
+ "base": "feuille_lavande",
+ "classes": [
+  {
+   "echelle": 1,
+   "taille_cm": 8
+  }
+ ],
+ "taille_nominale_cm": 8,
+ "rond": false,
+ "trous": {
+  "paliers": [
+   16,
+   32
+  ],
+  "variantes": 1,
+  "degres": [
+   {
+    "type": "morsure",
+    "degre": 1
+   },
+   {
+    "type": "morsure",
+    "degre": 2
+   },
+   {
+    "type": "grele",
+    "degre": 1
+   },
+   {
+    "type": "grele",
+    "degre": 2
+   }
+  ]
+ },
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "x16": "feuille_lavande_details_x16.png",
+  "x32": "feuille_lavande_details_x32.png"
+ },
+ "pieces": [
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    0,
+    0,
+    31,
+    33
+   ],
+   "attache": [
+    1,
+    36
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    32,
+    0,
+    44,
+    43
+   ],
+   "attache": [
+    -1,
+    45
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    77,
+    0,
+    35,
+    54
+   ],
+   "attache": [
+    1,
+    57
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    113,
+    0,
+    26,
+    59
+   ],
+   "attache": [
+    12,
+    64
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    140,
+    0,
+    32,
+    54
+   ],
+   "attache": [
+    30,
+    59
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    173,
+    0,
+    44,
+    43
+   ],
+   "attache": [
+    44,
+    47
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    218,
+    0,
+    35,
+    33
+   ],
+   "attache": [
+    33,
+    36
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    254,
+    0,
+    22,
+    22
+   ],
+   "attache": [
+    12,
+    28
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    277,
+    0,
+    28,
+    29
+   ],
+   "attache": [
+    1,
+    31
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    306,
+    0,
+    39,
+    40
+   ],
+   "attache": [
+    -1,
+    42
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    346,
+    0,
+    30,
+    46
+   ],
+   "attache": [
+    0,
+    49
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    377,
+    0,
+    24,
+    52
+   ],
+   "attache": [
+    11,
+    56
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    402,
+    0,
+    28,
+    47
+   ],
+   "attache": [
+    26,
+    51
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    431,
+    0,
+    39,
+    36
+   ],
+   "attache": [
+    39,
+    40
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    471,
+    0,
+    31,
+    27
+   ],
+   "attache": [
+    30,
+    30
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    503,
+    0,
+    20,
+    19
+   ],
+   "attache": [
+    10,
+    23
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    524,
+    0,
+    24,
+    35
+   ],
+   "attache": [
+    1,
+    36
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    549,
+    0,
+    28,
+    47
+   ],
+   "attache": [
+    -1,
+    48
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    578,
+    0,
+    34,
+    56
+   ],
+   "attache": [
+    1,
+    58
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    613,
+    0,
+    31,
+    58
+   ],
+   "attache": [
+    13,
+    62
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    645,
+    0,
+    26,
+    55
+   ],
+   "attache": [
+    24,
+    59
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    672,
+    0,
+    29,
+    45
+   ],
+   "attache": [
+    29,
+    49
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    702,
+    0,
+    34,
+    36
+   ],
+   "attache": [
+    32,
+    39
+   ]
+  },
+  {
+   "palier": 16,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x16",
+   "rect": [
+    737,
+    0,
+    27,
+    31
+   ],
+   "attache": [
+    16,
+    33
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    0,
+    0,
+    62,
+    68
+   ],
+   "attache": [
+    2,
+    73
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    63,
+    0,
+    87,
+    85
+   ],
+   "attache": [
+    -2,
+    91
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    151,
+    0,
+    70,
+    105
+   ],
+   "attache": [
+    2,
+    113
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    222,
+    0,
+    53,
+    118
+   ],
+   "attache": [
+    25,
+    128
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    276,
+    0,
+    62,
+    107
+   ],
+   "attache": [
+    59,
+    117
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    339,
+    0,
+    87,
+    84
+   ],
+   "attache": [
+    88,
+    94
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    427,
+    0,
+    69,
+    64
+   ],
+   "attache": [
+    66,
+    72
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    497,
+    0,
+    48,
+    50
+   ],
+   "attache": [
+    25,
+    58
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    546,
+    0,
+    55,
+    57
+   ],
+   "attache": [
+    2,
+    62
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    602,
+    0,
+    77,
+    79
+   ],
+   "attache": [
+    -2,
+    84
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    680,
+    0,
+    61,
+    92
+   ],
+   "attache": [
+    0,
+    99
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    742,
+    0,
+    47,
+    103
+   ],
+   "attache": [
+    22,
+    112
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    790,
+    0,
+    56,
+    92
+   ],
+   "attache": [
+    53,
+    102
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    847,
+    0,
+    78,
+    73
+   ],
+   "attache": [
+    79,
+    81
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    926,
+    0,
+    60,
+    53
+   ],
+   "attache": [
+    59,
+    60
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    987,
+    0,
+    42,
+    41
+   ],
+   "attache": [
+    22,
+    47
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1030,
+    0,
+    51,
+    72
+   ],
+   "attache": [
+    2,
+    75
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 45,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1082,
+    0,
+    56,
+    92
+   ],
+   "attache": [
+    -3,
+    95
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1139,
+    0,
+    67,
+    109
+   ],
+   "attache": [
+    2,
+    115
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 135,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1207,
+    0,
+    60,
+    116
+   ],
+   "attache": [
+    26,
+    124
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1268,
+    0,
+    52,
+    108
+   ],
+   "attache": [
+    49,
+    118
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 225,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1321,
+    0,
+    57,
+    90
+   ],
+   "attache": [
+    59,
+    99
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1379,
+    0,
+    67,
+    72
+   ],
+   "attache": [
+    64,
+    79
+   ]
+  },
+  {
+   "palier": 32,
+   "echelle": 1,
+   "taille_cm": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 315,
+   "couche": "poils",
+   "planche": "x32",
+   "rect": [
+    1447,
+    0,
+    55,
+    65
+   ],
+   "attache": [
+    33,
+    69
+   ]
+  }
+ ]
+}

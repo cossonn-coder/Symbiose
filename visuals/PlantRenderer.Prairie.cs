@@ -225,13 +225,14 @@ namespace Symbiose
 				// Ton 3 ou 2 : une feuille à contre-soleil perd un ton, et ne doit pas se fondre
 				// dans la sous-couche (ton 1).
 				int ton = 3 - (Hash01(209, ig, k) < 0.3f ? 1 : 0);
-				if (zoom < PaliersHautsMinZoom) PoserTacheFeuille(p, taille * 1.05f, col, ton);
-				// Une seule face par FEUILLE (`teinte`) : le soleil réel l'éclaire entière. Une face
-				// par foliole n'en allumait qu'une, et la feuille se lisait comme un cœur isolé.
 				// Quatre folioles : calées en X. En + les deux horizontales, écrasées par
 				// l'iso, se confondraient. Un petit écart garde le pied naturel.
-				else PoserFeuille(p, taille, folioles, folioles == 4 ? Mathf.Pi * 0.25f + (a0 - Mathf.Pi) * 0.04f : a0, col,
-					Ton(col, ton, (int)(a0 / Mathf.Tau * 8f) & 7));
+				float az = folioles == 4 ? Mathf.Pi * 0.25f + (a0 - Mathf.Pi) * 0.04f : a0;
+				if (PoserTrefleSplat(p, taille, folioles, az, col, k)) { }   // RELIQUATS ④ (SplatsHerbes.cs)
+				else if (zoom < PaliersHautsMinZoom) PoserTacheFeuille(p, taille * 1.05f, col, ton);
+				// Une seule face par FEUILLE (`teinte`) : le soleil réel l'éclaire entière. Une face
+				// par foliole n'en allumait qu'une, et la feuille se lisait comme un cœur isolé.
+				else PoserFeuille(p, taille, folioles, az, col, Ton(col, ton, (int)(a0 / Mathf.Tau * 8f) & 7));
 				if (f >= feuilles.Count * 2 / 3)
 					_sitesPrairie.Add((Iso(p.X, p.Y, p.Z), taille * 0.7f * WorldView.PxPerCmX, k, p.Z));
 			}

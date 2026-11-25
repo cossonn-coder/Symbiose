@@ -211,7 +211,10 @@ namespace Symbiose
 			var niv = new byte[l * h];
 			var codes = new byte[l * h];
 			couches.Sort((p, q) => p.Coeur.CompareTo(q.Coeur));
+			bool aCoeur = false, coeurPose = false;
 			foreach (var (r, a, coeur) in couches)
+			{
+				aCoeur |= coeur;
 				for (int y = 0; y < r.Size.Y; y++)
 					for (int x = 0; x < r.Size.X; x++)
 					{
@@ -220,7 +223,15 @@ namespace Symbiose
 						int d = (y - a.Y - y0) * l + (x - a.X - x0);
 						niv[d] = coeur ? KitCoeur : src[s];
 						codes[d] = src[s + 1];
+						coeurPose |= coeur;
 					}
+			}
+			// RELIQUATS ④ : un fleuron de 2 px a un cœur sous le pixel (couche vide à la cuisson) —
+			// on force le pixel de l'attache (le centre de la fleur), sinon le cœur jaune disparaît.
+			// À 1 px, le pixel unique garde la teinte des pétales (comme l'ancien Fleuron.Point).
+			int centre = -y0 * l - x0;
+			if (aCoeur && !coeurPose && l * h >= 4 && centre >= 0 && centre < niv.Length && niv[centre] != KitVide)
+				niv[centre] = KitCoeur;
 			return new PieceKit(niv, codes, l, h, -x0, -y0);
 		}
 	}

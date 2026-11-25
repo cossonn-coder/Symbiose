@@ -43,6 +43,8 @@ namespace Symbiose
 			["glandes"] = 16f,    // drosera : tentacules (ancien : ×32)
 			["gouttes"] = 8f,     // drosera : perles de glu, ×8
 			["etamines"] = 32f,   // corolle : ×32 (DrawEtamines)
+			["chevron"] = 16f,    // trèfle : marque claire en V, ×16 (PoserMarqueFoliole) — RELIQUATS ④
+			["antheres"] = 8f,    // blé en fleur : ×8 (PoserEpiChaume) — RELIQUATS ④
 		};
 		// Nervures pâles du lierre (marque de fiche) : ×8, comme PoserNervuresLierre.
 		private const float SeuilNervuresMarque = 8f;
@@ -96,7 +98,8 @@ namespace Symbiose
 			}
 		}
 
-		/// <summary>Sur-couches d'un organe : étamines d'une corolle ouverte, pruine d'un fruit.</summary>
+		/// <summary>Sur-couches d'un organe : étamines d'une corolle ouverte, pruine d'un fruit, anthères
+		/// d'un épi de blé en fleur.</summary>
 		private void PoserDetailsOrgane(string recette, Vector2 ancre, float z, int e, int inc, int lacet, int v, bool fleur)
 		{
 			string rd = recette + "_details";
@@ -107,6 +110,7 @@ namespace Symbiose
 			{
 				string d = couches[k];
 				if (!SeuilsDetails.TryGetValue(d, out float seuil) || z < seuil || (d == "pruine" && s != Surface.Pruine)) continue;
+				if (d == "antheres" && _structure.Floraison < FloraisonSeuil) continue;   // anthèse seulement (ancien dessin)
 				if (!SplatPlanches.Trouver(rd, z, e, k, inc, lacet, v, 0, out var p, out _, exacte: true)) continue;
 				PoserPieceSplat(p, ancre, PaletteIndexee.Palette(CouleurDetail(d, default, MarqueFeuille.Aucune)));
 			}
@@ -123,6 +127,7 @@ namespace Symbiose
 			"poils" => s == Surface.Poils,
 			"pruine" => s == Surface.Pruine,
 			"glandes" => s == Surface.Glandes,
+			"chevron" => true,   // seules les feuilles du trèfle portent cette couche
 			_ => false,
 		};
 
@@ -131,7 +136,8 @@ namespace Symbiose
 		private Color CouleurDetail(string d, Color col, MarqueFeuille m) => d switch
 		{
 			"nervures" => m == MarqueFeuille.Nervures ? Clair(col) : HueShift(col, NervureShift),
-			"duvet" or "eclat" or "revers" => Clair(col),
+			"duvet" or "eclat" or "revers" or "chevron" => Clair(col),
+			"antheres" => Clair(PaletteIndividu().Flower),
 			"poils" => Opaque(PoilColor),
 			"pruine" => Opaque(PruineColor),
 			"gouttes" => Opaque(GluColor),

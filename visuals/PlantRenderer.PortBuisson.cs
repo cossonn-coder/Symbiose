@@ -162,7 +162,8 @@ namespace Symbiose
 				float h1 = Hash01(467, ig, k);
 				int ton = h1 < 0.55f ? PaletteIndexee.TonBase : h1 < 0.88f ? 3 : 4;
 				Color teinte = Ton(col, ton, Orientation(new Vector2(ux, uy)));
-				if (lames)
+				if (PoserGrainSplat(lameuse, c, new Vector2(ux * rx, uy * ry), col, b.GrainCm, k)) { }   // RELIQUATS ④ (SplatsHerbes.cs)
+				else if (lames)
 					_lotPrairie.Ligne(c, c + new Vector2(ux * lame * 0.5f, -lame), teinte, Mathf.Max(0.9f * pxx, pix));
 				else PoserDisque(c, r, teinte);
 				if (k % 5 == 0) _sitesPrairie.Add((c, r * 1.5f, k, z));

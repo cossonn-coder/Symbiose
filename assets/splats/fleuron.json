@@ -128,12 +128,12 @@
    "rect": [
     14,
     0,
-    0,
-    0
+    1,
+    1
    ],
    "attache": [
-    6,
-    6
+    0,
+    1
    ]
   },
   {
@@ -145,7 +145,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    15,
+    16,
     0,
     1,
     1
@@ -164,7 +164,7 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    17,
+    18,
     0,
     0,
     0
@@ -183,7 +183,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    18,
+    19,
     0,
     3,
     1
@@ -202,7 +202,7 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    22,
+    23,
     0,
     0,
     0
@@ -221,7 +221,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    23,
+    24,
     0,
     5,
     3
@@ -240,14 +240,14 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    29,
+    30,
     0,
-    0,
-    0
+    1,
+    2
    ],
    "attache": [
-    6,
-    6
+    0,
+    1
    ]
   },
   {
@@ -259,7 +259,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    30,
+    32,
     0,
     1,
     1
@@ -278,7 +278,7 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    32,
+    34,
     0,
     0,
     0
@@ -297,7 +297,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    33,
+    35,
     0,
     3,
     2
@@ -316,7 +316,7 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    37,
+    39,
     0,
     0,
     0
@@ -335,7 +335,7 @@
    "couche": "petales",
    "planche": "kit",
    "rect": [
-    38,
+    40,
     0,
     5,
     3
@@ -354,14 +354,14 @@
    "couche": "coeur",
    "planche": "kit",
    "rect": [
-    44,
+    46,
     0,
-    0,
-    0
+    1,
+    1
    ],
    "attache": [
-    6,
-    6
+    0,
+    1
    ]
   }
  ]

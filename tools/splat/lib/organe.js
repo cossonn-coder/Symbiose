@@ -84,15 +84,16 @@ function tige(ctx, pts, r0, r1 = r0, k = 0) {
 }
 
 // Petite corolle à 5 pétales ronds autour de `c`, face vers `haut` ; cœur en
-// couche `kCoeur` (même couche que les pétales si non donnée).
-function corolle(ctx, c, r, haut, phase, kCoeur = 0, coupe = 0.25) {
+// couche `kCoeur` (même couche que les pétales si non donnée) ; `coeur` = rayon du cœur en
+// part de r (RELIQUATS ④ : le fleuron du kit le grossit pour qu'il survive à 2-3 px).
+function corolle(ctx, c, r, haut, phase, kCoeur = 0, coupe = 0.25, coeur = 0.28) {
   const [U, W] = perp(haut);
   for (let i = 0; i < 5; i++) {
     const a = phase + (i * 2 * Math.PI) / 5;
     const d = norm(add(add(mul(U, Math.cos(a)), mul(W, Math.sin(a))), mul(haut, coupe)));
     petale(ctx, add(c, mul(d, r * 0.1)), d, r * 0.95, r * 0.75, r * 0.06 + 0.002, haut);
   }
-  boule(ctx, add(c, mul(haut, r * 0.08)), r * 0.28, kCoeur, 0.7);
+  boule(ctx, add(c, mul(haut, r * 0.08)), r * coeur, kCoeur, 0.7);
 }
 
 module.exports = { CM, OBLIQUE, INCLINAISONS, repere, perp, recette, petale, boule, tige, corolle, add, mul, norm, cross };

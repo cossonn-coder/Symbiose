@@ -14,7 +14,7 @@ Golden : **`bce813af…` INTACT à tous les tronçons** (vue + outillage, `data/
 | ① | `01_memoire_x32.md` — budget de précuisson 1 Go, plafonds relevés, ×32 cuit | **fait 2026-11-25** (non commité) |
 | ② | `02_classes_taille.md` — 3 tailles par recette, correction du √2, recuisson | **fait 2026-11-25** (non commité) |
 | ③ | `03_details_cuits.md` — inventaire + tous les détails en couches + sonde ×64 | **fait 2026-11-25** (non commité) |
-| ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | à faire |
+| ④ | `04_recettes_neuves.md` — trèfle 3/4, thym, lavande, fétuque, anthères, cœur des fleurons | **fait 2026-11-25** (non commité) |
 | ⑤ | `05_portraits.md` — portraits ratés hors arbres + baies de la myrtille | à faire |
 | ⑥ | `06_revue_paliers.md` — revue ×0,5→×32, finitions, section F5, clôture | à faire |
 
@@ -177,6 +177,49 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
 - Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : details.js 139 · cuire.js 185 · codes.js 86 ·
   controle.js 81 · SplatsDetails 93 · Splats 167 · SplatPlanches 234 · PaliersHauts 221 (tous 🟢).
 
+### ④ Recettes neuves — fait 2026-11-25
+- **Recettes neuves** (`tools/splat/recettes/`) : `feuille_trefle` (3 folioles, ProfilFoliole de la vue, à plat,
+  inclinaison 0 seule) + `feuille_trefle4` (4 folioles, même fabrique) ; `feuille_thym` (rameau ligneux 3,6 cm,
+  6 nœuds de feuilles opposées 6-7 mm + bouquet terminal) ; `feuille_lavande` (touffe de 3 lames linéaires ~8 cm,
+  bords enroulés) ; `panicule_fetuque` (panicule lâche, 4 rameaux retombants, épillets 0,5 cm). Noms préfixés
+  `feuille_`/`panicule` → repris tels quels par `controle_feuilles.js` / `controle_organes.js`.
+- **Classes** (`lib/classes.js`) : trèfle k 0,5/0,71/1 (foliole 1,5/2,1/3 cm ; la vue va de 1,8 à 3) ; thym,
+  lavande, panicule de fétuque **1 classe** (taille FIXE dans la vue : `GrainCm`, aucune croissance).
+- **Détails** (`lib/details.js`) : trèfle nervures + `chevron` (marque claire en V, ×16) ; thym/lavande `poils`
+  à soies réduites (`poilsCm` 0,1 / 0,12 ; facteur exact 1 pour les recettes du ③, octets inchangés) ; `epi_ble`
+  sur-couche `antheres` (×8, anthèse seulement) — `epi_ble.js` rend désormais les sites (1 épillet sur 3),
+  sculpture de base inchangée, base NON recuite.
+- **Fleuron** : cœur 0,28 → 0,4 × r (`corolle(…, coeur)`, défaut inchangé pour les autres têtes) → la couche cœur
+  possède le pixel central à 3 px (avant : vide aux 3 tailles). À 2 px il reste sous le pixel : `FondreCouches`
+  (KitSplats.cs) force le pixel de l'attache en `KitCoeur`. À 1 px, teinte des pétales (= ancien Fleuron.Point).
+- **Vue** : neuf `visuals/PlantRenderer.SplatsHerbes.cs` (21 LDC) — crochets d'une ligne dans `DessinerTrefle`
+  (Prairie.cs, toutes paliers, pétiole tracé dès ×8), `PoserMasse` (PortBuisson.cs, chaque grain → rameau/touffe,
+  tous paliers, sur le dôme sombre), `DessinerFetuque` (Graminees.cs, organe dès ×2). `SplatsDetails.cs` : seuils
+  `chevron` 16 / `antheres` 8, anthères gatées par `Floraison ≥ FloraisonSeuil`, couleurs (clair du limbe ; clair
+  de la fleur). Ancien dessin intact derrière chaque crochet.
+- **Écarts au kickoff (6)** : (a) **4 folioles NON tirées au hash dans la vue** : la rareté existe déjà côté MOTEUR
+  (`sim/quatre_feuilles.py`, ~1 pied sur 200, cueillable par `recolter`, snapshot `quatre_feuilles`) ; un tirage
+  vue créerait des trèfles à 4 feuilles non cueillables (faux indice, philo #5). La pièce 4 folioles est posée là où
+  l'ancien dessin posait 4 folioles. (b) thym/lavande/fétuque à 1 classe (taille fixe). (c) anthères = sur-couche
+  de `epi_ble` (pas une pièce). (d) 1ʳᵉ version du thym à 1,9 cm trop petite (`GrainCm` est le RAYON du disque
+  dessiné) → recuite à 3,6 cm après capture.
+- **Mesures** (VM, charge 4-13, n=1) : 11 cuissons `xargs -P 11`, **11 min 43 s de mur** (20:05:34 → 20:17:17 ;
+  plus long `epi_ble --details` 702 s CPU), + recuisson thym 2 min. Pièces : trèfle 696 + 432 détails (×2 recettes),
+  thym 232 + 48, lavande 232 + 48, panicule 168, `epi_ble` détails 576, fleuron 18. Journal `mesures/04_journal_cuisson.txt`.
+  **Poids `assets/splats/` 63 → 65 Mo** (nouveaux fichiers 2,1 Mo ; seul existant modifié : `fleuron.json` + `fleuron_kit.png`).
+- **Captures** (`planche_especes -l 2`, avant = `SYMBIOSE_SPLATS=0`) : `mesures/04_<trefle|thym|lavande|fetuque|ble>_x<1|8|16>_{avant,apres}.png`
+  + `04_kit_{avant,apres}.png`. Lues : trèfle ×8 feuilles à 3 folioles en volume (même densité) ; thym ×8 rameaux
+  hérissés sur le coussin (moins couvrant que les anciens disques : le dôme sombre se voit davantage) ; lavande ×8
+  touffes de lames en volume (plus sombre que les traits clairs d'avant) ; fétuque ×16 panicules rousses en étoile ;
+  kit : fleurons 2 et 3 px avec pixel jaune. Blé : banc à épis MÛRS (dorés), anthères chargées au journal
+  (`epi_ble_details_x8/16/32`) mais à peine visibles ; non vérifiées en anthèse verte. Contrôles :
+  `mesures/controle_{feuille_trefle,feuille_trefle4,feuille_thym,feuille_lavande,panicule_fetuque,fleuron}[_details].png`,
+  `controle_epi_ble_details.png`. Aucune ligne `repli` au journal.
+- **Reste dessiné sur les herbacées** : brins et rubans des graminées (S2) ; organes sous ×2 (seuil ⑤bis) ; folioles du
+  volubile en losange (repli seul) ; trèfle de loin : plus rien (la tache hexagonale ne sert qu'en repli).
+- Golden `bce813af…` INTACT ; build vert, 0 avertissement. LDC : SplatsHerbes 21 · Prairie 304 (🟡 préexistant, 303
+  avant) · Graminees 208 · PortBuisson 149 · SplatsDetails 98 · KitSplats 179 · details.js 151 (tous 🟢 sauf Prairie).
+
 ## F5 (à remplir par les tronçons, consolidé au ⑥)
 - ① À ×32 sur un tournesol et un pommier : les feuilles et les fleurs sont en volume (splats).
   L'à-coup au premier passage à ×32 (gel d'environ 1-2 s par grande plante sur la VM) est-il
@@ -190,10 +233,15 @@ Détails : conception §4. Captures de la conception non versionnées (scratchpa
   armoise/framboisier ×4 (1 feuille sur 3 claire + liseré), perles du drosera ×8, tentacules ×16, poils ×32
   (bourrache, consoude, tomate, tournesol, courgette, fraisier), pruine de l'ail et des baies ×32, étamines
   ×32. Bourrache ×32 trop chargée (nervures + duvet + poils) ? Maj+F11 compare à l'ancien dessin.
+- ④ Prairie : trèfle en pièces (3 folioles) à tous les paliers — même densité de tapis ? marque claire en V à ×16 ?
+  Un pied `quatre_feuilles` montre-t-il bien ses feuilles en X ? Thym : les rameaux font-ils un coussin, ou le
+  dôme sombre se voit-il trop entre eux ? Lavande : touffes de lames trop sombres face au gris-vert d'avant ?
+  Fétuque : panicules rousses lisibles ×2-×16 ? Blé EN FLEUR (vert) ×8-×32 : anthères pâles visibles ?
+  Fleurons des plantes sans fiche ×1-×2 : le cœur jaune revient-il ?
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire »
-(①②③ faits : prochain = ④ `04_recettes_neuves.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
+(①②③④ faits : prochain = ⑤ `05_portraits.md`). Budget de précuisson : `visuals/BudgetCuisson.cs`.
 Classes de taille : `tools/splat/lib/classes.js` (+ `inventaire_tailles.js`) ; toute recette neuve ou
 recuite (③④) passe par elle — y ajouter son entrée (sinon k = 1 seule). Une recuisson complète coûte
 ~3 h de mur [VM, n=1] : ne recuire que les recettes touchées.
@@ -201,6 +249,8 @@ Détails (③) : toute recette neuve ou recuite qui porte un détail (④ : trè
 son entrée à `DETAILS` (`tools/splat/lib/details.js`) et recuit ses sur-couches (`cuire.js <r> --details`) ;
 seuils et « qui porte quoi » dans `visuals/PlantRenderer.SplatsDetails.cs`. Une recette dont la base est
 recuite DOIT recuire ses détails (même sculpture, sinon décalage).
+Recettes neuves du ④ : `feuille_trefle(4)`, `feuille_thym`, `feuille_lavande`, `panicule_fetuque` (crochets :
+`visuals/PlantRenderer.SplatsHerbes.cs`). Les portraits du ⑤ peuvent les utiliser (thym, lavande, trèfle, fétuque).
 Outils hérités du sprint (a) : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`,
 `PoserPieceFeuille`, `PoserOrganeSplat`, `PoserFoliolesSplat`, `TouffeGerbe`,
 `tools/splat/cuire.js`, `cuire_portraits.js`.

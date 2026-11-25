@@ -10,9 +10,10 @@
 // palette calculée par la vue, MÊME interrupteur (Maj+F11, SYMBIOSE_SPLATS=0). Chaque
 // fonction rend false quand elle n'a rien posé : l'ancien dessin vectoriel prend le relais.
 //
-// Restent dessinés, faute de recette à la bonne échelle (cf. 00_etat.md ④bis) : feuilles du
-// trèfle (triade = haricot, 14 cm), brins et rubans des graminées (lanières que le vent plie
-// point par point), masses du buisson, panicule de la fétuque, masses et gerbes d'arbre ×4.
+// Restaient dessinés, faute de recette (cf. 00_etat.md ④bis) : feuilles du trèfle, masses du
+// buisson, panicule de la fétuque → pièces depuis RELIQUATS ④ (PlantRenderer.SplatsHerbes.cs).
+// Restent dessinés (sprint S2) : brins et rubans des graminées (lanières que le vent plie
+// point par point), masses et gerbes d'arbre ×4.
 //
 // 📖 Pédagogie : une recette d'organe porte DÉJÀ sa pose naturelle (l'épi de seigle est cuit
 // penché, la gousse et le chaton pendants). La vue ne choisit donc que le LACET (vers où

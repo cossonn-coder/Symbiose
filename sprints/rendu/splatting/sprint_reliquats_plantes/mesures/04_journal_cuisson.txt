@@ -1,0 +1,230 @@
+== log_epi_ble_--details.txt
+epi_ble : 576 pièces (3 vides), 702622 ms au total
+  sculpture+bake : 351, 443, 311, 169, 218, 156, 161, 142, 131 ms
+  ×2.84 : 502.6 ms/pièce (72)
+  ×4 : 418.7 ms/pièce (72)
+  ×5.68 : 234.7 ms/pièce (72)
+  ×8 : 357.1 ms/pièce (72)
+  ×11.36 : 632.9 ms/pièce (72)
+  ×16 : 1193.3 ms/pièce (72)
+  ×22.72 : 2138.6 ms/pièce (72)
+  ×32 : 4238.5 ms/pièce (72)
+  assets/splats/epi_ble_details_x4_k71.png 457 o
+  assets/splats/epi_ble_details_x4.png 825 o
+  assets/splats/epi_ble_details_x8_k71.png 1617 o
+  assets/splats/epi_ble_details_x8.png 2459 o
+  assets/splats/epi_ble_details_x16_k71.png 3806 o
+  assets/splats/epi_ble_details_x16.png 5478 o
+  assets/splats/epi_ble_details_x32_k71.png 9249 o
+  assets/splats/epi_ble_details_x32.png 13018 o
+  assets/splats/epi_ble_details.json 151446 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_epi_ble_details.png 45757 o
+== log_feuille_lavande_--details.txt
+feuille_lavande : 48 pièces (0 vides), 188747 ms au total
+  sculpture+bake : 2702, 2542, 2161 ms
+  ×16 : 1743.5 ms/pièce (24)
+  ×32 : 5781.0 ms/pièce (24)
+  assets/splats/feuille_lavande_details_x16.png 5856 o
+  assets/splats/feuille_lavande_details_x32.png 13218 o
+  assets/splats/feuille_lavande_details.json 13180 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lavande_details.png 13260 o
+== log_feuille_lavande.txt
+feuille_lavande : 232 pièces (5 vides), 408324 ms au total
+  sculpture+bake : 1154, 909, 749, 1076, 716, 1097, 1054 ms
+  ×0.5 : 458.3 ms/pièce (24)
+  ×1 : 535.9 ms/pièce (24)
+  ×2 : 869.5 ms/pièce (24)
+  ×4 : 857.6 ms/pièce (24)
+  ×8 : 841.6 ms/pièce (24)
+  ×16 : 1407.2 ms/pièce (56)
+  ×32 : 4225.7 ms/pièce (56)
+  assets/splats/feuille_lavande_x0_5.png 122 o
+  assets/splats/feuille_lavande_x1.png 231 o
+  assets/splats/feuille_lavande_x2.png 445 o
+  assets/splats/feuille_lavande_x4.png 1553 o
+  assets/splats/feuille_lavande_x8.png 3864 o
+  assets/splats/feuille_lavande_x16.png 16493 o
+  assets/splats/feuille_lavande_x32.png 45424 o
+  assets/splats/feuille_lavande.json 56825 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_lavande.png 14039 o
+== log_feuille_thym_--details.txt
+feuille_thym : 48 pièces (0 vides), 51341 ms au total
+  sculpture+bake : 5160, 6965, 5843 ms
+  ×16 : 475.8 ms/pièce (24)
+  ×32 : 882.5 ms/pièce (24)
+  assets/splats/feuille_thym_details_x16.png 1634 o
+  assets/splats/feuille_thym_details_x32.png 4257 o
+  assets/splats/feuille_thym_details.json 13175 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_thym_details.png 2761 o
+== log_feuille_thym.txt
+feuille_thym : 232 pièces (34 vides), 90738 ms au total
+  sculpture+bake : 1136, 963, 1254, 705, 660, 1002, 1457 ms
+  ×0.5 : 235.0 ms/pièce (24)
+  ×1 : 252.3 ms/pièce (24)
+  ×2 : 285.5 ms/pièce (24)
+  ×4 : 275.9 ms/pièce (24)
+  ×8 : 257.4 ms/pièce (24)
+  ×16 : 297.2 ms/pièce (56)
+  ×32 : 621.6 ms/pièce (56)
+  assets/splats/feuille_thym_x0_5.png 69 o
+  assets/splats/feuille_thym_x1.png 104 o
+  assets/splats/feuille_thym_x2.png 168 o
+  assets/splats/feuille_thym_x4.png 341 o
+  assets/splats/feuille_thym_x8.png 916 o
+  assets/splats/feuille_thym_x16.png 4108 o
+  assets/splats/feuille_thym_x32.png 11137 o
+  assets/splats/feuille_thym.json 56860 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_thym.png 3392 o
+== log_feuille_trefle4_--details.txt
+feuille_trefle4 : 432 pièces (0 vides), 243014 ms au total
+  sculpture+bake : 3773, 4436, 3017 ms
+  ×4 : 867.5 ms/pièce (24)
+  ×5.68 : 888.9 ms/pièce (24)
+  ×8 : 924.2 ms/pièce (48)
+  ×11.36 : 950.9 ms/pièce (24)
+  ×16 : 1083.1 ms/pièce (48)
+  ×22.72 : 1242.1 ms/pièce (24)
+  ×32 : 1646.8 ms/pièce (24)
+  assets/splats/feuille_trefle4_details_x8_k50.png 1200 o
+  assets/splats/feuille_trefle4_details_x8_k71.png 2162 o
+  assets/splats/feuille_trefle4_details_x8.png 3593 o
+  assets/splats/feuille_trefle4_details_x16_k50.png 3593 o
+  assets/splats/feuille_trefle4_details_x16_k71.png 6310 o
+  assets/splats/feuille_trefle4_details_x16.png 11288 o
+  assets/splats/feuille_trefle4_details_x32_k50.png 11288 o
+  assets/splats/feuille_trefle4_details_x32_k71.png 18258 o
+  assets/splats/feuille_trefle4_details_x32.png 30042 o
+  assets/splats/feuille_trefle4_details.json 114361 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_trefle4_details.png 19222 o
+== log_feuille_trefle4.txt
+feuille_trefle4 : 696 pièces (0 vides), 452608 ms au total
+  sculpture+bake : 1747, 1814, 1238, 1242, 1464, 1206, 1427 ms
+  ×0.25 : 528.1 ms/pièce (24)
+  ×0.355 : 529.4 ms/pièce (24)
+  ×0.5 : 504.3 ms/pièce (48)
+  ×0.71 : 563.4 ms/pièce (24)
+  ×1 : 579.9 ms/pièce (48)
+  ×1.42 : 624.1 ms/pièce (24)
+  ×2 : 570.7 ms/pièce (48)
+  ×2.84 : 568.9 ms/pièce (24)
+  ×4 : 605.7 ms/pièce (48)
+  ×5.68 : 534.9 ms/pièce (24)
+  ×8 : 467.4 ms/pièce (80)
+  ×11.36 : 525.7 ms/pièce (56)
+  ×16 : 630.0 ms/pièce (112)
+  ×22.72 : 839.1 ms/pièce (56)
+  ×32 : 1218.9 ms/pièce (56)
+  assets/splats/feuille_trefle4_x0_5_k50.png 91 o
+  assets/splats/feuille_trefle4_x0_5_k71.png 100 o
+  assets/splats/feuille_trefle4_x0_5.png 89 o
+  assets/splats/feuille_trefle4_x1_k50.png 89 o
+  assets/splats/feuille_trefle4_x1_k71.png 164 o
+  assets/splats/feuille_trefle4_x1.png 176 o
+  assets/splats/feuille_trefle4_x2_k50.png 176 o
+  assets/splats/feuille_trefle4_x2_k71.png 265 o
+  assets/splats/feuille_trefle4_x2.png 382 o
+  assets/splats/feuille_trefle4_x4_k50.png 382 o
+  assets/splats/feuille_trefle4_x4_k71.png 614 o
+  assets/splats/feuille_trefle4_x4.png 1193 o
+  assets/splats/feuille_trefle4_x8_k50.png 1193 o
+  assets/splats/feuille_trefle4_x8_k71.png 1999 o
+  assets/splats/feuille_trefle4_x8.png 3243 o
+  assets/splats/feuille_trefle4_x16_k50.png 4730 o
+  assets/splats/feuille_trefle4_x16_k71.png 9109 o
+  assets/splats/feuille_trefle4_x16.png 15613 o
+  assets/splats/feuille_trefle4_x32_k50.png 15613 o
+  assets/splats/feuille_trefle4_x32_k71.png 27038 o
+  assets/splats/feuille_trefle4_x32.png 45978 o
+  assets/splats/feuille_trefle4.json 172911 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_trefle4.png 14147 o
+== log_feuille_trefle_--details.txt
+feuille_trefle : 432 pièces (0 vides), 217331 ms au total
+  sculpture+bake : 2514, 2883, 2600 ms
+  ×4 : 750.9 ms/pièce (24)
+  ×5.68 : 684.2 ms/pièce (24)
+  ×8 : 764.2 ms/pièce (48)
+  ×11.36 : 828.4 ms/pièce (24)
+  ×16 : 1057.9 ms/pièce (48)
+  ×22.72 : 1127.7 ms/pièce (24)
+  ×32 : 1641.4 ms/pièce (24)
+  assets/splats/feuille_trefle_details_x8_k50.png 1032 o
+  assets/splats/feuille_trefle_details_x8_k71.png 1895 o
+  assets/splats/feuille_trefle_details_x8.png 3113 o
+  assets/splats/feuille_trefle_details_x16_k50.png 3113 o
+  assets/splats/feuille_trefle_details_x16_k71.png 5343 o
+  assets/splats/feuille_trefle_details_x16.png 9482 o
+  assets/splats/feuille_trefle_details_x32_k50.png 9482 o
+  assets/splats/feuille_trefle_details_x32_k71.png 15213 o
+  assets/splats/feuille_trefle_details_x32.png 24931 o
+  assets/splats/feuille_trefle_details.json 114339 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_trefle_details.png 15799 o
+== log_feuille_trefle.txt
+feuille_trefle : 696 pièces (0 vides), 400416 ms au total
+  sculpture+bake : 1227, 1268, 1137, 1032, 818, 927, 1229 ms
+  ×0.25 : 553.1 ms/pièce (24)
+  ×0.355 : 522.1 ms/pièce (24)
+  ×0.5 : 532.0 ms/pièce (48)
+  ×0.71 : 503.7 ms/pièce (24)
+  ×1 : 499.3 ms/pièce (48)
+  ×1.42 : 581.2 ms/pièce (24)
+  ×2 : 550.9 ms/pièce (48)
+  ×2.84 : 518.5 ms/pièce (24)
+  ×4 : 440.2 ms/pièce (48)
+  ×5.68 : 465.8 ms/pièce (24)
+  ×8 : 404.3 ms/pièce (80)
+  ×11.36 : 446.0 ms/pièce (56)
+  ×16 : 567.8 ms/pièce (112)
+  ×22.72 : 716.4 ms/pièce (56)
+  ×32 : 1040.8 ms/pièce (56)
+  assets/splats/feuille_trefle_x0_5_k50.png 86 o
+  assets/splats/feuille_trefle_x0_5_k71.png 86 o
+  assets/splats/feuille_trefle_x0_5.png 92 o
+  assets/splats/feuille_trefle_x1_k50.png 92 o
+  assets/splats/feuille_trefle_x1_k71.png 147 o
+  assets/splats/feuille_trefle_x1.png 183 o
+  assets/splats/feuille_trefle_x2_k50.png 183 o
+  assets/splats/feuille_trefle_x2_k71.png 256 o
+  assets/splats/feuille_trefle_x2.png 369 o
+  assets/splats/feuille_trefle_x4_k50.png 369 o
+  assets/splats/feuille_trefle_x4_k71.png 594 o
+  assets/splats/feuille_trefle_x4.png 1045 o
+  assets/splats/feuille_trefle_x8_k50.png 1045 o
+  assets/splats/feuille_trefle_x8_k71.png 1768 o
+  assets/splats/feuille_trefle_x8.png 2801 o
+  assets/splats/feuille_trefle_x16_k50.png 4249 o
+  assets/splats/feuille_trefle_x16_k71.png 7839 o
+  assets/splats/feuille_trefle_x16.png 13471 o
+  assets/splats/feuille_trefle_x32_k50.png 13471 o
+  assets/splats/feuille_trefle_x32_k71.png 22802 o
+  assets/splats/feuille_trefle_x32.png 38145 o
+  assets/splats/feuille_trefle.json 172856 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_feuille_trefle.png 11934 o
+== log_fleuron.txt
+fleuron : 18 pièces (6 vides), 1848 ms au total
+  sculpture+bake : 134, 91, 105 ms
+  t1 : 99.9 ms/pièce (3)
+  t2 : 99.7 ms/pièce (3)
+  t3 : 108.4 ms/pièce (3)
+  assets/splats/fleuron_kit.png 162 o
+  assets/splats/fleuron.json 4986 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_fleuron.png 384 o
+== log_panicule_fetuque.txt
+panicule_fetuque : 168 pièces (0 vides), 53498 ms au total
+  sculpture+bake : 367, 307, 296 ms
+  ×0.5 : 147.8 ms/pièce (24)
+  ×1 : 153.8 ms/pièce (24)
+  ×2 : 229.3 ms/pièce (24)
+  ×4 : 161.6 ms/pièce (24)
+  ×8 : 154.2 ms/pièce (24)
+  ×16 : 325.3 ms/pièce (24)
+  ×32 : 985.5 ms/pièce (24)
+  assets/splats/panicule_fetuque_x0_5.png 97 o
+  assets/splats/panicule_fetuque_x1.png 107 o
+  assets/splats/panicule_fetuque_x2.png 241 o
+  assets/splats/panicule_fetuque_x4.png 703 o
+  assets/splats/panicule_fetuque_x8.png 1882 o
+  assets/splats/panicule_fetuque_x16.png 4369 o
+  assets/splats/panicule_fetuque_x32.png 10679 o
+  assets/splats/panicule_fetuque.json 39479 o
+  sprints/rendu/splatting/sprint_reliquats_plantes/mesures/controle_panicule_fetuque.png 6299 o
+mur 20:05:34 → 20:17:17 (xargs -P 11), charge 4-13

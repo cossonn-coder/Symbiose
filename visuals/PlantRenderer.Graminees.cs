@@ -166,6 +166,7 @@ namespace Symbiose
 				float a = Mathf.Tau * Hash01(249, ig, k), e = rayon * 0.4f;
 				Vector2 tete = Iso(Mathf.Cos(a) * e, Mathf.Sin(a) * e, h * 1.2f);
 				_lotPrairie.Ligne(Iso(0f, 0f, 0f), tete, Ton(pal.Flower, 1), PixelInterne);
+				if (PoserPaniculeFetuqueSplat(tete, pal.Flower, ig + k)) continue;   // RELIQUATS ④ (SplatsHerbes.cs)
 				// Panicule lâche : quelques épillets roux autour du bout de la tige.
 				for (int m = 0; m < 5; m++)
 				{

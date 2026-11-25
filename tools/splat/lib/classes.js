@@ -48,6 +48,12 @@ const CLASSES = {
   feuille_cuillere: { nominalCm: 4, k: [0.71, 1, 1.41] },
   feuille_composee: { nominalCm: 18, k: [0.35, 1, 1.41] },
   feuille_aiguille: { nominalCm: 3, k: [1] },
+  // RELIQUATS ④ : trèfle = longueur d'une FOLIOLE (TailleFolioleCm × 0,6-1 = 1,8-3 cm) ;
+  // thym (rameau) et lavande (lames) : `GrainCm` de la fiche, taille fixe dans la vue → 1 classe.
+  feuille_trefle: { nominalCm: 3, k: [0.5, 0.71, 1] },
+  feuille_trefle4: { nominalCm: 3, k: [0.5, 0.71, 1] },
+  feuille_thym: { nominalCm: 1.9, k: [1] },
+  feuille_lavande: { nominalCm: 8, k: [1] },
   // Têtes, fruits, boutons : rayon (cm), organes ronds.
   tete_capitule: { nominalCm: 3, rond: true, k: [0.71] },
   tete_bouquet: { nominalCm: 1.8, rond: true, k: [0.71, 1.41] },
@@ -71,6 +77,7 @@ const CLASSES = {
   panicule: { nominalCm: 11, k: [0.71, 1] },
   gousse: { nominalCm: 15, k: [1] },
   chaton: { nominalCm: 6, k: [1] },
+  panicule_fetuque: { nominalCm: 2.5, k: [1] },   // RELIQUATS ④ : taille fixe dans la vue
 };
 
 // Taille vue d'une classe k = 1 rapportée à la taille sculptée (√2 pour un organe rond).
