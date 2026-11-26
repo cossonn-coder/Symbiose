@@ -52,6 +52,7 @@ namespace Symbiose
 		private readonly Dictionary<int, List<(int Rang, Vector3 B)>> _attachesParCle = new();
 		private PlantStructure _fruitsPosesDe;
 		private Vector2 _fruitsPosesAxe;
+		private bool _fruitsPosesTube;   // bois courbe ou droit (Maj+F11), comme BoisDuHouppier
 
 		private FicheFruit FicheFruitArbre =>
 			FruitsArbres.TryGetValue(_structure.SpeciesName, out var f) ? f : FruitParDefaut;
@@ -64,8 +65,9 @@ namespace Symbiose
 		private List<FruitPose> FruitsPoses()
 		{
 			Vector2 axe = WorldView.WorldToScreenOffset(1f, 1f);
-			if (_fruitsPosesDe == _structure && _fruitsPosesAxe == axe) return _fruitsPoses;
+			if (_fruitsPosesDe == _structure && _fruitsPosesAxe == axe && _fruitsPosesTube == TubeActif) return _fruitsPoses;
 			_fruitsPosesDe = _structure;
+			_fruitsPosesTube = TubeActif;
 			_fruitsPosesAxe = axe;
 			_fruitsPoses.Clear();
 			var fruits = _structure.Fruits;

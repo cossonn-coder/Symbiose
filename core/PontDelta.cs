@@ -7,8 +7,10 @@
 // Où ça tourne : dans SimBridge.Request, juste après le parse JSON, sur le fil qui a
 // fait la requête (pool pour un step / une action, principal pour un snapshot). Le
 // résultat est ÉCRIT DANS LE SNAPSHOT lui-même, par plante :
-//  · `segs_lus` = PackedFloat32Array, 10 flottants par segment
-//    [bx, by, bz, dx, dy, dz, longueur, épaisseur, apex 0/1, âge en semaines] —
+//  · `segs_lus` = PackedFloat32Array, 11 flottants par segment
+//    [bx, by, bz, dx, dy, dz, longueur, épaisseur, apex 0/1, âge en semaines,
+//     parent (−1 = racine)] — `parent` lu depuis le sprint bois_arbres ① (axes du
+//    tube lissé, visuals/BoisAxes.cs) ; ajouté EN FIN pour ne décaler aucun lecteur —
 //    lu par PlantStructure.FromSnapshot / PlanteLue à la place de `segments` ;
 //  · `genes` = remis depuis le cache (le serveur ne l'envoie qu'au 1er envoi).
 // Le snapshot se suffit donc à lui-même : la rotation qui ré-applique `_lastSnap`,
@@ -34,7 +36,13 @@ namespace Symbiose
 	public sealed class PontDelta
 	{
 		/// <summary>Flottants par segment dans `segs_lus` (et dans le cache).</summary>
-		public const int Pas = 10;
+		public const int Pas = 11;
+
+		/// <summary>Colonne de l'âge (semaine de naissance dans le cache).</summary>
+		public const int ColAge = 9;
+
+		/// <summary>Colonne du parent (index du segment porteur, −1 = racine).</summary>
+		public const int ColParent = 10;
 
 		// Cache par plante : segments au format `segs_lus` mais avec la SEMAINE DE
 		// NAISSANCE en dernière colonne (elle ne bouge pas ; l'âge, si).
@@ -153,9 +161,13 @@ namespace Symbiose
 				using Variant op = ops[i];
 				if (op.VariantType == Variant.Type.Array)
 				{
-					// [parent, bx, by, bz, dx, dy, dz, long, ép, apex, naissance] → parent ignoré
+					// [parent, bx, by, bz, dx, dy, dz, long, ép, apex, naissance] → parent
+					// rangé EN FIN (colonne ColParent), le reste décalé de 1.
 					using var lit = op.AsGodotArray();
-					for (int c = 0; c < Pas; c++) neuf[w * Pas + c] = (float)LectureSnap.D(lit, c + 1);
+					for (int c = 0; c < ColParent; c++) neuf[w * Pas + c] = (float)LectureSnap.D(lit, c + 1);
+					// `parent` = null côté Python pour le collet → −1 (Nil.AsDouble vaudrait 0).
+					using (Variant par = lit[0])
+						neuf[w * Pas + ColParent] = par.VariantType == Variant.Type.Nil ? -1f : (float)par.AsDouble();
 					w++;
 					continue;
 				}
@@ -174,9 +186,9 @@ namespace Symbiose
 				w += k;
 			}
 			e.Segs = neuf;
-			// Sortie : même tableau, dernière colonne = âge (semaine − naissance).
+			// Sortie : même tableau, colonne ColAge = âge (semaine − naissance).
 			var sortie = (float[])neuf.Clone();
-			for (int s = Pas - 1; s < sortie.Length; s += Pas) sortie[s] = semaine - sortie[s];
+			for (int s = ColAge; s < sortie.Length; s += Pas) sortie[s] = semaine - sortie[s];
 			p[LectureSnap.Cle("segs_lus")] = sortie;
 		}
 	}

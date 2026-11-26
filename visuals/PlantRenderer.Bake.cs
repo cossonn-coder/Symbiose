@@ -136,7 +136,7 @@ namespace Symbiose
 				long t0 = Stopwatch.GetTimestamp();
 				DrawVector();
 				double ms = Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
-				BakeQueue.RecordBrushDraw(ms, _structure?.Segments.Count ?? 0);
+				BakeQueue.RecordBrushDraw(ms, _structure?.Segments.Count ?? 0, _structure?.SpeciesName);
 				if (BakeQueue.TraceCout)
 					GD.Print($"[cout] {_structure?.SpeciesName} {ms:F3} {_lotPrairie?.Sommets ?? 0}");
 				return;

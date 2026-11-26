@@ -26,15 +26,19 @@ namespace Symbiose
 	// is_apex — PLUS age_weeks depuis le sprint Rendu feuillage ⑤ (protocole 0.5.5,
 	// croissance progressive des feuilles, E1) : l'âge du segment porteur sert de
 	// proxy d'âge des feuilles qu'il porte → facteur `leafGrowth` côté renderer. Les
-	// champs restants du Python (auxin, has_bud, parent, organs) ne servent toujours
-	// pas au dessin → non transportés.
+	// champs restants du Python (auxin, has_bud, organs) ne servent toujours pas au
+	// dessin → non transportés. `Parent` (index du segment porteur, −1 = collet) est
+	// lu depuis le sprint bois_arbres ① : il relie les segments en AXES pour le tube
+	// lissé (visuals/BoisAxes.cs). Défaut −1 = flux qui ne le porte pas → chaque
+	// segment est alors un axe isolé (repli sûr : dessin équivalent à l'ancien).
 	public readonly record struct Segment(
 		Vector3 Base,        // origine du segment (cm, espace sol 3D)
 		Vector3 Dir,         // vecteur directeur unitaire 3D
 		float LengthCm,      // longueur → extrémité = Base + Dir * LengthCm
 		float ThicknessCm,   // épaisseur (vieux bois = épais) → largeur de trait
 		bool IsApex,         // extrémité de croissance active (dessinée en vert)
-		int AgeWeeks);       // âge du segment (sem.) — proxy d'âge des feuilles (⑤)
+		int AgeWeeks,        // âge du segment (sem.) — proxy d'âge des feuilles (⑤)
+		int Parent = -1);    // segment porteur (index dans Segments), −1 = collet
 
 	// ---------------------------------------------------------------------------
 	// FRUIT — miroir d'un fruit tracé du moteur (plant.fruits, décompo·compost ③)
@@ -263,7 +267,8 @@ namespace Symbiose
 						LengthCm: f[o + 6],
 						ThicknessCm: f[o + 7],
 						IsApex: f[o + 8] != 0f,
-						AgeWeeks: (int)f[o + 9]));
+						AgeWeeks: (int)f[o + PontDelta.ColAge],
+						Parent: (int)f[o + PontDelta.ColParent]));
 			}
 			else
 				using (var segs = LectureSnap.Tab(plant, "segments"))
@@ -295,7 +300,16 @@ namespace Symbiose
 				LengthCm: LectureSnap.F(seg, "length_cm"),
 				ThicknessCm: LectureSnap.F(seg, "thickness_cm"),
 				IsApex: LectureSnap.B(seg, "is_apex"),
-				AgeWeeks: LectureSnap.A(seg, "age_weeks") ? LectureSnap.I(seg, "age_weeks") : 0);
+				AgeWeeks: LectureSnap.A(seg, "age_weeks") ? LectureSnap.I(seg, "age_weeks") : 0,
+				Parent: LireParent(seg));
+		}
+
+		// `parent` : entier, ou null pour le collet (→ −1) ; absent (flux ancien) → −1.
+		private static int LireParent(Godot.Collections.Dictionary seg)
+		{
+			if (!LectureSnap.A(seg, "parent")) return -1;
+			using Variant v = seg[LectureSnap.Cle("parent")];
+			return v.VariantType == Variant.Type.Nil ? -1 : (int)v.AsDouble();
 		}
 
 		/// <summary>Le tableau plat `segs_lus` posé par PontDelta (copie .NET).</summary>

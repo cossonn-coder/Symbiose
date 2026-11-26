@@ -127,10 +127,28 @@ namespace Symbiose
 			return r.Intersects(vp, includeBorders: true) ? dist : dist + HorsChamp;
 		}
 
-		/// <summary>Ligne du rapport perf (touche C) et du F4.</summary>
+		/// <summary>Ligne du rapport perf (touche C) et du F4. Depuis bois_arbres ① : QUELLES
+		/// espèces sont en repli (un arbre en repli paie son tube à chaque image) et la pire
+		/// cuisson (ms de pinceau, espèce) — le rapport du PC ne permettait pas de le savoir.</summary>
 		public static string Ligne() =>
 			$"précuisson {Courant / 1048576.0:F0}/{BudgetOctets / 1048576} Mo "
 			+ $"(pages {AtlasPages.TotalBytes / 1048576.0:F0}, planches {SplatPlanches.OctetsCharges / 1048576.0:F0}) "
-			+ $"· {Replis} plante(s) en repli · {Evictions} évincée(s)";
+			+ $"· {Replis} plante(s) en repli{EspecesEnRepli()} · {Evictions} évincée(s)"
+			+ $" · pinceau max {BakeQueue.PinceauMaxMs:F1} ms ({BakeQueue.PinceauMaxEspece})";
+
+		// « (AppleTree ×2, OakTree) », triées par nom (ordre stable d'un rapport à l'autre).
+		private static string EspecesEnRepli()
+		{
+			if (_replis.Count == 0) return "";
+			var compte = new SortedDictionary<string, int>(System.StringComparer.Ordinal);
+			foreach (var p in _replis.Keys)
+			{
+				string e = GodotObject.IsInstanceValid(p) ? p.Espece ?? p.Name : "?";
+				compte[e] = compte.TryGetValue(e, out int n) ? n + 1 : 1;
+			}
+			var parts = new List<string>();
+			foreach (var (e, n) in compte) parts.Add(n > 1 ? $"{e} ×{n}" : e);
+			return " (" + string.Join(", ", parts) + ")";
+		}
 	}
 }

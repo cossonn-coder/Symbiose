@@ -390,7 +390,7 @@ namespace Symbiose
 		private Vector2 PlaceFeuille(Segment s, int i, int j, int n, Vector2 perp, Vector3 collet,
 									 float leafGrowth, out Vector3 p, out Vector2 insert)
 		{
-			p = s.Base + s.Dir * (s.LengthCm * (j + 0.5f) / n);
+			p = PointDuBois(s, (j + 0.5f) / n);   // sur la courbe du bois (BOIS & ARBRES ①)
 			float h2 = Hash01(11, i, j);
 			float side = Hash01(7, i, j) < 0.5f ? 1f : -1f;
 			float off = LeafOffsetCm * (0.5f + h2);

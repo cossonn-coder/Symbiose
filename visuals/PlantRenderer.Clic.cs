@@ -25,13 +25,11 @@ namespace Symbiose
 			if (FicheDeLaPlante != null) return false;
 			Vector3 collet = _structure.ColletCm;
 			float marge = 4f / WorldView.CurrentZoom;          // 4 px d'écran de tolérance
-			foreach (var s in _structure.Segments)
+			for (int i = 0; i < _structure.Segments.Count; i++)
 			{
-				Vector3 tip = s.Base + s.Dir * s.LengthCm;
-				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
-				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
+				var s = _structure.Segments[i];
 				float demi = s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor / 2f;
-				if (local.DistanceTo(Geometry2D.GetClosestPointToSegment(local, p1, p2)) <= demi + marge)
+				if (DistanceAuBois(i, local, collet) <= demi + marge)   // courbe du tube (BOIS & ARBRES ①)
 					return true;
 			}
 			return false;

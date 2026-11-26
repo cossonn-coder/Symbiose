@@ -131,13 +131,20 @@ namespace Symbiose
 		/// <summary>Temps CPU cumulé des coups de pinceau depuis le lancement (HOUPPIER ④).</summary>
 		internal static double PinceauMsCumul;
 
-		public static void RecordBrushDraw(double ms, int segs)
+		public static void RecordBrushDraw(double ms, int segs, string espece = null)
 		{
 			_drawMsSum += ms;
 			PinceauMsCumul += ms;
 			_drawCount++;
 			if (ms > _drawMsMax) { _drawMsMax = ms; _drawMaxSegs = segs; }
+			// Rapport C (bois_arbres ①) : la pire cuisson depuis le lancement et son espèce,
+			// jamais remise à zéro par la vidange de file (le rapport se lit après coup).
+			if (ms > PinceauMaxMs) { PinceauMaxMs = ms; PinceauMaxEspece = espece ?? "?"; }
 		}
+
+		/// <summary>Pire temps de pinceau d'UNE cuisson depuis le lancement (ms) et son espèce.</summary>
+		public static double PinceauMaxMs { get; private set; }
+		public static string PinceauMaxEspece { get; private set; } = "";
 
 		// ② : les pages d'atlas communes (AtlasPages.cs) sont rangées sous la file.
 		public override void _EnterTree() => AtlasPages.Hote = this;

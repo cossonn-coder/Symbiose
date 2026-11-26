@@ -16,7 +16,7 @@ namespace Symbiose
 		internal Vector2 MilieuSegmentCanvas(int i)
 		{
 			var s = _structure.Segments[i];
-			Vector3 c = _structure.ColletCm, m = s.Base + s.Dir * (s.LengthCm * 0.5f);
+			Vector3 c = _structure.ColletCm, m = PointDuBois(s, 0.5f);   // sur la courbe dessinée (BOIS & ARBRES ①)
 			return ToGlobal(Iso(m.X - c.X, m.Y - c.Y, m.Z));
 		}
 

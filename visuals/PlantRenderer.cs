@@ -485,12 +485,8 @@ namespace Symbiose
 			float bestD = maxDistPx;
 			for (int i = 1; i < _structure.Segments.Count; i++)   // 0 = collet, exclu
 			{
-				var s = _structure.Segments[i];
-				Vector3 tip = s.Base + s.Dir * s.LengthCm;
-				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
-				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
-				float d = local.DistanceTo(
-					Geometry2D.GetClosestPointToSegment(local, p1, p2));
+				// BOIS & ARBRES ① : la courbe dessinée (tube), ou le segment droit (ancien bois).
+				float d = DistanceAuBois(i, local, collet);
 				if (d < bestD) { bestD = d; best = i; }
 			}
 			if (best >= 0) distPx = bestD;
@@ -546,11 +542,32 @@ namespace Symbiose
 			// CASSÉ À L'ÉCRAN ④ : racines en éventail + halo dithéré sous un arbre.
 			DrawAncrage();
 
+			bool houppier = Houppier;   // HOUPPIER ⑤ : bois à sa vraie épaisseur, bout seul tendre
+			// BOIS & ARBRES ① : tube lissé trié par profondeur (PlantRenderer.Tube.cs) ;
+			// l'ancien bois ci-dessous reste derrière l'interrupteur (Maj+F11).
+			if (TubeActif) DrawTube(collet, houppier);
+			else DrawBoisSegments(collet, houppier);
+
+			// Organes (tranche 6·A) : feuilles puis fleurs/fruits, PAR-DESSUS le
+			// bois (ordre du prototype). Redessinés UNIQUEMENT avec la plante
+			// (SetStructure à chaque snapshot) — jamais par frame ni au balayage
+			// du soleil (leçon perf C2 : l'ombre seule vit dans un nœud séparé).
+			// Paliers hauts (D106 T6) : masses ×4, organes ×8, symptômes ×16, intime ×32.
+			DrawOrgans(collet);
+
+			// Surbrillance (tranche 5) : le segment sous la souris en mode
+			// tailler se redessine PAR-DESSUS, après tout le bois.
+			DrawHighlight(collet);
+		}
+
+		// L'ANCIEN bois (avant BOIS & ARBRES ①), un DrawLine par segment — conservé derrière
+		// l'interrupteur Maj+F11 / SYMBIOSE_SPLATS=0 pour comparer avant/après.
+		private void DrawBoisSegments(Vector3 collet, bool houppier)
+		{
 			// Tri par épaisseur DÉCROISSANTE : le bois épais (tronc) se dessine
 			// d'abord (dessous), les fines brindilles par-dessus — comme _panel.
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
-			bool houppier = Houppier;   // HOUPPIER ⑤ : bois à sa vraie épaisseur, bout seul tendre
 
 			for (int k = 0; k < segs.Count; k++)
 			{
@@ -579,18 +596,6 @@ namespace Symbiose
 				if (houppier) DrawBoutTendre(s, collet);
 				DrawSnowOnBranch(p1, p2, w, s, k);   // neige posée sur le bois (T5)
 			}
-
-			// Organes (tranche 6·A) : feuilles puis fleurs/fruits, PAR-DESSUS le
-			// bois (ordre du prototype). Redessinés UNIQUEMENT avec la plante
-			// (SetStructure à chaque snapshot) — jamais par frame ni au balayage
-			// du soleil (leçon perf C2 : l'ombre seule vit dans un nœud séparé).
-			// Paliers hauts (D106 T6) : masses ×4, organes ×8, symptômes ×16, intime ×32.
-			DrawOrgans(collet);
-
-			// Surbrillance (tranche 5) : le segment sous la souris en mode
-			// tailler se redessine PAR-DESSUS, après tout le bois.
-			DrawHighlight(collet);
-
 		}
 
 		// Aplatissement de la silhouette « couchée » : le moteur ne ré-oriente PAS
@@ -612,6 +617,7 @@ namespace Symbiose
 		{
 			Vector3 collet = _structure.ColletCm;
 			float zf = _deadStade == "couchee" ? CoucheeFlatten : 1f;
+			if (TubeActif) { DrawSqueletteTube(collet, zf); return; }   // BOIS & ARBRES ①
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
 			for (int k = 0; k < segs.Count; k++)
@@ -635,11 +641,12 @@ namespace Symbiose
 			if (hi < 0 || hi >= _structure.Segments.Count)
 				return;
 			var s = _structure.Segments[hi];
+			float w = Mathf.Max(2f,
+				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor) + 2f);
+			if (TubeActif) { DrawHighlightTube(hi, collet, w); return; }   // le long de la courbe (①)
 			Vector3 tip = s.Base + s.Dir * s.LengthCm;
 			Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
 			Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
-			float w = Mathf.Max(2f,
-				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor) + 2f);
 			DrawLine(p1, p2, HighlightColor, w, antialiased: false);
 		}
 	}

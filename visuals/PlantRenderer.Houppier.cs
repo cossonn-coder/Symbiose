@@ -48,7 +48,9 @@ namespace Symbiose
 		private void DrawBoutTendre(in Segment s, Vector3 collet)
 		{
 			if (!s.IsApex) return;
-			Vector3 tip = s.Base + s.Dir * s.LengthCm, de = tip - s.Dir * Mathf.Min(BoutTendreCm, s.LengthCm * 0.5f);
+			// Sur la courbe du bois (BOIS & ARBRES ①) : le bout tendre colle au tube.
+			float part = s.LengthCm > 1e-4f ? Mathf.Min(BoutTendreCm, s.LengthCm * 0.5f) / s.LengthCm : 0f;
+			Vector3 tip = PointDuBois(s, 1f), de = PointDuBois(s, 1f - part);
 			DrawLine(Iso(de.X - collet.X, de.Y - collet.Y, de.Z), Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z),
 				Lit(WoodRamp(LigBoutTendre)), PixelInterne * BoisArbreMinPx * 0.5f, antialiased: false);
 		}

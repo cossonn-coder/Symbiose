@@ -70,7 +70,7 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 ## Carte des tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_axes_tube.md` — parent lu, axes, tube lissé, pied, cols, tri profondeur, géométrie unique, rapport C | à faire |
+| ① | `01_axes_tube.md` — parent lu, axes, tube lissé, pied, cols, tri profondeur, géométrie unique, rapport C | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ② | `02_ecorces.md` — maquette C3, écorces 12 essences × 3 âges, plaquage | à faire |
 | ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | à faire |
 | ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | à faire |
@@ -84,7 +84,46 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 - Interdits : `data/code/` (lecture seule), `test_epaisseur_500ans`, DeepSeek dans les sous-agents, `tools/splat/vendor/`.
 
 ## Compte rendu des tronçons
-(rempli par chaque tronçon)
+
+### ① Axes et tube lissé — FAIT côté code (2026-11-26), golden `bce813af…` intact, build 0 avert.
+- **Parent lu** : `PontDelta.Pas` 10 → 11, `parent` rangé EN FIN (col. 10, `ColParent`) pour ne
+  décaler aucun lecteur ; l'âge reste col. 9 (`ColAge`, la soustraction des semaines le vise
+  nommément). `null` Python (collet) → −1 (Nil.AsDouble aurait donné 0). `Segment.Parent` (défaut −1)
+  lu aussi par `ParseSegment`. `data/code/tests/simserver/delta.py` garde déjà `parent` : rien à faire.
+- **Neufs** : `visuals/BoisAxes.cs` (axes, Catmull-Rom centripète, largeur continue, pied, cols,
+  mémo `ConditionalWeakTable` par référence de structure, partagé avec le pinceau) ;
+  `visuals/RubanTexture.cs` (primitive : normales en onglet borné, bandes [u0,u1] avec u/v, un
+  `CanvasItemAddTriangleArray` par morceau) ; `visuals/PlantRenderer.Tube.cs` (tube vivant +
+  squelette, tri par profondeur, tons de l'ancien `DrawEcorce`, stries, neige, clic, surbrillance).
+- **Lecteurs migrés** sur `PointDuBois` / la courbe : rameaux dérivés (donc fruits et feuilles
+  d'arbre), feuilles génériques (`PlaceFeuille`), bout tendre, `FindSegmentNear`, `BoisSous`,
+  surbrillance, banc `MilieuSegmentCanvas`. Les nœuds étant SUR la courbe, les lecteurs de bouts
+  (`FruitPoint`, vrilles, emprise) n'avaient pas à bouger.
+- **Non migrés (hors périmètre, signalés)** : paliers bas ×0,5-×2 (`DrawTigesAssemblees`,
+  `PlacerTouffes`, `Paliers.cs` : tiges de 1 px, droites) ; lianes ; ports à fiche ; petit bois
+  dérivé (③). Racines-triangles coupées quand le tube est actif (halo gardé) ; ellipse au sol sous
+  le tronc (sinon bas coupé à l'horizontale, vu en capture).
+- **Interrupteur** : Maj+F11 / `SYMBIOSE_SPLATS=0` → ancien bois ET lecteurs droits (clés de mémo
+  des rameaux/fruits incluent l'état de l'interrupteur).
+- **Rapport C / F4** : `BudgetCuisson.Ligne()` liste les espèces en repli et la pire cuisson
+  (« pinceau max X ms (espèce) », depuis le lancement).
+- **Mesures** [VM llvmpipe, charge 9-11, n=1 cuisson par cas] : bois seul du charme (70 segments)
+  3,3 / 5,1 / 6,7 / 10,3 ms à ×4/×8/×16/×32 (ancien : 0,5 / 0,8 / 1,2 / 3,0 ms) ; ≈ 2 850 triangles
+  [×16-×32] ; cuisson complète du charme ×32 ≈ 1 014 ms [après] contre 992 ms [avant] → le bois
+  pèse ≈ 1 % d'une cuisson. Première version 45 ms à ×16 (stries en `DrawPolyline` + `Ton` par quad)
+  corrigée. Frame `full` ×8 avant/après NON mesurée (VM trop chargée pour un temps significatif).
+- **Banc de taille** `-Y AppleTree` ×8 et ×16 : OK (70 → 69 segments, 0 feuillage déplacé).
+- Captures : `mesures/01_*` (verger ×4/×8 avant/après, charme ×16 avant/après : plus de marches,
+  pied ×8 évasé). Constat : tronc continu effilé, pied évasé arrondi, branches derrière le tronc
+  passent derrière. Squelette : pas de banc prêt, à voir au F5.
+- **Écarts au kickoff** : aucun bloquant. `PontDelta.Pas` = 11 avec `parent` en fin (et non en
+  tête) ; `tests/simserver/delta.py` est sous `data/code/` (lecture seule, déjà correct).
+- **F5 Nico** : tronc et charpentières sans marche ni coude (×4→×32) ; pied évasé (force 0,8 [choix])
+  et cols ; branche arrière derrière le tronc ; squelette d'arbre mort ; taille : surbrillance qui
+  suit la courbe, coupe là où l'on vise ; Maj+F11 avant/après ; rapport C : espèces en repli.
 
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire » (①).
+① fait côté code (non commité au moment de l'écriture : l'orchestrateur commit). Lire `CLAUDE.md`,
+ce fichier, la conception, puis le kickoff du premier tronçon « à faire » (②, `02_ecorces.md`).
+Pour ② : `RubanTexture.Envoyer(ci, tex)` envoie déjà u ∈ [−1,1] et v = longueur d'arc en cm ;
+les tons d'écorce se branchent dans `PlantRenderer.Tube.cs` (`PeindreEcorceTube`).

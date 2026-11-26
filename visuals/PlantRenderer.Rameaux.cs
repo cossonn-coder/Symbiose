@@ -72,6 +72,7 @@ namespace Symbiose
 		private readonly List<BoisDerive> _boisDerive = new();
 		private PlantStructure _boisDeriveDe;
 		private Vector2 _boisDeriveAxe;
+		private bool _boisDeriveTube;   // Maj+F11 change le bois porteur (courbe ou droit) : clé aussi
 
 		/// <summary>Arbre vivant au port d'arbre, avec une table de rameaux. Le jeune plant sans tronc et
 		/// le squelette gardent leur dessin.</summary>
@@ -84,8 +85,9 @@ namespace Symbiose
 		private List<BoisDerive> BoisDuHouppier()
 		{
 			Vector2 axe = WorldView.WorldToScreenOffset(1f, 1f);
-			if (_boisDeriveDe == _structure && _boisDeriveAxe == axe) return _boisDerive;
+			if (_boisDeriveDe == _structure && _boisDeriveAxe == axe && _boisDeriveTube == TubeActif) return _boisDerive;
 			_boisDeriveDe = _structure;
+			_boisDeriveTube = TubeActif;
 			_boisDeriveAxe = axe;
 			_boisDerive.Clear();
 			RecetteRameaux r = RecettesRameaux[_structure.SpeciesName];
@@ -102,7 +104,7 @@ namespace Symbiose
 			int n = Mathf.Max(1, Mathf.RoundToInt(s.LengthCm / 100f * r.ParMetre));
 			for (int k = 0; k < n; k++)
 			{
-				Vector3 a = s.Base + s.Dir * (s.LengthCm * (k + Hash01(521, cle, k)) / n);
+				Vector3 a = PointDuBois(s, (k + Hash01(521, cle, k)) / n);   // sur la courbe (BOIS & ARBRES ①)
 				float ouv = r.Ouverture * Mathf.Lerp(0.7f, 1.3f, Hash01(525, cle, k));
 				Vector3 d = Bifurcation(s.Dir, Mathf.Tau * Hash01(523, cle, k), ouv, r.Port);
 				float l = r.LongCm * Mathf.Lerp(0.6f, 1.4f, Hash01(527, cle, k)) * g;

@@ -223,6 +223,8 @@ namespace Symbiose
 			float rx = Mathf.Min(tronc * 1.6f, AncrageMaxPx), ry = rx * 0.5f;
 			RemplirTrame(EllipsePoints(Vector2.Zero, rx, ry, 16), HaloSol);
 			DrawColoredPolygon(EllipsePoints(Vector2.Zero, rx * 0.65f, ry * 0.65f, 16), Ton(HaloSol, 1));
+			// BOIS & ARBRES ① : le tube porte un pied évasé (BoisAxes) — plus de racines plates.
+			if (TubeActif) return;
 			// Racines : 4-5 doigts en éventail au sol, orientés vers l'extérieur et le haut.
 			int g = GraineIndividu, nR = 4 + (Hash01(151, g, 0) < 0.5f ? 1 : 0);
 			float a0 = Hash01(153, g, 0) * Mathf.Tau;
