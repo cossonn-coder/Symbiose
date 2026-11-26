@@ -85,7 +85,8 @@ const tigeDe = f => (f.Tige && f.Tige.Tige) || (f.Chaume && f.Chaume.Couleur) ||
 function sculpter(o, s, table, moteur, esp, etat) {
   if (s.genre === 'arbre') {
     const st = moteur[esp].structures[etat.nom === 'jeune' ? 0 : 1];
-    return arbre(o, st, table.rameaux[esp], table.fruitsArbres[esp] || null, table.grappes[esp] || null);
+    return arbre(o, st, table.rameaux[esp], table.fruitsArbres[esp] || null, table.grappes[esp] || null,
+      table.fleursArbres[esp] || null, table.cone, esp);
   }
   if (s.genre === 'liane') return liane(o, moteur[esp].structures[etat.nom === 'jeune' ? 0 : 1], table.lianes[esp]);
   const port = { Rosette: bas.rosette, Tapis: bas.tapis, Rampante: bas.rampante,
@@ -127,6 +128,7 @@ function portrait(L, s, table, moteur, esp, etat, k) {
   const coul = { ...couleurs(etat, pal, tigeDe(s.fiche || {}) || (table.lianes[esp] && table.lianes[esp].Organes.Tige.Tige), table.automneDefaut,
     (s.fiche && s.fiche.MelangeFruit) || 0),
     ...(s.fiche && s.fiche.Pied ? { pied: s.fiche.Pied } : {}),
+    ...(table.ecorces[esp] ? { ecorce: table.ecorces[esp], marque: '#26221e' } : {}),   // écorce d'essence (⑤)
     ...(s.fiche && s.fiche.Tapis && s.fiche.Tapis.Stolon ? { stolon: s.fiche.Tapis.Stolon } : {}) };
   const { pal: hex, M } = palette(coul);
   const B = L.makeBuilder(11 + k, hex), S = L.KIT.sculpt(L.makeSculpt(B));

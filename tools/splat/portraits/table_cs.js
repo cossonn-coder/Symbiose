@@ -184,7 +184,7 @@ function constantes(src) {
 
 // La table complète, lue une fois.
 function lireTable() {
-  const sources = ['PortsFiches', 'Organs', 'Lianes', 'Rameaux', 'FruitsArbre', 'FleursArbre', 'Prairie', 'Graminees']
+  const sources = ['PortsFiches', 'Organs', 'Lianes', 'Rameaux', 'FruitsArbre', 'FleursArbre', 'Prairie', 'Graminees', 'Arbres', 'Sapin']
     .map(f => [f, VUE(f)]);
   const types = { Color: { params: [{ nom: 'hex', type: 'string' }] } };
   for (const [, s] of sources) signatures(s, types);
@@ -198,6 +198,10 @@ function lireTable() {
     fruitsArbres: d.FruitsArbres, grappes: d.GrappesFruits, fleursArbres: d.FleursArbres,
     prairie: d.PortsPrairie, constPrairie: { ...constantes(src.Prairie), ...constantes(src.Graminees) },
     palettes, paletteDefaut: lecteur(jetons(def[1]), types).expr(),
+    // BOIS & ARBRES ⑤ : écorce d'essence (RecetteArbre.Ecorce) et règle du cône (PlantRenderer.Sapin.cs).
+    ecorces: Object.fromEntries(Object.entries(d.RecettesArbres || {}).map(([e, r]) => [e, r.Ecorce])),
+    cone: { ...constantes(src.Sapin),
+      especes: [.../PortsConiques\s*=\s*new\(\)\s*\{([^}]*)\}/.exec(src.Sapin)[1].matchAll(/"(\w+)"/g)].map(m => m[1]) },
     automneDefaut: [...src.Organs.match(/AutumnLeaves\s*=\s*\{([^}]*)\}/)[1].matchAll(/"(\w+)"/g)].map(m => '#' + m[1])
   };
 }

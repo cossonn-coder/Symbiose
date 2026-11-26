@@ -70,7 +70,11 @@ def main(args: list[str]) -> None:
         structures = []
         for sem in (int(a) for a in ages.split(',')):
             p = _grow(table[nom], sem, "real" if sem >= SEMAINES_REELLES else "summer")
-            structures.append({"semaines": sem, **_specimen_dict(p, f"{nom} · {sem} sem.")})
+            spec = _specimen_dict(p, f"{nom} · {sem} sem.")
+            # BOIS & ARBRES ⑤ : le segment porteur, pour lisser le bois en AXES (un tube par axe).
+            for d, seg in zip(spec["segments"], p.segments):
+                d["parent"] = seg.parent
+            structures.append({"semaines": sem, **spec})
         doc[nom]["structures"] = structures
     json.dump(doc, sys.stdout, sort_keys=True)
 

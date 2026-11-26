@@ -45,7 +45,7 @@ namespace Symbiose
 			["Alder"]        = new(7f, 50f, 0.70f,  0.20f, 3, 7, FormeFeuille.Coeur, 9f, 0.75f),       // ronde échancrée, 4-9 cm
 			["Willow"]       = new(8f, 80f, 0.55f, -0.65f, 3, 8, FormeFeuille.Lanceolee, 10f, 0.2f),   // retombée ; étroite, 5-10 cm
 			["Fig"]          = new(5f, 60f, 1.00f,  0.25f, 3, 2, FormeFeuille.Palmee, 22f, 0.9f),      // palmée, 10-25 cm : peu de feuilles
-			["FirTree"]      = new(8f, 50f, 1.25f, -0.30f, 3, 12, FormeFeuille.Ruban, 4f, 0.15f),      // étages ; aiguille, 2-3 cm
+			["FirTree"]      = new(8f, 50f, 1.25f, -0.30f, 3, 12, FormeFeuille.Ruban, 4f, 0.15f),      // étages (Sapin.cs) ; aiguille, 2-3 cm
 		};
 
 		private static readonly Dictionary<string, FichePort> FichesLimbe = new();
@@ -91,6 +91,8 @@ namespace Symbiose
 			_boisDeriveAxe = axe;
 			_boisDerive.Clear();
 			RecetteRameaux r = RecettesRameaux[_structure.SpeciesName];
+			_cimeConeCm = PortsConiques.Contains(_structure.SpeciesName) ? CimeDuTronc() : 0f;
+			if (_cimeConeCm > 0f) DeriverEtages(r);   // cône du sapin (Sapin.cs, BOIS & ARBRES ⑤)
 			foreach (var s in _structure.Segments)
 				if (IsLeafy(s)) DeriverRameaux(s, r);
 			_boisDerive.Sort(static (a, b) => a.Prof.CompareTo(b.Prof));
@@ -143,7 +145,8 @@ namespace Symbiose
 		{
 			Vector3 c = _structure.ColletCm;
 			var h = new Vector2(p.X - c.X, p.Y - c.Y);
-			if (h.Length() > _rayonReelCm) h = h.Normalized() * _rayonReelCm;
+			float rmax = RayonPermis(p.Z - c.Z);   // le disque réel, ou le cône d'un sapin (Sapin.cs)
+			if (h.Length() > rmax) h = h.Normalized() * rmax;
 			return new Vector3(c.X + h.X, c.Y + h.Y,
 				Mathf.Clamp(p.Z, RameauSolCm, _hauteurReelCm + c.Z + RameauMargeHautCm));
 		}

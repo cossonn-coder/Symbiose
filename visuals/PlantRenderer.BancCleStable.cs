@@ -64,6 +64,14 @@ namespace Symbiose
 							e.Add(P(PlaceFeuille(s, i, j, n, perp, collet, LeafGrowthFactor(s), out _, out _)));
 				}
 			}
+			// Le petit bois dérivé d'un arbre (rameaux, étages du sapin — BOIS & ARBRES ⑤) : ses bouts portent
+			// gerbes, aiguilles, fleurs et fruits à tous les paliers.
+			if (Houppier)
+			{
+				Vector3 c = _structure.ColletCm;
+				foreach (var b in BoisDuHouppier())
+					e.Add($"bois {P(Iso(b.B.X - c.X, b.B.Y - c.Y, b.B.Z))}");
+			}
 			return e;
 		}
 	}

@@ -74,7 +74,7 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 | ② | `02_ecorces.md` — maquette C3, écorces 12 essences × 3 âges, plaquage | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | **FAIT côté code 2026-11-26** (F5 attendu) |
-| ⑤ | `05_sapin_portraits.md` — cône du sapin en jeu, portraits d'arbres | à faire |
+| ⑤ | `05_sapin_portraits.md` — cône du sapin en jeu, portraits d'arbres | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ⑥ | `06_revue.md` — revue des paliers, F5 consolidé S2, clôture | à faire |
 
 ## Règles du sprint
@@ -240,9 +240,44 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
   montée de floraison (bouquets roses de boutons pommier, blanc verdâtre cerisier) ; descente
   (bouquets clairsemés à mesure que `floraison` baisse) ; Maj+F11 (repli gerbes).
 
+### ⑤ Cône du sapin et portraits d'arbres — FAIT côté code (2026-11-26), golden `bce813af…` intact, build 0 avert.
+- **Cône EN JEU** (`visuals/PlantRenderer.Sapin.cs`, neuf ; branché dans `BoisDuHouppier`) : `PortsConiques =
+  {FirTree}` ; tronc = du collet, l'enfant le plus vertical (Dir.Z > 0,7) ; étages aux hauteurs ABSOLUES
+  25 + k × 30 cm, 5 rameaux par verticille, longueur L = R × (cime − z)/cime (R = `_rayonReelCm`), brindilles
+  alternées dans le plan du rameau tous les 8 cm [choix]. **Correction en cours** : sans plus, les rameaux
+  que la vue dérive déjà des latéraux et de la FLÈCHE du moteur (50-70 cm) écrasaient la pointe → tout le
+  petit bois d'un port conique est ramené dans le cône (`RayonPermis`, utilisé par `DansLaCouronne`,
+  plancher 10 cm à la cime). Rayon réel jamais dépassé.
+- **Prémisse écartée** : longueur « par l'âge » du verticille (plus juste en botanique) — au banc
+  `houppiers_25` la flèche cale à 6 m, le haut du tronc a 13 ans, le bas 25 → cylindre tronqué [n=1 pied].
+- **Clé stable** : `-Y FirTree` ×2 : segments 17 → 15, 566 → 516 éléments, **0 déplacé** ; `-Y AppleTree`
+  ×2 : 70 → 69, 0 déplacé. Le banc compte désormais aussi le BOUT de chaque bois dérivé
+  (`EmpreinteFeuillage`, il ne voyait pas les rameaux d'arbre). Limite : étêter le sapin ou couper le
+  latéral le plus long change tous les étages (cime / R).
+- **Portraits** : `moteur.py` exporte `parent` ; `table_cs.js` lit `RecettesArbres.Ecorce` et la règle du
+  cône dans `Sapin.cs` (aucune constante recopiée) ; `portraits/cone.js` (neuf, même règle qu'en jeu) ;
+  `arbres.js` : bois en AXES (un tube lissé par chaîne), écorce d'essence (fin bois brun), bouleau : base
+  noire + lenticelles ; fruits au rayon plancher lisible (étendue/160 [choix]) en grappes ; bouquets
+  cuits du ④ au bout des rameaux (≤ 160). **Cerisier : cause trouvée** — `arbre()` ne posait JAMAIS de
+  fleur, et une cerise de 1 cm faisait ½ px d'art. Trois états seulement → floraison au portrait
+  « jeune » (`etats.js` `floraisonArbre`), cerises au « mûre » [choix]. 36 portraits d'arbres recuits
+  (17 min en 6 processus ; Fig mûre 727 s), `portraits.json` inchangé, déterminisme : 6 portraits
+  recuits identiques à l'octet. `godot --import` + `.import` parasites de `docs/` `sprints/` supprimés.
+- Captures `mesures/05_*` : sapin `houppiers` ×1/×2 avant/après, ×4 après ; `05_controle_portraits_*`.
+  Constat : ×1/×2 cône net (avant : poteau à 3 touffes) ; ×4 cône lisible, gerbes grosses ; **×8 = squelette
+  de bâtons bruns à aiguilles claires d'1 px** (même rendu qu'avant, plus dense) — essayé 20 aiguilles/brin :
+  gain faible, pinceau +60 % [VM chargée, n=1] → rendu ×8 des aiguilles à revoir (⑥ ou dette).
+- **Écarts / non faits** : figuier — portrait non « buissonnant » : le squelette du moteur a UN tronc
+  (port de la vue = celui du moteur ; un port en cépée est moteur → non ouvert) ; figues encore peu
+  visibles. Bouleau : marques d'écorce invisibles à 240 px (tronc ≈ 3 px), seul le blanc se lit. Cerises
+  lisibles mais discrètes. Poids `assets/splats/` 65 Mo (inchangé).
+- **F5 Nico** : sapin ×1→×32 (cône, étages, pointe), ×8 aiguilles ; taille d'un latéral du sapin ;
+  encyclopédie : cerisier jeune en fleurs / mûr en cerises, sapin conique, bouleau blanc, figuier.
+
 ## §REPRISE
-④ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
-conception, puis le kickoff du premier tronçon « à faire ». ①②③④ faits côté code. Prochain : ⑤
-(`05_sapin_portraits.md`). Outils : écorces `node tools/splat/cuire_ecorces.js`, limbes `… --jeu limbes`
+⑤ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
+conception, puis le kickoff du premier tronçon « à faire ». ①→⑤ faits côté code. Prochain : ⑥
+(`06_revue.md`) — y trancher le rendu ×8 des aiguilles du sapin (cf. ⑤). Portraits d'arbres :
+`node tools/splat/cuire_portraits.js <Espece>` (Fig mûre ≈ 12 min). Outils : écorces `node tools/splat/cuire_ecorces.js`, limbes `… --jeu limbes`
 (cf. tools/splat/README.md) ; chargeur commun `visuals/BandesCuites.cs` (texel blanc en (0, 0) :
 aplats + bandes en un envoi, `RubanTexture.Verser` pour un LotTriangles).

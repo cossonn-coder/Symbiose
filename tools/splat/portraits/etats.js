@@ -38,7 +38,10 @@ function etats(moteur) {
       ? { nom: 'fin', libelle: 'hiver (nu)', echelle: 1, densite: 0, fleurs: false, graines: false, fruits: false, maturite: 1, feuillage: 'nu', retombe: 0 }
       : { nom: 'fin', libelle: 'hiver (persistant)', echelle: 1, densite: 0.75, fleurs: false, graines: false, fruits: false, maturite: 1, feuillage: 'hiver', retombe: 0.15 };
   return [
-    { nom: 'jeune', libelle: 'jeune', echelle: jeune, densite: 0.6, fleurs: false, graines: false, fruits: false, maturite: 0, feuillage: 'ete', retombe: 0 },
+    // `floraisonArbre` (BOIS & ARBRES ⑤) : un arbre ne porte pas fleurs et fruits ensemble ; trois
+    // états seulement → la floraison de printemps va au portrait « jeune » (un arbre de 3 ans fleurit),
+    // les fruits au « mûre ». Lu par arbres.js seul ; les autres ports l'ignorent. [choix]
+    { nom: 'jeune', libelle: 'jeune', echelle: jeune, densite: 0.6, fleurs: false, graines: false, fruits: false, maturite: 0, feuillage: 'ete', retombe: 0, floraisonArbre: true },
     { nom: 'mure', libelle: 'mûre, pleine saison', echelle: 1, densite: 1, fleurs: true, graines: false, fruits: true, maturite: 0.6, feuillage: 'ete', retombe: 0 },
     fin
   ];
