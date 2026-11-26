@@ -238,6 +238,7 @@ namespace Symbiose
 			"revers" or "sepales" or "pedoncule" => pal.Leaf,
 			"rayons" when recette == "tete_ombelle" => pal.Leaf,
 			"silicules" => pal.FruitUnripe,
+			"stomates" => Clair(c),   // dessous argenté du rameau aplati (LISIÈRE ②)
 			"fleurs" when recette == "tete_chapelet" => pal.Flower,
 			_ => c,
 		};

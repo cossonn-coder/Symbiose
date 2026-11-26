@@ -36,7 +36,7 @@ namespace Symbiose
 		/// LITTÉRAL (texels), période en cm.</summary>
 		internal readonly record struct Bande(ImageTexture Tex, Rect2 Codes, Rect2 Litteral, float PeriodeCm);
 
-		private readonly record struct Brute(Rect2I Rect, float PeriodeCm);
+		private readonly record struct Brute(Rect2I Rect, float PeriodeCm, float DCm);
 
 		private readonly string _manifeste;
 		private readonly string[] _ages;
@@ -68,6 +68,35 @@ namespace Symbiose
 			return true;
 		}
 
+		// Planche brute gardée pour CodesBruts (un palier ; relue au changement).
+		private Image _imgBrute;
+		private int _palierBrute = -1;
+
+		/// <summary>LISIÈRE ② : les CODES bruts de la bande `nom` × `age` au palier `z` (un octet de
+		/// palette par texel, rangée par rangée ; ton de base et vide → 0 = transparent), sa taille, sa
+		/// période et son diamètre de cuisson (cm) — pour la RECOPIER dans un autre atlas (décor de
+		/// lisière, DecorLayer.Charpente.cs). Faux si elle n'est pas cuite.</summary>
+		public bool CodesBruts(string nom, int age, int z, out byte[] codes, out Vector2I taille, out float periodeCm, out float dCm)
+		{
+			codes = null; taille = default; periodeCm = dCm = 0f;
+			if (!Manifeste() || !_bandes.TryGetValue((nom, age, z), out var br) || !_fichiers.TryGetValue(z, out string f)) return false;
+			if (_palierBrute != z) { _imgBrute = SplatPlanches.LireImage(SplatPlanches.Dossier + f); _palierBrute = z; }
+			if (_imgBrute == null) return false;
+			byte[] src = _imgBrute.GetData();
+			int w = _imgBrute.GetWidth();
+			taille = br.Rect.Size;
+			codes = new byte[taille.X * taille.Y];
+			for (int py = 0; py < taille.Y; py++)
+				for (int px = 0; px < taille.X; px++)
+				{
+					int i = ((br.Rect.Position.Y + py) * w + br.Rect.Position.X + px) * 4;
+					if (src[i + 3] >= 128 && ((src[i + 1] >> 4) & 7) != PaletteIndexee.TonBase) codes[py * taille.X + px] = src[i + 1];
+				}
+			periodeCm = br.PeriodeCm;
+			dCm = br.DCm;
+			return true;
+		}
+
 		private bool Manifeste()
 		{
 			if (_bandes != null) return _bandes.Count > 0;
@@ -84,7 +113,8 @@ namespace Symbiose
 				int[] rect = d["rect"].AsInt32Array();
 				int age = System.Array.IndexOf(_ages, d["age"].AsString());
 				_bandes[(d["essence"].AsString(), age, d["palier"].AsInt32())] =
-					new Brute(new Rect2I(rect[0], rect[1], rect[2], rect[3]), d["periode_cm"].AsSingle());
+					new Brute(new Rect2I(rect[0], rect[1], rect[2], rect[3]), d["periode_cm"].AsSingle(),
+							  d.TryGetValue("d_cm", out var dc) ? dc.AsSingle() : 0f);
 			}
 			return _bandes.Count > 0;
 		}

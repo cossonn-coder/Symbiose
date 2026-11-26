@@ -143,6 +143,7 @@ namespace Symbiose
 		/// manquants, le plus proche du palier courant d'abord, ≤ BudgetFondMs.</summary>
 		private void AvancerFond()
 		{
+			SuivreBois();   // LISIÈRE ② : Maj+F11 change la géométrie du bois (DecorLayer.Charpente.cs)
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			while (true)
 			{

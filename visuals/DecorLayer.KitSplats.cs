@@ -75,6 +75,7 @@ namespace Symbiose
 				foreach (var ((f, i, v), c) in codes)
 					_kitCodes.Add((_kitRects[IndexKit(t, (int)f, i, v)], c, src));
 			}
+			BasculerBois();   // LISIÈRE ② : bandes d'écorce gardées, bois des arbres reconstruit
 			EcrireAtlasCodes(_swatchY0);
 			TeleverserKit();
 			GD.Print($"[DecorLayer] lisière : kit {(PlantRenderer.SplatsActifs && KitSplat() != null ? "splats" : "généré")}.");

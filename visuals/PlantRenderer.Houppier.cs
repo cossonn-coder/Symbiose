@@ -227,6 +227,7 @@ namespace Symbiose
 			_sitesPrairie.Clear();
 			_feuillesPort.Clear();
 			var pied = new Vector3(collet.X, collet.Y, 0f);
+			if (PoserRameauxAplatis(pied, tons, density)) return;   // LISIÈRE ② : sapin ×8-×32 (SapinRameaux.cs)
 			float penche = r.Port <= PortPendant ? -0.8f : -0.25f;
 			foreach (var e in BoisDuHouppier())
 			{

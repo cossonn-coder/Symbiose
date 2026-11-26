@@ -144,6 +144,7 @@ namespace Symbiose
 					hRang = Mathf.Max(hRang, s.Y + 1);
 				}
 			}
+			RangerEcorces(ref x, ref y, ref hRang);   // LISIÈRE ② : écorces de S2 (DecorLayer.Charpente.cs)
 			int hauteur = y + hRang;
 			_kitTaille = new Vector2(AtlasW, hauteur + SwatchRangs);
 			EcrireAtlasCodes(hauteur);

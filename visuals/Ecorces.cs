@@ -30,5 +30,10 @@ namespace Symbiose
 		/// <summary>La bande `essence` × `age` au palier servi pour `zoom` (cf. BandesCuites).</summary>
 		public static bool Trouver(string essence, int age, float zoom, out BandesCuites.Bande b) =>
 			_jeu.Trouver(essence, age, zoom, out b);
+
+		/// <summary>LISIÈRE ② : codes bruts d'une bande, pour la recopier dans l'atlas du décor.</summary>
+		public static bool CodesBruts(string essence, int age, int palier, out byte[] codes, out Godot.Vector2I taille,
+			out float periodeCm, out float dCm) =>
+			_jeu.CodesBruts(essence, age, palier, out codes, out taille, out periodeCm, out dCm);
 	}
 }

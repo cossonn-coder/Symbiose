@@ -39,10 +39,12 @@ namespace Symbiose
 		/// <summary>Axe prolongé dans la couronne puis 3 à 5 charpentières (`c0`, `rx`, `ry` =
 		/// ellipse de l'enveloppe, `w` = largeur du tronc). Rameaux si `DetailsVisibles`.</summary>
 		private void DrawBranches(Vector2 apex, Vector2 c0, float rx, float ry, float w,
-								  TreePort port, Color col, uint hb)
+								  TreeSilhouette sil, Color mod, uint hb)
 		{
 			float fin = 0.5f / ZoomConstr;   // demi-largeur minimale : 1 px interne en tout
-			FormeBranches f = FormeDe(port);
+			FormeBranches f = FormeDe(sil.Port);
+			Color col = sil.Ecorce * mod;
+			bool ruban = BoisCuit;   // LISIÈRE ② : charpente en rubans lissés (DecorLayer.Charpente.cs)
 			Vector2 sommet = c0 + Vector2.Up * ry * PartSommetAxe;
 			ClasseAplats(ClasseSansSaison);
 			// Palier le plus bas : moitié moins de sommets. La charpente y fait quelques
@@ -66,8 +68,12 @@ namespace Symbiose
 				float milieu = Mathf.Max(fin, racine * 0.5f);
 				Vector2 coude = DansCouronne(depart + d1 * portee * 0.55f, c0, rx, ry);
 				Vector2 bout = DansCouronne(coude + Direction(angle + f.Courbe, cote) * portee * 0.45f, c0, rx, ry);
-				Troncon(depart, coude, racine, milieu, col);
-				Troncon(coude, bout, milieu, fin, col);
+				if (ruban && !bas) CharpentiereRuban(depart, coude, bout, racine, milieu, fin, sil.Bois, col, mod, h);
+				else
+				{
+					Troncon(depart, coude, racine, milieu, col);
+					Troncon(coude, bout, milieu, fin, col);
+				}
 				if (bas) continue;
 				// Une fourche au coude : sans elle, un arbre nu n'a que quelques traits.
 				Vector2 fourche = coude + Direction(angle + f.Courbe - 45f, -cote) * portee * 0.35f;
@@ -79,6 +85,7 @@ namespace Symbiose
 			{
 				Troncon(apex, sommet, w * 0.5f, finAxe, col);
 			}
+			else if (ruban) AxeRuban(apex, sommet, w * 0.5f, finAxe, sil.Bois, col, mod, hb);
 			else
 			{
 				// L'axe prolonge le fût : mêmes flancs orientés, sinon une couture se voit.

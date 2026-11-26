@@ -37,11 +37,12 @@ namespace Symbiose
 			public readonly Color Ecorce;
 			public readonly float CanopyRadiusCm;   // rayon de houppier ADULTE
 			public readonly float TrunkHeightCm;    // hauteur de fût sous le houppier
+			public readonly string Bois;            // LISIÈRE ② : essence de l'écorce cuite (ecorces.json)
 			public TreeSilhouette(TreePort port, Color feuillage, Color ecorce,
-								  float canopyCm, float trunkCm)
+								  float canopyCm, float trunkCm, string bois)
 			{
 				Port = port; Feuillage = feuillage; Ecorce = ecorce;
-				CanopyRadiusCm = canopyCm; TrunkHeightCm = trunkCm;
+				CanopyRadiusCm = canopyCm; TrunkHeightCm = trunkCm; Bois = bois;
 			}
 		}
 
@@ -49,20 +50,20 @@ namespace Symbiose
 		// Chêne/sapin/noyer préexistants + hêtre/bouleau/charme ajoutés en T1.
 		private static readonly System.Collections.Generic.Dictionary<string, TreeSilhouette> Silhouettes = new()
 		{
-			["chene"]   = new(TreePort.Etale,   Palette16.FeuillageChene,   Palette16.EcorceBrune,   340f, 220f),
-			["hetre"]   = new(TreePort.Ovoide,  Palette16.FeuillageHetre,   Palette16.EcorceBrune,   300f, 300f),
-			["bouleau"] = new(TreePort.Elance,  Palette16.FeuillageBouleau, Palette16.EcorceBouleau, 170f, 300f),
-			["charme"]  = new(TreePort.Sinueux, Palette16.FeuillageCharme,  Palette16.EcorceBrune,   230f, 200f),
-			["sapin"]   = new(TreePort.Conique, Palette16.FeuillageSapin,   Palette16.EcorceBrune,   210f, 120f),
-			["noyer"]   = new(TreePort.Etale,   Palette16.FeuillageChene,   Palette16.EcorceBrune,   300f, 240f),
+			["chene"]   = new(TreePort.Etale,   Palette16.FeuillageChene,   Palette16.EcorceBrune,   340f, 220f, "OakTree"),
+			["hetre"]   = new(TreePort.Ovoide,  Palette16.FeuillageHetre,   Palette16.EcorceBrune,   300f, 300f, "BeechTree"),
+			["bouleau"] = new(TreePort.Elance,  Palette16.FeuillageBouleau, Palette16.EcorceBouleau, 170f, 300f, "BirchTree"),
+			["charme"]  = new(TreePort.Sinueux, Palette16.FeuillageCharme,  Palette16.EcorceBrune,   230f, 200f, "HornbeamTree"),
+			["sapin"]   = new(TreePort.Conique, Palette16.FeuillageSapin,   Palette16.EcorceBrune,   210f, 120f, "FirTree"),
+			["noyer"]   = new(TreePort.Etale,   Palette16.FeuillageChene,   Palette16.EcorceBrune,   300f, 240f, "WalnutTree"),
 			// Essences de RIPISYLVE (D73 ①/⑥) : le moteur peut donner `aulne` ou
 			// `saule` comme dominante d'une lisière qui touche une rivière. Sans
 			// entrée ici, elles ne pourraient jamais être rendues. Teintes reprises
 			// du registre existant (aucune couleur neuve à la palette) : l'aulne
 			// dressé et sombre, le saule clair et sinueux (port pleureur, cf. son
 			// `gravitropism_gain` côté moteur).
-			["aulne"]   = new(TreePort.Ovoide,  Palette16.FeuillageCharme,  Palette16.EcorceBrune,   250f, 260f),
-			["saule"]   = new(TreePort.Sinueux, Palette16.FeuillageBouleau, Palette16.EcorceBrune,   280f, 180f),
+			["aulne"]   = new(TreePort.Ovoide,  Palette16.FeuillageCharme,  Palette16.EcorceBrune,   250f, 260f, "Alder"),
+			["saule"]   = new(TreePort.Sinueux, Palette16.FeuillageBouleau, Palette16.EcorceBrune,   280f, 180f, "Willow"),
 		};
 
 		// Peuple un secteur « forêt » : scatter d'arbres en gradient de lisière,

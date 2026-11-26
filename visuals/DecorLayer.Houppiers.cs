@@ -56,25 +56,31 @@ namespace Symbiose
 			// gris étranger), puis l'écorce en deux flancs ORIENTÉS (le soleil réel éclaire
 			// l'un, ombre l'autre — DecorLayer.Indexe.cs).
 			float w = Mathf.Max(1.5f / z, r * 0.14f);
-			Aplats(OPlat, 0);
-			Fuseau(basePos + Vector2.Down / z, apex, w + 1f / z, sil.Ecorce * mod);
-			Aplats(OrientEcorceG);
-			FuseauDemi(basePos, apex, w, -1f, sil.Ecorce * mod);
-			Aplats(OrientEcorceD);
-			FuseauDemi(basePos, apex, w, 1f, sil.Ecorce * mod);
-			Aplats(OPlat);
-			if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : lenticelles
-				for (float tl = 0.2f; tl < 0.95f; tl += 0.18f)
-				{
-					Vector2 c = basePos.Lerp(apex, tl);
-					_lot.Ligne(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f, Palette16.EcorceLenticelle, 1f / z);
-				}
+			bool boisCuit = BoisCuit;
+			// LISIÈRE ② : fût en ruban, pied évasé, écorce cuite de l'essence (DecorLayer.Charpente.cs).
+			if (boisCuit) FutRuban(basePos, apex, w, sil, mod, hb);
+			else
+			{
+				Aplats(OPlat, 0);
+				Fuseau(basePos + Vector2.Down / z, apex, w + 1f / z, sil.Ecorce * mod);
+				Aplats(OrientEcorceG);
+				FuseauDemi(basePos, apex, w, -1f, sil.Ecorce * mod);
+				Aplats(OrientEcorceD);
+				FuseauDemi(basePos, apex, w, 1f, sil.Ecorce * mod);
+				Aplats(OPlat);
+				if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : lenticelles
+					for (float tl = 0.2f; tl < 0.95f; tl += 0.18f)
+					{
+						Vector2 c = basePos.Lerp(apex, tl);
+						_lot.Ligne(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f, Palette16.EcorceLenticelle, 1f / z);
+					}
+			}
 			// Enveloppe du port (fond du houppier, en TISSAGE du dialecte 2, ton d'ombre)
 			// puis bouquets.
 			Vector2 c0 = apex + Vector2.Up * r * up;
 			rx *= r; ry *= r;
 			// LISIÈRE NUE ③ : la charpente, cachée l'été, révélée par le dégarnissement du shader.
-			if (!conique) DrawBranches(apex, c0, rx, ry, w, sil.Port, sil.Ecorce * mod, hb);
+			if (!conique) DrawBranches(apex, c0, rx, ry, w, sil, mod, hb);
 			Teinte t = TeinteFeuillage(sil.Feuillage);
 			Color ombre = sil.Feuillage * mod;   // ⑥ : l'ombre = ton 1 de SA palette (tissage)
 			ClasseAplats(conique ? ClasseSansSaison : ClasseFeuillu);   // ⑥ : la couronne suit la saison
@@ -95,6 +101,8 @@ namespace Symbiose
 			int n = Mathf.Clamp(Mathf.RoundToInt(1.5f * Mathf.Pi * rx * ry / (sz.X * sz.Y)), 4, BouquetsMax);
 			_bouquets.Clear();
 			float rot = (hb & 0xffff) / 65535f * Mathf.Tau;
+			// LISIÈRE ② : le sapin en étages (DecorLayer.Charpente.cs) au lieu du semis dans le triangle.
+			if (conique && boisCuit) { EtagesSapin(c0, rx, ry, f, taille, sz, t, mod, hb); n = 0; }
 			for (int k = 0; k < n; k++)
 			{
 				uint h = HashCase(hb, k, 0, 3u);
