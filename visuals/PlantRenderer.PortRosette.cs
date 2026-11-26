@@ -121,7 +121,7 @@ namespace Symbiose
 			switch (f.Feuille)
 			{
 				case FormeFeuille.Ruban:
-					PoserBrin(fe.U.X * 1.2f, fe.U.Y * 1.2f, fe.U.X, fe.U.Y, fe.Long, fe.HautZ, f.LargeurFeuille, Ton(col, fe.Ton));
+					PoserBrin(fe.U.X * 1.2f, fe.U.Y * 1.2f, fe.U.X, fe.U.Y, fe.Long, fe.HautZ, f.LargeurFeuille, col, fe.Ton);
 					return;
 				case FormeFeuille.Plume: PoserPlume(fe, col); return;
 				case FormeFeuille.Cuillere: PoserCuillere(fe, col, f.Marque); return;

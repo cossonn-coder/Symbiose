@@ -11,7 +11,8 @@
 //
 // 📖 Pédagogie : un brin est une LANIÈRE de triangles, le long d'une courbe calculée en cm
 // puis projetée point par point par Iso. C'est Iso qui applique la flexion du vent : les
-// bouts se couchent, le pied ne bouge pas, sans code de vent ici.
+// bouts se couchent, le pied ne bouge pas, sans code de vent ici. BOIS & ARBRES ③ : le limbe cuit
+// (nervures, cœur clair) se plaque sur CES points — le vent plie toujours le brin.
 
 using Godot;
 
@@ -40,34 +41,46 @@ namespace Symbiose
 		// BRIN — lanière arquée, du pied au bout, de largeur décroissante
 		// ---------------------------------------------------------------------------
 
-		// (x, y) = pied, (ux, uy) = direction de l'arc, `port` = écart horizontal du bout.
+		// (x, y) = pied, (ux, uy) = direction de l'arc, `port` = écart horizontal du bout. Couleur du
+		// brin : ton `ton`, face `orient` de la rampe de `teinte` ; BOIS & ARBRES ③ : le limbe cuit
+		// de la même rampe se plaque ensuite par-dessus (PlantRenderer.Limbes.cs), sur ces points.
 		private void PoserBrin(float x, float y, float ux, float uy, float port, float h,
-							   float largeurCm, Color col)
+							   float largeurCm, Color teinte, int ton, int orient = PaletteIndexee.OrientPlat)
 		{
+			Color col = Ton(teinte, ton, orient);
 			float zf = AplatMort;
 			Vector2 prec = Iso(x, y, 0f);
 			float l0 = Mathf.Max(largeurCm * WorldView.PxPerCmX, PixelInterne);
+			float mini = PixelInterne * 0.5f;
 			Vector2 gPrec = prec, dPrec = prec;
+			var cmPrec = new Vector3(x, y, 0f);
+			_brinPts[0] = prec; _brinV[0] = 0f;
 			for (int i = 1; i <= SegmentsBrin; i++)
 			{
 				float t = i / (float)SegmentsBrin;
 				float z = h * t * (2f - t) * zf;              // monte vite, ralentit : l'arc
 				float e = port * t * t;                       // s'écarte de plus en plus
-				Vector2 p = Iso(x + ux * e, y + uy * e, z);
+				var cm = new Vector3(x + ux * e, y + uy * e, z);
+				Vector2 p = Iso(cm.X, cm.Y, cm.Z);
 				Vector2 nrm = (p - prec).Orthogonal().Normalized();
 				float l = l0 * 0.5f * (1f - t * t);
-				float mini = PixelInterne * 0.5f;
-				Vector2 g = p + nrm * Mathf.Max(l, i < SegmentsBrin ? mini : 0f);
-				Vector2 d = p - nrm * Mathf.Max(l, i < SegmentsBrin ? mini : 0f);
+				float demi = Mathf.Max(l, i < SegmentsBrin ? mini : 0f);
+				Vector2 g = p + nrm * demi;
+				Vector2 d = p - nrm * demi;
 				if (i == 1)
 				{
-					gPrec = prec + nrm * Mathf.Max(l0 * 0.5f, mini);
-					dPrec = prec - nrm * Mathf.Max(l0 * 0.5f, mini);
+					float demi0 = Mathf.Max(l0 * 0.5f, mini);
+					gPrec = prec + nrm * demi0;
+					dPrec = prec - nrm * demi0;
+					_brinNrm[0] = nrm; _brinDemi[0] = demi0;
 				}
 				_lotPrairie.Triangle(gPrec, dPrec, d, col);
 				_lotPrairie.Triangle(gPrec, d, g, col);
-				gPrec = g; dPrec = d; prec = p;
+				_brinPts[i] = p; _brinNrm[i] = nrm; _brinDemi[i] = demi;
+				_brinV[i] = _brinV[i - 1] + cm.DistanceTo(cmPrec);
+				gPrec = g; dPrec = d; prec = p; cmPrec = cm;
 			}
+			PlaquerLimbe(largeurCm, l0 * WorldView.CurrentZoom, teinte);
 		}
 
 		// ---------------------------------------------------------------------------
@@ -94,8 +107,8 @@ namespace Symbiose
 				// Le cœur plus clair et plus droit, le bord plus sombre et plus arqué.
 				float arc = k / (float)n;
 				int ton = arc < 0.35f ? 1 : arc < 0.8f ? PaletteIndexee.TonBase : 3;
-				Color c = Ton(col, ton, Orientation(WorldView.WorldToScreenOffset(ux, uy)));
-				PoserBrin(ux * d, uy * d, ux, uy, rayon * Mathf.Lerp(0.5f, 1f, 1f - arc), hb, LargeurDactyleCm, c);
+				int face = Orientation(WorldView.WorldToScreenOffset(ux, uy));
+				PoserBrin(ux * d, uy * d, ux, uy, rayon * Mathf.Lerp(0.5f, 1f, 1f - arc), hb, LargeurDactyleCm, col, ton, face);
 				if (k % 3 == 0)
 					_sitesPrairie.Add((Iso(ux * rayon * 0.5f, uy * rayon * 0.5f, hb * 0.8f),
 						LargeurDactyleCm * 2f * WorldView.PxPerCmX, k, hb));
@@ -154,7 +167,7 @@ namespace Symbiose
 				float d = rayon * 0.55f * Mathf.Sqrt(Hash01(243, ig, k));
 				float hb = h * Mathf.Lerp(0.55f, 1f, Hash01(245, ig, k));
 				int ton = PaletteIndexee.TonBase + (Hash01(247, ig, k) < 0.35f ? 1 : Hash01(247, ig, k) > 0.75f ? -1 : 0);
-				PoserBrin(ux * d, uy * d, ux, uy, rayon * 0.45f, hb, LargeurFetuqueCm, Ton(col, ton));
+				PoserBrin(ux * d, uy * d, ux, uy, rayon * 0.45f, hb, LargeurFetuqueCm, col, ton);
 				if (k % 5 == 0)
 					_sitesPrairie.Add((Iso(ux * d, uy * d, hb * 0.7f), 1.2f * WorldView.PxPerCmX, k, hb));
 			}

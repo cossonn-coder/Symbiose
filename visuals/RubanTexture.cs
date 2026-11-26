@@ -2,6 +2,9 @@
 // UNE primitive pour tout ce qui est long et courbe : le bois des plantes (tube lissé, ①), puis les
 // brins et rubans des graminées (③) et le décor de lisière (S3). Indépendante de PlantRenderer :
 // elle reçoit une polyligne À L'ÉCRAN, une demi-largeur par point, et pose des triangles.
+// ③ : les bandes de TONS (`PoserBande`) portent l'UV (0, 0), le texel BLANC des planches de
+// BandesCuites → aplats et bandes texturées partent dans UN même envoi (`Envoyer` avec la
+// texture), ou se versent dans un LotTriangles (`Verser`, lot des graminées).
 //
 // Coordonnées : u en TRAVERS (−1 bord droit … +1 bord gauche, côté de la normale), v le long
 // (longueur d'arc en cm, fournie par l'appelant) → au ② la texture d'écorce garde son échelle à
@@ -76,8 +79,7 @@ namespace Symbiose
 				_pts.Add(pts[k + 1] + nrm[k + 1] * (demi[k + 1] * u1));
 				_pts.Add(pts[k + 1] + nrm[k + 1] * (demi[k + 1] * u0));
 				for (int q = 0; q < 4; q++) _cols.Add(c);
-				_uvs.Add(new Vector2(u0, v[k])); _uvs.Add(new Vector2(u1, v[k]));
-				_uvs.Add(new Vector2(u1, v[k + 1])); _uvs.Add(new Vector2(u0, v[k + 1]));
+				for (int q = 0; q < 4; q++) _uvs.Add(Vector2.Zero);   // texel blanc (③)
 				_idx.Add(b); _idx.Add(b + 1); _idx.Add(b + 2);
 				_idx.Add(b); _idx.Add(b + 2); _idx.Add(b + 3);
 			}
@@ -123,12 +125,27 @@ namespace Symbiose
 		}
 
 		/// <summary>Pose le lot en cours sur le CanvasItem `ci` (un seul appel) puis le vide. `tex` :
-		/// texture du ② lue en (u, v) ; null = tons seuls (aucune coordonnée envoyée).</summary>
+		/// planche de BandesCuites (bandes périodiques ; les aplats lisent son texel blanc) ; null =
+		/// tons seuls (aucune coordonnée envoyée).</summary>
 		public static void Envoyer(CanvasItem ci, Texture2D tex = null)
 		{
 			if (_idx.Count > 0)
 				RenderingServer.CanvasItemAddTriangleArray(ci.GetCanvasItem(), _idx.ToArray(), _pts.ToArray(),
 					_cols.ToArray(), tex != null ? _uvs.ToArray() : null, texture: tex?.GetRid() ?? default);
+			_pts.Clear(); _cols.Clear(); _uvs.Clear(); _idx.Clear();
+		}
+
+		/// <summary>③ : verse le lot en cours dans `lot` (mêmes triangles, mêmes UV, dans l'ordre)
+		/// puis le vide — le brin de graminée rejoint ainsi le lot de sa plante, à sa place dans
+		/// l'ordre de peinture. `tex` : la planche lue (le lot l'enverra avec ses triangles).</summary>
+		internal static void Verser(LotTriangles lot, Texture2D tex)
+		{
+			for (int i = 0; i + 2 < _idx.Count; i += 3)
+			{
+				int a = _idx[i], b = _idx[i + 1], c = _idx[i + 2];
+				lot.TriangleUv(_pts[a], _uvs[a], _pts[b], _uvs[b], _pts[c], _uvs[c], _cols[a]);
+			}
+			if (_idx.Count > 0) lot.Texture = tex;
 			_pts.Clear(); _cols.Clear(); _uvs.Clear(); _idx.Clear();
 		}
 	}

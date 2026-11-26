@@ -72,7 +72,7 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 |---|---|---|
 | ① | `01_axes_tube.md` — parent lu, axes, tube lissé, pied, cols, tri profondeur, géométrie unique, rapport C | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ② | `02_ecorces.md` — maquette C3, écorces 12 essences × 3 âges, plaquage | **FAIT côté code 2026-11-26** (F5 attendu) |
-| ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | à faire |
+| ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | à faire |
 | ⑤ | `05_sapin_portraits.md` — cône du sapin en jeu, portraits d'arbres | à faire |
 | ⑥ | `06_revue.md` — revue des paliers, F5 consolidé S2, clôture | à faire |
@@ -169,8 +169,50 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
   marche ; bouleau (blanc, lenticelles noires, base noire) ; lecture côté soleil vs ombre ;
   neige/surbrillance par-dessus ; pinceau ET repli identiques ; Maj+F11.
 
+### ③ Rubans des graminées et petit bois — FAIT côté code (2026-11-26), golden `bce813af…` intact, build 0 avert.
+- **Limbe cuit** : `tools/splat/recettes/limbe_graminee.js` (« large » 1,5 cm : médiane + 2 nervures
+  par côté ; « etroit » 0,6 cm : médiane + 1), cuit par `cuire_ecorces.js --jeu limbes` (le
+  baker a pris une option `--jeu`, le pas du sculpteur `pasPx32` et les tons par couche peuvent
+  venir de la recette ; `--liste` écorces inchangé, 39 bandes). Nervures et bords = pigment
+  d'OMBRE (ton 1), cœur = pigment clair (ton 3) : des sillons CREUSÉS ne donnaient presque pas
+  d'occlusion à cette finesse (43 texels d'ombre / 1 000 à ×32, mesuré) → prescription « nervures
+  par relief » corrigée. Période 4 cm (traits droits : couture 0 par construction, mesurée 0).
+- **Vue** : `visuals/BandesCuites.cs` (chargeur d'`Ecorces.cs` extrait en instance, partagé
+  écorces/limbes ; `Ecorces.cs` = façade) ; les planches reçoivent 2 rangées BLANCHES en tête →
+  UV (0, 0) = texel blanc, aplats et bandes dans UN envoi. `RubanTexture.PoserBande` émet cet UV
+  (ses anciens (u, v) n'étaient jamais envoyés) ; `RubanTexture.Verser(lot)` + `LotTriangles.
+  TriangleUv/Texture` (DessinerSansMaille envoie UV + texture si `Texture`, remis à null par Vider).
+  `PoserBrin(…, teinte, ton, orient)` (4 appelants : dactyle, fétuque, rubans du chaume, rosette à
+  ruban) garde sa géométrie à l'identique, remplit l'arc (points, normales, demi-largeurs, v en cm)
+  et `PlaquerLimbe` (`PlantRenderer.Limbes.cs`) verse les marques dans `_lotPrairie` juste après le
+  brin → ordre de peinture gardé, vent intact (Iso point par point).
+- **Seuil** `LimbeMinPx` = 7 px internes au pied [choix] : à ×8 le dactyle (≈ 5 px) montrait des
+  nervures d'1 px en POINTILLÉ (capture `03_dactyle_x8_pointille_rejete.png`) → dactyle/blé dès
+  ×16, seigle/pâturin/rubans ≤ 1 cm à ×32 ; fétuque (0,3 cm) jamais (≤ 4 px même à ×32).
+- **Petit bois en tube** (`DrawPetitBoisTube`, Houppier.cs, ×4 et plus) : ruban A → B en 3 points
+  (A déjà sur la courbe du porteur, ①), effilé à 0,6 au bout [choix], âme + flancs orientés (dès
+  3 px), écorce « rameau » de l'essence (`PoserEcorceCuite`, scindée de `PeindreEcorceCuite` : pose
+  sans envoyer). Tout le petit bois de l'arbre = UN envoi (avant : un DrawLine par rameau). Couleur
+  = l'ancienne (`WoodRamp(LigRameau/LigBrindille)`) ; la bande rameau (cuite pour 2,25 cm) est
+  comprimée sur 1,2 / 0,5 cm → marques serrées (à juger au F5). À ×4 : tube effilé uni (était un
+  DrawLine). Interrupteur Maj+F11 : ancien DrawLine.
+- **Mesures** [VM llvmpipe, charge 10-15, n=1 capture par cas] : `planche_especes` dactyle avec vent
+  (`-v 0.8`) ×0,5/×1/×2/×4 **identiques à l'octet** avant/après (base du brin inchangée) ; ×16/×32
+  nervures + cœur clair visibles, brins toujours ployés ; blé ×32 (automne : rubans de base striés),
+  pâturin ×32 (rubans étroits lisibles). `houppiers -c 425,1425 -H` (bouleau) : ×16 avant = barres
+  brunes plates, après = tubes effilés à flancs + lenticelles ; ×32 écorce de rameau dense. Poids
+  `assets/splats/` 65 Mo (+2,6 Ko : 4 planches limbes + manifeste). Cuisson limbes ≈ 6 s,
+  déterministe (sha256 identiques sur 2 cuissons). Temps de pinceau NON chronométré (VM chargée).
+- **Captures** `mesures/03_*` : dactyle ×16/×32 avant/après, ×8 rejeté, blé/pâturin ×32 après,
+  petit bois ×16 avant/après, ×8/×32 après.
+- **F5 Nico** : graminées ×16/×32 (nervures, cœur clair, pas de moirage gênant sur les brins
+  obliques — l'échantillonnage au plus proche donne des marches) ; vent qui plie toujours ;
+  automne/paille et santé (teinte du brin) ; petit bois des 12 arbres ×8→×32 (effilement,
+  écorce de rameau pas trop chargée) ; Maj+F11 avant/après ; pinceau ET repli.
+
 ## §REPRISE
-② non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
-conception, puis le kickoff du premier tronçon « à faire ». ① et ② faits côté code. Prochain : ③ (`03_rubans.md`) — `RubanTexture.PoserBandePeriodique`
-(bande périodique texturée, quads coupés aux frontières) est réutilisable pour les brins ; les
-écorces se recuisent par `node tools/splat/cuire_ecorces.js` (cf. tools/splat/README.md).
+③ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
+conception, puis le kickoff du premier tronçon « à faire ». ①②③ faits côté code. Prochain : ④
+(`04_arbres_x4.md`). Outils : écorces `node tools/splat/cuire_ecorces.js`, limbes `… --jeu limbes`
+(cf. tools/splat/README.md) ; chargeur commun `visuals/BandesCuites.cs` (texel blanc en (0, 0) :
+aplats + bandes en un envoi, `RubanTexture.Verser` pour un LotTriangles).

@@ -61,6 +61,7 @@ namespace Symbiose
 			Vector3 c = _structure.ColletCm;
 			float pix = PixelInterne;
 			bool brindilles = WorldView.CurrentZoom >= PalierSanteZoom;
+			if (TubeActif && AuPalier(PaliersHautsMinZoom)) { DrawPetitBoisTube(brindilles); return; }   // BOIS & ARBRES ③
 			Color rameau = Lit(WoodRamp(LigRameau)), brindille = Lit(WoodRamp(LigBrindille));
 			foreach (var e in BoisDuHouppier())
 			{
@@ -69,6 +70,56 @@ namespace Symbiose
 				DrawLine(Iso(e.A.X - c.X, e.A.Y - c.Y, e.A.Z), Iso(e.B.X - c.X, e.B.Y - c.Y, e.B.Z),
 					e.EstRameau ? rameau : brindille, w, antialiased: false);
 			}
+		}
+
+		// BOIS & ARBRES ③ — le petit bois en TUBE (paliers ×4 et plus) : chaque rameau / brindille est
+		// un ruban qui s'affine vers son bout (A est déjà SUR la courbe du porteur, géométrie unique
+		// du ①), âme + flancs orientés comme le tube, et l'écorce « rameau » de l'essence par-dessus
+		// (PoserEcorceCuite). Tout le petit bois de l'arbre part en UN envoi : les âmes lisent le texel
+		// blanc de la planche d'écorce, l'ordre de pose reste celui d'avant (BoisDuHouppier).
+		private const float PetitBoisBout = 0.6f;   // demi-largeur au bout / au départ [choix]
+		private readonly BoisAxes.Morceau _petitBois = new()
+		{
+			Points = new Vector3[3], LargeurCm = new float[3], V = new float[3],
+		};
+		private readonly Vector2[] _petitPts = new Vector2[3];
+		private readonly float[] _petitDemi = new float[3];
+
+		private void DrawPetitBoisTube(bool brindilles)
+		{
+			Vector3 c = _structure.ColletCm;
+			float z = WorldView.CurrentZoom;
+			Texture2D tex = null;
+			foreach (var e in BoisDuHouppier())
+			{
+				if (!e.EstRameau && !brindilles) continue;
+				float cm = e.EstRameau ? RameauLargeCm : BrindilleLargeCm;
+				float w = Mathf.Max(PixelInterne, cm * WorldView.PxPerCmX);
+				Color col = WoodRamp(e.EstRameau ? LigRameau : LigBrindille);
+				var m = _petitBois;
+				m.Axe = e.Cle * 7 + e.Rang;
+				float l = e.A.DistanceTo(e.B);
+				for (int k = 0; k < 3; k++)
+				{
+					Vector3 p = e.A.Lerp(e.B, k * 0.5f);
+					_petitPts[k] = Iso(p.X - c.X, p.Y - c.Y, p.Z);
+					_petitDemi[k] = w * 0.5f * Mathf.Lerp(1f, PetitBoisBout, k * 0.5f);
+					m.LargeurCm[k] = cm;
+					m.V[k] = l * k * 0.5f;
+				}
+				if (_petitPts[0].IsEqualApprox(_petitPts[2])) continue;
+				Vector2[] nrm = RubanTexture.Normales(_petitPts);
+				Color ame = Ton(col, PaletteIndexee.TonBase);
+				RubanTexture.PoserBande(_petitPts, _petitDemi, nrm, m.V, -1f, 1f, _ => ame);
+				if (w * z >= 3f)
+				{
+					for (int o = 0; o < 8; o++) _tonsFlanc[o] = Ton(col, PaletteIndexee.TonBase, o);
+					RubanTexture.PoserBande(_petitPts, _petitDemi, nrm, m.V, 1f / 3f, 1f, p => _tonsFlanc[Orientation(p)]);
+					RubanTexture.PoserBande(_petitPts, _petitDemi, nrm, m.V, -1f, -1f / 3f, p => _tonsFlanc[Orientation(-p)]);
+				}
+				tex = PoserEcorceCuite(m, _petitPts, _petitDemi, nrm, col, w * z, LigRameau) ?? tex;
+			}
+			RubanTexture.Envoyer(this, tex);
 		}
 
 		// ---------------------------------------------------------------------------

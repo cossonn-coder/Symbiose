@@ -1,0 +1,147 @@
+{
+ "recette": "limbes",
+ "format": "R = niveau kit ; G = 128 | ton << 4 | 8 (plat) ; A = fût",
+ "ages": [
+  {
+   "nom": "limbe",
+   "d_cm": 1.5,
+   "periode_cm": 4
+  }
+ ],
+ "planches": {
+  "x4": "limbes_x4.png",
+  "x8": "limbes_x8.png",
+  "x16": "limbes_x16.png",
+  "x32": "limbes_x32.png"
+ },
+ "bandes": [
+  {
+   "essence": "large",
+   "age": "limbe",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 8,
+   "planche": "x4",
+   "rect": [
+    0,
+    0,
+    2,
+    6
+   ]
+  },
+  {
+   "essence": "etroit",
+   "age": "limbe",
+   "palier": 4,
+   "d_cm": 0.6,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 8,
+   "planche": "x4",
+   "rect": [
+    3,
+    0,
+    2,
+    6
+   ]
+  },
+  {
+   "essence": "large",
+   "age": "limbe",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 36,
+   "planche": "x8",
+   "rect": [
+    0,
+    0,
+    6,
+    12
+   ]
+  },
+  {
+   "essence": "etroit",
+   "age": "limbe",
+   "palier": 8,
+   "d_cm": 0.6,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 12,
+   "planche": "x8",
+   "rect": [
+    7,
+    0,
+    2,
+    12
+   ]
+  },
+  {
+   "essence": "large",
+   "age": "limbe",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 140,
+   "planche": "x16",
+   "rect": [
+    0,
+    0,
+    10,
+    26
+   ]
+  },
+  {
+   "essence": "etroit",
+   "age": "limbe",
+   "palier": 16,
+   "d_cm": 0.6,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 56,
+   "planche": "x16",
+   "rect": [
+    11,
+    0,
+    4,
+    26
+   ]
+  },
+  {
+   "essence": "large",
+   "age": "limbe",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 520,
+   "planche": "x32",
+   "rect": [
+    0,
+    0,
+    20,
+    50
+   ]
+  },
+  {
+   "essence": "etroit",
+   "age": "limbe",
+   "palier": 32,
+   "d_cm": 0.6,
+   "periode_cm": 4,
+   "couture_texels": 0,
+   "couture_sur": 208,
+   "planche": "x32",
+   "rect": [
+    21,
+    0,
+    8,
+    50
+   ]
+  }
+ ]
+}

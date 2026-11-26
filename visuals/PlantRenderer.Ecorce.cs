@@ -41,14 +41,24 @@ namespace Symbiose
 		private bool PeindreEcorceCuite(BoisAxes.Morceau m, Vector2[] pts, float[] demi, Vector2[] nrm,
 			Color col, float wi, float lig)
 		{
-			if (wi < EcorceMinPx) return false;
+			Texture2D tex = PoserEcorceCuite(m, pts, demi, nrm, col, wi, lig);
+			if (tex != null) RubanTexture.Envoyer(this, tex);
+			return tex != null;
+		}
+
+		/// <summary>③ : même écorce, AJOUTÉE au lot en cours de RubanTexture sans l'envoyer (le petit
+		/// bois envoie tout l'arbre en un appel). Rend la planche lue, null si rien n'est posé.</summary>
+		private Texture2D PoserEcorceCuite(BoisAxes.Morceau m, Vector2[] pts, float[] demi, Vector2[] nrm,
+			Color col, float wi, float lig)
+		{
+			if (wi < EcorceMinPx) return null;
 			string essence = RecetteDeLaPlante(out _) ? _structure.SpeciesName
 				: lig >= EcorceLigMin ? Ecorces.Generique : null;
-			if (essence == null) return false;
+			if (essence == null) return null;
 			int n = m.LargeurCm.Length;
 			if (_agesEcorce.Length < n) _agesEcorce = new float[n];
 			for (int k = 0; k < n; k++) _agesEcorce[k] = AgeEcorce(m.LargeurCm[k]);
-			bool idx = Indexe, pose = false;
+			bool idx = Indexe;
 			Color mod = idx ? PaletteIndexee.ModulatePiece(PaletteIndexee.Palette(col)) : TeinteLitterale(col);
 			Texture2D tex = null;
 			for (int age = Ecorces.Rameau; age <= Ecorces.Tronc; age++)
@@ -61,10 +71,8 @@ namespace Symbiose
 				RubanTexture.PoserBandePeriodique(pts, demi, nrm, m.V, -1f, 1f, b.Tex,
 					idx ? b.Codes : b.Litteral, b.PeriodeCm, dec, mod, Garder);
 				tex = b.Tex;   // un palier = une texture pour toutes les bandes
-				pose = true;
 			}
-			if (pose) RubanTexture.Envoyer(this, tex);
-			return pose;
+			return tex;
 		}
 	}
 }

@@ -48,6 +48,11 @@ namespace Symbiose
 		private readonly List<Vector2> _uvs = new();
 		public Vector2 UvUni = Vector2.Zero;
 
+		/// <summary>BOIS & ARBRES ③ : texture des triangles posés par `TriangleUv` (planche de
+		/// BandesCuites, texel blanc en (0, 0) = `UvUni` par défaut) ; envoyée par
+		/// DessinerSansMaille avec les UV. null = lot sans texture (comportement d'avant).</summary>
+		public Texture2D Texture;
+
 		/// <summary>Nombre de sommets accumulés (trace de coût, DecorLayer).</summary>
 		public int Sommets => _sommets.Count;
 
@@ -57,6 +62,7 @@ namespace Symbiose
 			_sommets.Clear();
 			_couleurs.Clear();
 			_uvs.Clear();
+			Texture = null;
 		}
 
 		/// <summary>≡ DrawColoredPolygon(pts, col).</summary>
@@ -129,6 +135,13 @@ namespace Symbiose
 								 Vector2 c, Color cc, Vector2 uv)
 		{
 			Ajouter(a, uv, ca); Ajouter(b, uv, cb); Ajouter(c, uv, cc);
+		}
+
+		/// <summary>BOIS & ARBRES ③ : un triangle TEXTURÉ, un UV par sommet, une couleur (modulate
+		/// de la bande, RubanTexture.Verser).</summary>
+		public void TriangleUv(Vector2 a, Vector2 ua, Vector2 b, Vector2 ub, Vector2 c, Vector2 uc, Color col)
+		{
+			Ajouter(a, ua, col); Ajouter(b, ub, col); Ajouter(c, uc, col);
 		}
 
 		/// <summary>Un GRAIN pixel-art (FLUIDITÉ PC LEVIERS ②, pollen + butineurs) à
@@ -219,12 +232,13 @@ namespace Symbiose
 		/// lot d'UN pinceau, sans texture ni UV). Mesuré à cuisson égale : créer une surface de
 		/// maillage coûte un forfait, quel que soit le nombre de sommets, et c'est lui qui rendait
 		/// une petite plante à port 4 fois plus chère que ses segments. Sans indices : les
-		/// triangles se suivent dans les tableaux.</summary>
+		/// triangles se suivent dans les tableaux. ③ : avec `Texture`, les UV partent aussi.</summary>
 		public void DessinerSansMaille(CanvasItem ci)
 		{
 			if (_sommets.Count == 0) return;
 			RenderingServer.CanvasItemAddTriangleArray(ci.GetCanvasItem(), System.Array.Empty<int>(),
-				_sommets.ToArray(), _couleurs.ToArray());
+				_sommets.ToArray(), _couleurs.ToArray(), Texture != null ? _uvs.ToArray() : null,
+				texture: Texture?.GetRid() ?? default);
 		}
 
 		/// <summary>Envoie le lot accumulé : UN DrawMesh sur `ci` (à appeler

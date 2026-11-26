@@ -18,7 +18,11 @@
 // débord doivent être, à l'octet, celles de l'autre bout de la bande (périodicité). Le nombre
 // de texels différents est écrit à la console et dans le manifeste (`couture_texels`).
 //
-// Usage : node tools/splat/cuire_ecorces.js [--controle DOSSIER] [--cache DOSSIER]
+// JEUX (BOIS & ARBRES ③) : `--jeu ecorces` (défaut, recettes/ecorce.js) ou `--jeu limbes`
+// (recettes/limbe_graminee.js : limbes des graminées, même contrat de bande) → planches
+// `<jeu>_x<z>.png` + `<jeu>.json`. Le pas du sculpteur peut venir de la recette (`pasPx32`).
+//
+// Usage : node tools/splat/cuire_ecorces.js [--jeu J] [--controle DOSSIER] [--cache DOSSIER]
 //   --liste : les noms de bandes ; --seulement Essence_age --cache D : une bande, mise en cache
 //   (parallèle : `node tools/splat/cuire_ecorces.js --liste | xargs -P 6 -I{} node
 //   tools/splat/cuire_ecorces.js --seulement {} --cache D`, puis sans --seulement : assemblage).
@@ -36,7 +40,16 @@ const png = require('./vendor/ink/cli/png.js');
 const codes = require('./lib/codes');
 const planche = require('./lib/planche');
 const { PALETTE, rampeCouche, GRAINE, AMBIANT, CIEL } = require('./cuire');
-const { AGES, ESSENCES, bande } = require('./recettes/ecorce');
+const ECORCE = require('./recettes/ecorce');
+const LIMBE = require('./recettes/limbe_graminee');
+
+// Le jeu de bandes : recettes, âges (manifeste), préfixe des fichiers.
+function jeu(nom) {
+  if (nom === 'limbes')
+    return { nom, ages: LIMBE.AGES, tonCouche: LIMBE.TONS_COUCHE, recs: Object.keys(LIMBE.LIMBES).map(LIMBE.bande) };
+  return { nom: 'ecorces', ages: ECORCE.AGES,
+    recs: Object.keys(ECORCE.ESSENCES).flatMap(e => ECORCE.AGES.map((_, a) => ECORCE.bande(e, a))) };
+}
 
 const RACINE = path.resolve(__dirname, '..', '..');
 const PALIERS = [4, 8, 16, 32];                 // la vue pose le tube à partir de ×4 (① : bas paliers non migrés)
@@ -49,7 +62,7 @@ const TON_RELIEF = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2];
 const TON_COUCHE = [null, 0, 3];                // pigment sombre / clair : ton fixe
 
 const options = argv => {
-  const o = { controle: null, seulement: null, cache: null, liste: false };
+  const o = { controle: null, seulement: null, cache: null, liste: false, jeu: 'ecorces' };
   for (let i = 0; i < argv.length; i += 2) {
     if (argv[i] === '--liste') { o.liste = true; i--; continue; }
     o[argv[i].replace(/^--/, '')] = argv[i + 1];
@@ -58,9 +71,9 @@ const options = argv => {
 };
 
 // Table couleur emballée → (couche << 3 | ton), comme cuire.js mais aux tons de l'écorce.
-function tableTons() {
+function tableTons(tonCouche = TON_COUCHE) {
   const t = new Map();
-  TON_COUCHE.forEach((fixe, c) => {
+  tonCouche.forEach((fixe, c) => {
     const tonDe = fixe === null ? TON_RELIEF : TON_RELIEF.map(() => fixe);
     for (const [k, v] of codes.tableTons(PALETTE, rampeCouche(c), tonDe, c)) t.set(k, v);
   });
@@ -71,7 +84,7 @@ function tableTons() {
 // sur deux) → la rangée en y et celle en y + P coïncident. Légèrement agrandi : ceil(P/pas)
 // tombe sur m même avec l'arrondi flottant.
 function pas(rec) {
-  let m = Math.round(rec.periodeCm / (PAS_PX32 / (PX_CM * 32)));
+  let m = Math.round(rec.periodeCm / ((rec.pasPx32 || PAS_PX32) / (PX_CM * 32)));
   m += m % 2;
   return { res: ((rec.periodeCm * CM) / m) * (1 + 1e-9), m };
 }
@@ -169,9 +182,9 @@ function cuireBande(L, tons, rec, cache) {
 
 function principal() {
   const o = options(process.argv.slice(2));
-  const recs = Object.keys(ESSENCES).flatMap(e => AGES.map((_, a) => bande(e, a)));
+  const J = jeu(o.jeu), recs = J.recs;
   if (o.liste) { for (const r of recs) console.log(r.nom); return; }
-  const L = ink.load(), tons = tableTons(), pieces = [], bandes = [];
+  const L = ink.load(), tons = tableTons(J.tonCouche), pieces = [], bandes = [];
   const t0 = process.hrtime.bigint();
   for (const rec of recs) {
     if (o.seulement && o.seulement !== rec.nom) continue;
@@ -189,20 +202,20 @@ function principal() {
   const dossier = path.join(RACINE, 'assets', 'splats'), noms = {};
   if (!o.seulement) {
     for (const [z, pl] of planches) {
-      const f = path.join(dossier, `ecorces_${z}.png`);
+      const f = path.join(dossier, `${J.nom}_${z}.png`);
       fs.writeFileSync(f, png.encode(pl.w, pl.h, pl.rgba, 4));
       if (!fs.existsSync(f + '.import')) fs.writeFileSync(f + '.import', '[remap]\n\nimporter="keep"\n');
       noms[z] = path.basename(f);
       console.log(`  ${path.relative(RACINE, f)} ${pl.w}×${pl.h} ${fs.statSync(f).size} o`);
     }
     const manifeste = {
-      recette: 'ecorces', format: 'R = niveau kit ; G = 128 | ton << 4 | 8 (plat) ; A = fût',
-      ages: AGES.map(a => ({ nom: a.nom, d_cm: a.dCm, periode_cm: a.periodeCm })), planches: noms,
+      recette: J.nom, format: 'R = niveau kit ; G = 128 | ton << 4 | 8 (plat) ; A = fût',
+      ages: J.ages.map(a => ({ nom: a.nom, d_cm: a.dCm, periode_cm: a.periodeCm })), planches: noms,
       bandes: bandes.map((b, k) => ({ ...b, planche: entrees[k].planche, rect: entrees[k].rect }))
     };
-    fs.writeFileSync(path.join(dossier, 'ecorces.json'), JSON.stringify(manifeste, null, 1) + '\n');
+    fs.writeFileSync(path.join(dossier, `${J.nom}.json`), JSON.stringify(manifeste, null, 1) + '\n');
   }
-  if (o.controle) ecrireControle(path.resolve(RACINE, o.controle), pieces, bandes);
+  if (o.controle) ecrireControle(path.resolve(RACINE, o.controle), pieces, bandes, J.nom);
   console.log(`total ${(Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0)} ms`);
 }
 
@@ -210,7 +223,7 @@ function principal() {
 // au ×16, chaque bande répétée 2 fois en hauteur → la couture se juge à l'œil au milieu. Tons
 // sur une rampe brune témoin ; base = ton 2 (la vue la rend transparente sur le tube éclairé).
 const RAMPE = [[0x2a, 0x1e, 0x16], [0x4e, 0x3a, 0x2a], [0x86, 0x6c, 0x52], [0xc8, 0xb0, 0x90], [0xf0, 0xe4, 0xc8]];
-function ecrireControle(dossier, pieces, bandes) {
+function ecrireControle(dossier, pieces, bandes, nom) {
   const Z = 16, MARGE = 6, cols = new Map();
   pieces.forEach((p, i) => {
     if (p.palier !== Z) return;
@@ -236,7 +249,7 @@ function ecrireControle(dossier, pieces, bandes) {
     x += Math.max(...l.map(p => p.w)) + MARGE;
   }
   fs.mkdirSync(dossier, { recursive: true });
-  const f = path.join(dossier, 'controle_ecorces.png');
+  const f = path.join(dossier, `controle_${nom}.png`);
   png.write(f, W, H, rgb);
   console.log(`  ${path.relative(RACINE, f)} ${W}×${H} (colonnes : ${[...cols.keys()].join(', ')})`);
 }

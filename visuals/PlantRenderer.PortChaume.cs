@@ -117,7 +117,7 @@ namespace Symbiose
 				float d = rayon * c.EcartPied * 0.5f * Hash01(407, ig, k);
 				float hb = z * Mathf.Lerp(0.6f, 1f, Hash01(409, ig, k));
 				int ton = k * 3 < n ? 1 : k * 4 < n * 3 ? PaletteIndexee.TonBase : 3;
-				PoserBrin(u.X * d, u.Y * d, u.X, u.Y, rayon * Mathf.Lerp(0.6f, 1f, Hash01(411, ig, k)), hb, c.RubanCm, Ton(col, ton, Orientation(ecran)));
+				PoserBrin(u.X * d, u.Y * d, u.X, u.Y, rayon * Mathf.Lerp(0.6f, 1f, Hash01(411, ig, k)), hb, c.RubanCm, col, ton, Orientation(ecran));
 				if (devant && k % 3 == 0)
 					_sitesPrairie.Add((Iso(u.X * rayon * 0.5f, u.Y * rayon * 0.5f, hb * 0.8f), c.RubanCm * WorldView.PxPerCmX, k, hb));
 			}
