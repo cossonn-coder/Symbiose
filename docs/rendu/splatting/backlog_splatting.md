@@ -37,6 +37,14 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
     arbres, portraits d'arbres (sapin, bouleau, cerisier, figuier), fleurs d'arbre ×4 clairsemées ;
   - **S3 = (b) + (g)** — **CLOS côté code le 2026-11-26** (①→⑤, golden `bce813af…` intact ; restes : à-coup 1ʳᵉ arrivée ×32, roche de falaise ×16-×32, ripisylve non capturée, phases du chargement à recaler au PC) (`conception_lisiere_chargement.md`) → `sprints/rendu/splatting/sprint_lisiere_chargement/` : kit de lisière en splats + rameau aplati du sapin, arbres de lisière sur le bois de S2, atlas par palier ×8-×32, écran de chargement en mycélium (carte des âges, mycorhize), liste F5 exhaustive S1-S3.
   - **SÉQUENCE CLOSE côté code le 2026-11-26.** **Prochain = F5 complet de Nico** sur la liste exhaustive S1+S2+S3 (`sprints/rendu/splatting/sprint_lisiere_chargement/00_etat.md` §« F5 EXHAUSTIF »), puis le proof of concept ×64.
+  - **Premiers retours F5 de Nico (2026-11-26, pont 0.6.26, PC i5-4200H / HD 4600)** :
+    - « l'écorce n'apparaît qu'à partir de ×4 » : c'est le seuil posé au ② (`EcorceReductionMax` =
+      2 dans `DecorLayer.Charpente.cs`, `EcorceMinPx` côté jardin). Seules les bandes ×4 (et ×8-×32
+      au ③) sont cuites ; réduites pour ×0,5-×2, elles donnaient un bouleau gris tacheté. Piste :
+      cuire aussi les bandes d'écorce aux petits paliers (×0,5/×1/×2), comme le ③ l'a fait vers le haut ;
+    - « les tuiles, les maisons d'auxiliaires, les événements météo, entre autres, ne sont pas encore
+      en splats » : c'est le reste du programme, familles (c)-(f). Le style n'est donc pas encore
+      homogène PARTOUT, alors que c'était la condition du F5 complet.
 - **Après S1-S3 : proof of concept ×64** sur une plante entière (chanvre), mesure du coût (sonde
   d'une feuille au ③ de S1). Un palier ×64 suppose que sol, faune, paillage… soient eux aussi
   cuits par palier (familles c-e).
