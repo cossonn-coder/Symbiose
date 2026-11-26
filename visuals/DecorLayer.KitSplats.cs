@@ -118,11 +118,14 @@ namespace Symbiose
 		private static Dictionary<(int, int), PieceLisiere> LirePlancheLisiere(string recette, Piece forme, string planche = "kit")
 		{
 			string chemin = SplatPlanches.Dossier + recette + ".json";
-			if (!FileAccess.FileExists(chemin)) { GD.PushWarning($"[DecorLayer] manifeste absent : {chemin} (kit généré)."); return null; }
+			// Repli annoncé selon l'appelant (LISIÈRE ⑤) : planche « kit » → kit généré ;
+			// paliers hauts → forme ×4 agrandie (DecorLayer.Hauts.cs), pas le kit généré.
+			string repli = planche == "kit" ? "kit généré" : "forme ×4 agrandie";
+			if (!FileAccess.FileExists(chemin)) { GD.PushWarning($"[DecorLayer] manifeste absent : {chemin} ({repli})."); return null; }
 			var m = Json.ParseString(FileAccess.GetFileAsString(chemin)).AsGodotDictionary();
 			if (!m["planches"].AsGodotDictionary().TryGetValue(planche, out var fichier))
 			{
-				GD.PushWarning($"[DecorLayer] planche « {planche} » absente de {chemin}.");
+				GD.PushWarning($"[DecorLayer] planche « {planche} » absente de {chemin} ({repli}).");
 				return null;
 			}
 			var img = SplatPlanches.LireImage(SplatPlanches.Dossier + fichier.AsString());

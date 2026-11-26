@@ -1,7 +1,7 @@
 # sprint_lisiere_chargement — état (S3 du style homogène)
 
 **Conception FIGÉE le 2026-11-26** (`/conception`, Nico : « vas-y ») → `docs/rendu/splatting/conception_lisiere_chargement.md`.
-**En cours (`/sprint-auto`)** : ①②③ faits et commités ; ④ fait côté code (2026-11-26, non commité par le sous-agent).
+**CLOS côté code le 2026-11-26** (`/sprint-auto`, ①→⑤).
 Source : `docs/rendu/splatting/backlog_splatting.md` (S3 = (b) lisière + (g) chargement),
 `conception_reliquats_plantes.md` §2 (E2 : barre de progression permise à l'écran de chargement,
 philo #5 = pendant le jeu seulement), `conception_bois_arbres.md` (C2 : `RubanTexture` réutilisable).
@@ -52,7 +52,7 @@ Golden attendu : `bce813af…` INTACT (vue + outillage, `data/code/` jamais modi
 | ② | `02_arbres_lisiere.md` — arbres de lisière sur le bois de S2 + sapin du jardin ×8-×32 | **fait** (F5 attendu) |
 | ③ | `03_paliers_hauts.md` — atlas par palier ×8-×32 | **fait** (F5 attendu) |
 | ④ | `04_chargement_mycelium.md` — écran de chargement en mycélium (porte : maquette) | **fait** (F5 attendu) |
-| ⑤ | `05_revue_f5.md` — revue, liste F5 exhaustive S1+S2+S3, clôture | à faire |
+| ⑤ | `05_revue_f5.md` — revue, liste F5 exhaustive S1+S2+S3, clôture | **fait** (F5 complet attendu) |
 Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
 
 ## Compte rendu ① (2026-11-26)
@@ -179,8 +179,157 @@ Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
   bas, croisé par 2-3 hyphes (à juger) ; parts/τ à recaler sur les durées du PC (log `[Chargement] phases`).
 - `PlantRenderer.TouffeChargement` n'a plus d'appelant (gardé, règle « ne jamais jeter de code »).
 
+## Compte rendu ⑤ (2026-11-26)
+- **Planches** (`capture_vm.sh -b full`, `-B` sauf friche ; avant = `SYMBIOSE_SPLATS=0`) → `mesures/05_*.png` (14) :
+  ×1 ensemble été (A/B) · ×2 prairie printemps (A/B) · ×4 forêt automne (A/B) · ×8 friche été (A/B) · ×16 falaise
+  neige (A/B) · ×32 forêt neige · ×4 rivière vent 0,8 + rotation D35 1 · ×32 prairie vent · ×0,5 rotation 2.
+  Effet net : bouleaux de lisière à écorce cuite et pied évasé (contre fûts unis à traits noirs) ; ensemble ×0,5
+  homogène, rotation propre. À juger (versé à la liste F5) : neige « camouflage » ×16-×32, rivière ×4 en aplats
+  (famille (e), hors S3), friche ×8 clairsemée, prairie ×32 rare, bandes de sol nu de la prairie (préexistant).
+- **Finition** : message de repli d'une planche haute absente → « forme ×4 agrandie » (`DecorLayer.KitSplats.cs`,
+  point remonté par ③). Aucune recette neuve, aucun seuil changé (rien de laid mesuré qui en relève).
+- **Perf** (`perf_vm.sh -b full`, VM llvmpipe charge 3,2-3,9 [n=6 relevés de 1 s, non transposable]) : ×0,5 243,8 ms
+  [276 draw calls, cuisson en cours : 6 gels > 250 ms] · ×4 58,0 ms [71] · ×32 54,0 ms [57] — draw calls identiques à
+  S2 (71/57).
+- **Mémoire** (journal des captures, n=1) : atlas lisière ×16 25,2 Mo (préparation 151 ms + envoi 44 ms) · ×32 100,8 Mo
+  (préparation 364-374 ms + envoi 303-330 ms, fil principal) ; précuisson ×32 forêt 637/1024 Mo (lisière 101),
+  1 plante en repli (Alder). Kit splats lu 38-44 ms.
+- **Refactor auto-léger** : fichiers touchés par S3 tous < 300 LDC sauf `WorldView.cs` **313** (🟡, était 303 avant S3,
+  une responsabilité, signalé) ; `DecorLayer.Kit.cs` 246, `DecorLayer.cs` 231 → rien à scinder.
+- **Clôture** : `journal/204_…` + `journal.md`, `backlog_splatting.md` (S3 et séquence CLOS). `BACKLOG.md` = index
+  (inchangé, la ligne `rendu/splatting` pointe déjà le fragment). `DETTE.md` inchangé (aucune dette neuve ouverte :
+  les restes vont à la liste F5, règle « pas de dette sans en fermer une »).
+
+## F5 EXHAUSTIF — séquence « style homogène » S1 + S2 + S3 (à jouer en une fois)
+Fusionne les sections « F5 consolidé » de S1 (`sprint_reliquats_plantes/00_etat.md`), S2
+(`sprint_bois_arbres/00_etat.md`), le F5 du sprint (a) (`sprint_precuisson_splats/00_etat.md` §F5) et les
+points ①→⑤ de S3. Une case = une observation. Chiffres VM = llvmpipe chargée, **non transposables au PC**.
+
+**Outils du F5** : **L** planche des paliers ×0,5→×32 sur la plante visée · **F10** banc décor (4 motifs :
+N forêt · E rivière · S falaise · O prairie ; la friche n'apparaît que hors banc, selon le seed) · **H** maison
++ lisière transparentes · **PgUp/PgDn** rotation D35 · **Maj+F11** ancien dessin (plantes, bois, lisière) ·
+**C** rapport (précuisson X/1024 Mo, plantes en repli, `[Chargement] phases`) · **F4** perf · **Z** balayage
+des à-coups de zoom. Bancs : monde `full` (ensemble), `planche_especes` (40 herbacées), `houppiers` /
+`houppiers_25` (12 arbres, jouer jusqu'en hiver pour le bois nu), `verger_floraison`.
+
+### 1. Écran de chargement (S3 ④)
+- [ ] Au lancement, le mycélium pousse **pendant** l'init du moteur : animation fluide, sans à-coup (VM : le
+      pont tourne désormais hors du fil principal).
+- [ ] Récit lisible dans l'ordre : spore qui germe → hyphes qui s'arborisent → elles rejoignent la racine
+      d'une plantule → manteau autour de la racine (mycorhize) → petit champignon (laccaire) à 100 %.
+- [ ] Le front lumineux suit les pointes (ni halo, ni pointillé).
+- [ ] Progression **monotone** : jamais de recul, pas de long palier figé ; l'écran n'ouvre qu'une fois le
+      champignon sorti.
+- [ ] Gel du montage du monde (VM ~1,4 s) : perceptible sur le PC ? Gênant ?
+- [ ] Cuisson du cadre (dernière moitié de la barre) : saccadée (VM ~0,75 s/image) — acceptable sur le PC ?
+- [ ] Texte « Le jardin se prépare » en bas : croisé par 2-3 hyphes — gênant ?
+- [ ] Durée totale (VM 34-36 s) ; relever la ligne `[Chargement] phases` du journal pour recaler les
+      parts (gerbes 0,01 · pont 0,46 · montage 0,05 · cuisson 0,48) et τ pont 10 s sur le PC.
+
+### 2. Jardin, palier par palier (monde `full`, puis F10)
+- [ ] ×0,5 et ×1 : ensemble homogène, aucune plante ni arbre qui « détonne » par son style.
+- [ ] Aucune bascule laide d'un palier au suivant (taille, détail qui apparaît/disparaît d'un coup) ;
+      sauts de classe de taille des feuilles (×1,4 à ×2,8 d'un coup) visibles ? gênants ?
+- [ ] ×1 → ×2 : têtes, fleurs, fruits passent du dessin aux pièces — la bascule se voit-elle trop ?
+- [ ] ×4 → ×8 : la lisière passe à l'atlas ×8 (bascule « grossi → net » ~1 s visible à la 1ʳᵉ arrivée).
+- [ ] ×32 : tout est en volume (aucune plante en dessin plat). 1ʳᵉ arrivée à ×32 : à-coup (VM : 1-2 s par
+      grande plante + préparation de l'atlas de lisière ~380 ms + envoi GPU 155-306 ms) — acceptable ?
+      Les retours suivants à ×32 doivent être sans à-coup.
+- [ ] Rotation D35 (PgUp/PgDn) à ×4 et ×32 : feuilles, bois et lisière tournent sans « sauter ».
+- [ ] Vent fort : feuilles et rameaux suivent la tige sans clignoter ; bouquets et arbres de lisière plient.
+
+### 3. Plantes herbacées (banc `planche_especes`, touche L)
+- [ ] Feuilles, têtes et fruits en VOLUME, côté éclairé qui suit le soleil (heure qui tourne).
+- [ ] `tailler` marche toujours au pied (taille au port).
+- [ ] **Tomate** ×8-×32 : folioles en volume ; ×32 poils fins vert pâle (PAS de points blancs façon oïdium).
+- [ ] **Tournesol** ×2-×32 : tête de face, cœur brun foncé ; ×16-×32 nervures + poils ; tige ×32 non décalée.
+- [ ] **Fraisier** ×8 : taille feuilles/fleurs ; ×32 poils discrets ; fraises **brunes** — voulu ?
+- [ ] **Courgette** ×16 : paume assez grande ? pâle et plate ? feuilles vues par la tranche ; trompette ×32.
+- [ ] **Carotte** ×2-×16 : rosette plume, ombelle en pièce ; ombelle **orange** — voulu ?
+- [ ] **Trèfle** tous paliers : tapis de 3 folioles, V clair ×16 ; un pied `quatre_feuilles` en X.
+- [ ] **Plantain** ×4-×32 : feuilles trop larges et pennées (pièce générique) — recette dédiée ? épi trop long ?
+- [ ] **Blé** ×8-×32 en fleur : anthères pâles. **Fétuque** ×2-×16 : panicules rousses lisibles.
+- [ ] **Thym** ×8-×32 : coussin de rameaux, ou dôme sombre plat trop visible ?
+- [ ] **Lavande** ×8-×32 : lames trop sombres ? épis. **Lierre** ×8 nervures pâles ; baies.
+- [ ] **Haricot** ×1-×32 : triades, gousses, fleurs-papillons ; grimpe sur ses appuis.
+- [ ] **Drosera** ×8 perles, ×16 tentacules : trop chargé ?
+- [ ] **Bourrache** ×8 duvet, ×32 nervures + poils : trop chargé ? feuilles bicolores trop contrastées ?
+- [ ] **Molène** ×2-×16 : épi jaune sur tout le tiers haut ; rosette à la taille du dessin ; duvet ×8.
+- [ ] **Armoise / framboisier** ×4 revers ; **basilic / poivron** ×4 éclat ; **ail** ×32 pruine ; **consoude** ×32 poils.
+- [ ] **Myrtille** : pas de baies en jeu (moteur, D134) — seulement au portrait.
+- [ ] Fleurons des plantes sans fiche ×1-×2 : cœur jaune.
+- [ ] Taille des feuilles de loin (×0,5-×2 : myrtille, haricot plus feuillus ; rosette de molène plus petite).
+
+### 4. Arbres du jardin (banc `houppiers`, hiver nu ×8-×32 sauf mention)
+- [ ] Tronc et charpentières sans marche ni coude ×4→×32 ; pied évasé ; cols de branche.
+- [ ] Départ d'une branche posée devant le tronc : rond sombre — naturel ou « trou » ? Branche partie
+      derrière : passe derrière.
+- [ ] Branches en U (noyer, saule ; géométrie moteur) : acceptable ?
+- [ ] Marche de couleur à certains nœuds (aulne ×16) : gênante ?
+- [ ] Écorces grises (hêtre, noyer, charme, sapin) trop claires, confondues avec le bouleau de loin ?
+- [ ] Écorce : fondu rameau/branche/tronc ; côté soleil/ombre ; neige et surbrillance par-dessus ; petit bois effilé.
+- [ ] Squelette d'arbre mort : tube lisse gris uni — voulu ?
+- [ ] Taille : surbrillance qui suit la courbe, coupe là où l'on vise (pommier, latéral du sapin).
+- [ ] **Pommier** plaques gris-brun ; ×4 en fleur (`verger_floraison`) : bouquets (pompons trop gros ?), saut ×4→×8.
+- [ ] **Cerisier** brun-rouge, lenticelles horizontales ; montée de floraison.
+- [ ] **Noyer** losanges clairs (trop contrasté ?) · **Chêne** crevasses · **Hêtre** lisse · **Charme**
+      cannelures · **Aulne** fissures sombres · **Saule** réseau, charpentières basses arquées.
+- [ ] **Bouleau** blanc, lenticelles, base crevassée (VM : gris-bleu, pas noire) ; pleureur.
+- [ ] **Noisetier** brun-rouge, lenticelles pâles · **Figuier** gris lisse (un tronc : moteur).
+- [ ] **Sapin** ×1→×4 cône, étages, pointe ; **×8-×32 rameaux aplatis** (S3 ②, tous les 8 cm, ±0,45 rad,
+      stomates clairs) : la masse tient-elle au saut ×4→×8 ? tronc gris très clair.
+- [ ] Chatons (noyer, noisetier) en floraison réelle.
+
+### 5. Graminées
+- [ ] Dactyle/blé ×16-×32 nervures + cœur clair ; seigle/pâturin ×32 ; seigle retombant, directions variées.
+- [ ] Pas de moirage gênant ; vent qui plie ; paille d'automne.
+- [ ] Petites taches vert sombre sur les brins du dactyle ×16-×32 (VM) : qu'est-ce ?
+
+### 6. Lisière (F10, chaque bord, ×0,5 → ×32, 4 saisons)
+- [ ] **Prairie** (O) : herbes en arcs, fleurettes de face ; herbes **plus pâles / moins contrastées**
+      qu'avant (S3 ①) — à garder ? ×32 : touffes splat belles mais rares sur un tissage uniforme ; ×2 : bandes de
+      sol nu en damier (avant comme après, `05_x2_prairie_printemps_*`).
+- [ ] **Forêt** (N) : bouquets de feuillage (plus de bulles), arbres de lisière à charpente en rubans,
+      pied évasé, flèche légère ; écorce cuite sur les fûts larges dès ×2, partout à ×4 ; ×0,5-×1 ruban
+      lissé + stries (seuil `EcorceReductionMax` = 2 : à juger).
+- [ ] **Bouleau de lisière** ×4 : marques grises denses (celles de la bande S2) ; fûts très blancs de loin.
+- [ ] **Sapin de lisière** en étages (3-8 rangs) : lisible ? nombre de rangs ?
+- [ ] **Ripisylve aulne/saule** (au bord de la rivière, seed qui en porte) : jamais capturée au banc.
+- [ ] **Rivière** (E) : roseaux dressés à massette ; étincelles d'eau jusqu'à ×32 (3 px natifs, discrètes ?) ;
+      ×4 : eau et berge en grands aplats sans texture, berge de sable presque nue (`05_x4_riviere_vent_r1_ap`, famille (e) sol/eau).
+- [ ] **Falaise** (S) : blocs anguleux ; roche ×16-×32 au grain natif très fin — lit-elle comme du gravier ?
+- [ ] **Friche** (hors banc, seed avec E/O en friche) : ronciers en dôme + cannes, sous-bois en plumes ; ×8 très
+      clairsemée (touffes rousses, fleurettes en points blancs de 3 px, capture ⑤) — assez vivante ?
+- [ ] Saison par bouquet (automne qui gagne le bois), hiver : neige et givre sur la lisière à ×16-×32 — capture ⑤ :
+      neige en grosses taches blanc/sable « camouflage » sur tout le sol (`05_x16_falaise_neige_ap`, `05_x32_foret_neige_ap`), à juger.
+- [ ] ×8-×32 : herbes, fougères, galets, écorces au pixel natif (plus de gros pavés grossis).
+
+### 7. Encyclopédie, magazine, portraits
+- [ ] Encyclopédie → Plantes, espèce vue : un portrait « jeune » ; après `palier3` : les trois — le portrait
+      change avec le niveau, reste net sur le PC ; libellés (« hiver (nu) ») utiles ?
+- [ ] Magazine (après `palier3`) : portrait mûr à chaque offre.
+- [ ] Portraits non-arbres : tournesol de face ; molène hampe jaune ; drosera (trop chargé ?) ; thym ;
+      lavande ; myrtille baies bleues ; haricot/jasmin/lierre sans tuteur ; chanvre (toujours une perche) ;
+      hampes de carotte, ail, bourse, épis de plantain, basilic, menthe trop hauts ?
+- [ ] Portraits d'arbres : cerisier jeune en fleurs / mûr en cerises ; sapin conique ; bouleau blanc
+      (marques invisibles à 240 px) ; figuier ; les 8 autres.
+- [ ] Premier lancement de l'éditeur Windows : import des portraits et de `assets/chargement/` sans rien régler.
+
+### 8. Interrupteur Maj+F11 (avant/après)
+- [ ] Plantes : bascule immédiate pièces splat ↔ ancien dessin, à ×4 et ×32.
+- [ ] Bois des arbres du jardin : ancien bois ↔ tube lissé.
+- [ ] Lisière : kit généré ↔ kit splat **et** arbres reconstruits (bois de S2), à ×1, ×4 et ×16 (atlas haut).
+
+### 9. Perf et mémoire (rapport C, F4, Z — sur le PC)
+- [ ] Précuisson `full` ×32 (VM 926-934/1024 Mo, menthe et noyer en repli) : une plante PLATE visible ? Le
+      budget de 1 Go tient-il en VRAM (HD 4600) ?
+- [ ] Atlas de lisière ×32 = 100,8 Mo (un seul vit) : compté dans la ligne « lisière N Mo » du rapport.
+- [ ] FPS par palier (F4) ×0,5 / ×4 / ×32 ; draw calls stables.
+- [ ] Balayage Z : à-coups de zoom ×4↔×8↔×32 (1ʳᵉ arrivée vs retours).
+- [ ] Rapport C : construction de la maille de lisière ×2/×4 (référence PC 30-37 ms avant S3).
+- [ ] Journal : une recette `_hauts` manquante annonce désormais « forme ×4 agrandie » (plus « kit généré »).
+
 ## §REPRISE
-Relire ce fichier + `docs/rendu/splatting/conception_lisiere_chargement.md`. ①②③ faits et commités ; ④ fait côté
-code (non commité par le sous-agent : commit `feat(chargement④)` à faire par l'orchestrateur, avec
-`assets/chargement/` (+ `.import` « keep »), `visuals/chargement_mycelium.gdshader`, `world/ProgressionChargement.cs`,
-`tools/splat/{cuire_mycelium.js,recettes/mycelium.js}` et `mesures/04_*`). Prochaine étape : tronçon ⑤ `05_revue_f5.md`.
+**Séquence « style homogène » (S1 → S2 → S3) CLOSE côté code le 2026-11-26** (S3 ①→⑤, golden `bce813af…`
+intact, build 0 avertissement). **Attend le F5 complet de Nico** : liste dans ce fichier, section « F5 EXHAUSTIF »
+(9 sections). Ensuite : proof of concept ×64 (chanvre), puis familles (c)-(f) de `backlog_splatting.md`.

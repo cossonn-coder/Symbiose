@@ -35,18 +35,19 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
   - **S2 arbres** — **CLOS côté code le 2026-11-26** (①→⑥, golden `bce813af…` intact, F5 consolidé S2 dans son `00_etat.md`, à jouer après S3 ; restes : rendu ×8-×32 des aiguilles du sapin = recette « rameau aplati » à cuire, figuier en cépée = moteur) (`conception_bois_arbres.md`) → `sprints/rendu/splatting/sprint_bois_arbres/` : RENDU seul (moteur intact), tube lissé sans angles abrupts +
     écorce cuite par essence, brins/rubans des graminées (même technique), masses ×4 des
     arbres, portraits d'arbres (sapin, bouleau, cerisier, figuier), fleurs d'arbre ×4 clairsemées ;
-  - **S3 = (b) + (g)** — **CONÇU le 2026-11-26** (`conception_lisiere_chargement.md`, 5 tronçons, golden intact) → `sprints/rendu/splatting/sprint_lisiere_chargement/`, prêt pour `/sprint-auto` : kit de lisière en splats + rameau aplati du sapin, arbres de lisière sur le bois de S2, atlas par palier ×8-×32, écran de chargement en mycélium (carte des âges, mycorhize), liste F5 exhaustive S1-S3.
+  - **S3 = (b) + (g)** — **CLOS côté code le 2026-11-26** (①→⑤, golden `bce813af…` intact ; restes : à-coup 1ʳᵉ arrivée ×32, roche de falaise ×16-×32, ripisylve non capturée, phases du chargement à recaler au PC) (`conception_lisiere_chargement.md`) → `sprints/rendu/splatting/sprint_lisiere_chargement/` : kit de lisière en splats + rameau aplati du sapin, arbres de lisière sur le bois de S2, atlas par palier ×8-×32, écran de chargement en mycélium (carte des âges, mycorhize), liste F5 exhaustive S1-S3.
+  - **SÉQUENCE CLOSE côté code le 2026-11-26.** **Prochain = F5 complet de Nico** sur la liste exhaustive S1+S2+S3 (`sprints/rendu/splatting/sprint_lisiere_chargement/00_etat.md` §« F5 EXHAUSTIF »), puis le proof of concept ×64.
 - **Après S1-S3 : proof of concept ×64** sur une plante entière (chanvre), mesure du coût (sonde
   d'une feuille au ③ de S1). Un palier ×64 suppose que sol, faune, paillage… soient eux aussi
   cuits par palier (familles c-e).
-- (b) décor de lisière (`visuals/DecorLayer.*`, même kit indexé) — S3.
+- (b) décor de lisière (`visuals/DecorLayer.*`, même kit indexé) — S3, **CLOS côté code le 2026-11-26**.
 - (c) faune + champignons (`FauneSilhouettes`, `MacroLife`, `Carpophore*`) — à concevoir.
 - (d) structures + maison (`CompostStructure`, `ContainerStructure`, `SupportRenderer`,
   `HabitatAuxiliaire`, `HouseNode`) — à concevoir.
 - (e) sol, litière, eau, neige, météo (`world/Sol*`, `*Litter*`, `Mulch*`, `Puddle*`,
   `SnowLayer`, `WeatherLayer`) — à concevoir ; surface continue, méthode à inventer.
 - (f) icônes de gestes et de faune en petits objets splats (D8, F5 de lisibilité d'abord).
-- (g) **écran de chargement** (Nico 2026-11-25 : « devenu moche ») — S3 : un **filament de
+- (g) **écran de chargement** (Nico 2026-11-25 : « devenu moche ») — S3, **CLOS côté code le 2026-11-26** : un **filament de
   mycélium qui s'arborise petit à petit, en splats, et sert de barre de progression** (philo #5
   = pendant le jeu seulement ; on charge planches splats, portraits, cuisson du cadre).
 - Horizon : vraie 3D temps réel (splats dans Godot, addon gdgs ou rendu C#), banc de
