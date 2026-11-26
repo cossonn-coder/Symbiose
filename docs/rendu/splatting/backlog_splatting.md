@@ -35,7 +35,7 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
   - **S2 arbres** — **CLOS côté code le 2026-11-26** (①→⑥, golden `bce813af…` intact, F5 consolidé S2 dans son `00_etat.md`, à jouer après S3 ; restes : rendu ×8-×32 des aiguilles du sapin = recette « rameau aplati » à cuire, figuier en cépée = moteur) (`conception_bois_arbres.md`) → `sprints/rendu/splatting/sprint_bois_arbres/` : RENDU seul (moteur intact), tube lissé sans angles abrupts +
     écorce cuite par essence, brins/rubans des graminées (même technique), masses ×4 des
     arbres, portraits d'arbres (sapin, bouleau, cerisier, figuier), fleurs d'arbre ×4 clairsemées ;
-  - **S3 = (b) + (g)** — **PROCHAIN** (`/conception`) : lisière sur le bois de S2 (primitive `RubanTexture` réutilisable), puis écran de chargement en mycélium.
+  - **S3 = (b) + (g)** — **CONÇU le 2026-11-26** (`conception_lisiere_chargement.md`, 5 tronçons, golden intact) → `sprints/rendu/splatting/sprint_lisiere_chargement/`, prêt pour `/sprint-auto` : kit de lisière en splats + rameau aplati du sapin, arbres de lisière sur le bois de S2, atlas par palier ×8-×32, écran de chargement en mycélium (carte des âges, mycorhize), liste F5 exhaustive S1-S3.
 - **Après S1-S3 : proof of concept ×64** sur une plante entière (chanvre), mesure du coût (sonde
   d'une feuille au ③ de S1). Un palier ×64 suppose que sol, faune, paillage… soient eux aussi
   cuits par palier (familles c-e).
