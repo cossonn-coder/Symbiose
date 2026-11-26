@@ -297,13 +297,22 @@ namespace Symbiose
 		// init → warmup → construction des couches → 1er snapshot → caméra.
 		private void StartSimulation(string config)
 		{
+			var pret = PreparerMonde(config);
+			if (pret.World != null) MonterMonde(config, pret.World, pret.Snap);
+		}
+
+		// Moitié PONT du démarrage (LISIÈRE & CHARGEMENT ④, L5) : init + warmup + 1er
+		// snapshot, AUCUN nœud touché → l'écran de chargement la lance hors du fil
+		// principal (Task.Run ; le verrou d'I/O de SimBridge sérialise le tube, et rien
+		// d'autre ne parle au pont avant `_started`). (null, null) si le moteur a lâché.
+		private (GDict World, GDict Snap) PreparerMonde(string config)
+		{
 			// Options d'init du panneau Paramètres (T2) : mémorisées avant « Lancer »,
 			// transmises au montage du monde (encyclopédie de départ + carnet anticipé).
 			_configLancee = config;   // rapport perf : quel monde (WorldView.Etalonnage.cs)
 			var world = _bridge.Init(Seed, config, _encycloDemarrage, _carnetAnticipe,
 									 _vigueurInfinie);
-			if (world == null) { _bridge.Quit(); return; }
-			_world = world;
+			if (world == null) { _bridge.Quit(); return (null, null); }
 
 			ulong t0 = Time.GetTicksMsec();
 			GDict snap = null;
@@ -314,10 +323,17 @@ namespace Symbiose
 			for (int i = 0; i < warmup; i++)
 				snap = _bridge.StepWeek();
 			if (snap == null) snap = _bridge.GetSnapshot();
-			if (snap == null) { _bridge.Quit(); return; }
+			if (snap == null) { _bridge.Quit(); return (null, null); }
 			GD.Print($"[WorldView] warmup {warmup} semaines en "
 					 + $"{Time.GetTicksMsec() - t0} ms — semaine {snap["week"].AsInt32()}, "
 					 + $"{snap["season"].AsString()}.");
+			return (world, snap);
+		}
+
+		// Moitié MONTAGE : l'arbre de scène, sur le fil principal (Godot l'exige).
+		private void MonterMonde(string config, GDict world, GDict snap)
+		{
+			_world = world;
 
 			// Décor AVANT le sol : ZIndex -5 le pose derrière tout, mais on l'ajoute
 			// tôt pour qu'il existe au 1er dessin. Build depuis le SEED du terrain.
@@ -434,6 +450,7 @@ namespace Symbiose
 			try { _pendingStep?.Wait(2000); } catch { /* moteur déjà mort : Quit gère */ }
 			try { _pendingAction?.Wait(2000); } catch { /* idem */ }
 			try { _pendingFields?.Wait(2000); } catch { /* idem */ }
+			try { _pontChargement?.Wait(2000); } catch { /* init en vol sous l'écran de chargement */ }
 			_bridge?.Quit();
 			LibererCurseur();   // rend le curseur système, libère ses textures (T1)
 		}
@@ -447,7 +464,7 @@ namespace Symbiose
 		{
 			// Écran de sélection (⑤) : rien à animer tant que le monde n'est pas
 			// construit (StartSimulation pose _started). L'écran de chargement, lui, avance.
-			if (!_started) { AvancerChargement(); return; }
+			if (!_started) { AvancerChargement(delta); return; }
 
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).

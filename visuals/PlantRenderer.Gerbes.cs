@@ -122,9 +122,25 @@ namespace Symbiose
 
 		// --- Construction -----------------------------------------------------
 
-		/// <summary>Génère l'atlas et l'envoie au GPU, une fois. Appelé par l'écran de chargement ;
-		/// à la 1ʳᵉ demande sinon (bancs de capture).</summary>
+		/// <summary>Génère l'atlas et l'envoie au GPU, une fois. À la 1ʳᵉ demande (bancs de
+		/// capture) ; l'écran de chargement, lui, appelle les deux moitiés séparément.</summary>
 		internal static void AssurerGerbes()
+		{
+			PreparerGerbes();
+			EnvoyerGerbes();
+		}
+
+		// Octets de l'atlas des codes, en attente d'envoi au GPU (null une fois envoyé).
+		private static byte[] _gerbesRgba;
+		private static int _gerbesHauteur;
+		private static double _gerbesMs;
+
+		/// <summary>Moitié CALCUL (octets + `Image`, aucun nœud ni texture) : peut tourner hors
+		/// du fil principal (écran de chargement, L5). Une fois.</summary>
+		/// <remarks>📖 Une `Image` est un tableau d'octets en mémoire vive, sans lien au GPU :
+		/// la créer dans un autre fil est sûr. Une `ImageTexture` parle au serveur de rendu :
+		/// elle naît sur le fil principal (EnvoyerGerbes).</remarks>
+		internal static void PreparerGerbes()
 		{
 			if (_gerbesNiveaux != null) return;
 			ulong t0 = Time.GetTicksUsec();
@@ -138,7 +154,6 @@ namespace Symbiose
 						PeindreGerbe(rg, hauteur, forme, p, v, touffes);
 			PeindreGerbesFleurs(rg);   // fleurs d'arbre, VERGER VIVANT ④ (GerbesFleurs.cs)
 			PeindrePiecesFleur(rg);    // et leurs fleurs de près (PiecesFleur.cs)
-			_gerbesNiveaux = Image.CreateFromData(GerbeAtlasLargeur, hauteur, false, Image.Format.Rg8, rg);
 			// Texel = (1, 1, code, 1) : × modulate (palette, palette, 1, 1) = pixel encodé, comme _kitCodes.
 			var rgba = new byte[GerbeAtlasLargeur * hauteur * 4];
 			for (int i = 0; i < GerbeAtlasLargeur * hauteur; i++)
@@ -147,9 +162,21 @@ namespace Symbiose
 				if (code == 0) continue;
 				rgba[i * 4] = 255; rgba[i * 4 + 1] = 255; rgba[i * 4 + 2] = code; rgba[i * 4 + 3] = 255;
 			}
-			_gerbesCodes = ImageTexture.CreateFromImage(Image.CreateFromData(GerbeAtlasLargeur, hauteur, false, Image.Format.Rgba8, rgba));
-			GD.Print($"[Chargement] atlas de gerbes : {GerbeAtlasLargeur}×{hauteur} px, {rgba.Length / 1048576.0:F2} Mo, "
-				+ $"{_gerbes.Count} pièces, {(Time.GetTicksUsec() - t0) / 1000.0:F1} ms.");
+			_gerbesRgba = rgba;
+			_gerbesHauteur = hauteur;
+			_gerbesMs = (Time.GetTicksUsec() - t0) / 1000.0;
+			_gerbesNiveaux = Image.CreateFromData(GerbeAtlasLargeur, hauteur, false, Image.Format.Rg8, rg);   // en dernier : « prêt »
+		}
+
+		/// <summary>Moitié GPU : crée la texture des codes, sur le fil principal. Une fois.</summary>
+		internal static void EnvoyerGerbes()
+		{
+			if (_gerbesCodes != null || _gerbesRgba == null) return;
+			ulong t0 = Time.GetTicksUsec();
+			_gerbesCodes = ImageTexture.CreateFromImage(Image.CreateFromData(GerbeAtlasLargeur, _gerbesHauteur, false, Image.Format.Rgba8, _gerbesRgba));
+			GD.Print($"[Chargement] atlas de gerbes : {GerbeAtlasLargeur}×{_gerbesHauteur} px, {_gerbesRgba.Length / 1048576.0:F2} Mo, "
+				+ $"{_gerbes.Count} pièces, calcul {_gerbesMs:F1} ms, envoi {(Time.GetTicksUsec() - t0) / 1000.0:F1} ms.");
+			_gerbesRgba = null;
 		}
 
 		// Rangement en étagères, du plus petit au plus grand côté. Rend la hauteur totale.

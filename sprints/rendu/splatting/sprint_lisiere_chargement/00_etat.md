@@ -1,7 +1,7 @@
 # sprint_lisiere_chargement — état (S3 du style homogène)
 
 **Conception FIGÉE le 2026-11-26** (`/conception`, Nico : « vas-y ») → `docs/rendu/splatting/conception_lisiere_chargement.md`.
-**En cours (`/sprint-auto`)** : ①② faits et commités ; ③ fait côté code (2026-11-26, non commité par le sous-agent).
+**En cours (`/sprint-auto`)** : ①②③ faits et commités ; ④ fait côté code (2026-11-26, non commité par le sous-agent).
 Source : `docs/rendu/splatting/backlog_splatting.md` (S3 = (b) lisière + (g) chargement),
 `conception_reliquats_plantes.md` §2 (E2 : barre de progression permise à l'écran de chargement,
 philo #5 = pendant le jeu seulement), `conception_bois_arbres.md` (C2 : `RubanTexture` réutilisable).
@@ -51,7 +51,7 @@ Golden attendu : `bce813af…` INTACT (vue + outillage, `data/code/` jamais modi
 | ① | `01_kit_lisiere.md` — kit de lisière en splats + rameau aplati | **fait** (F5 attendu) |
 | ② | `02_arbres_lisiere.md` — arbres de lisière sur le bois de S2 + sapin du jardin ×8-×32 | **fait** (F5 attendu) |
 | ③ | `03_paliers_hauts.md` — atlas par palier ×8-×32 | **fait** (F5 attendu) |
-| ④ | `04_chargement_mycelium.md` — écran de chargement en mycélium (porte : maquette) | à faire |
+| ④ | `04_chargement_mycelium.md` — écran de chargement en mycélium (porte : maquette) | **fait** (F5 attendu) |
 | ⑤ | `05_revue_f5.md` — revue, liste F5 exhaustive S1+S2+S3, clôture | à faire |
 Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
 
@@ -144,7 +144,43 @@ Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
   visible ~1 s) ; roche de falaise à ×16-×32 (grain natif très fin, lit comme du gravier : à juger) ; neige/givre
   à ×16-×32 en hiver (non capturés) ; étincelles de rivière à ×8-×32 (3 px natifs, discrètes) ; Maj+F11 à ×16.
 
+## Compte rendu ④ (2026-11-26)
+- **Porte de décision : CARTE DES ÂGES RETENUE (mesurée).** Âge d'un pixel = âge du splat PROPRIÉTAIRE (passe
+  `splatId`), porté nativement par ink-studio (`born`, flag 512, `data[15]`). Maquette (`mesures/04_maquette_p*.png`,
+  gauche = vue par la carte, droite = VÉRITÉ = ink rendu au temps t = p) : écart sur les pixels du mycélium
+  p=0,1 : 37 px / 509 révélés · p=0,4 : 54 / 3 409 · p=0,7 : 43 / 7 246 · p=1 : 2 / 9 127 [n=1 cuisson] ; tous
+  « manquants » au front (≤ 1 px de retard à la pointe, couvert par la lueur), 0-1 « en trop » ; ni halo ni
+  pointillé à l'œil. Pas de repli en N images.
+- **Écart au kickoff (conception)** : une seule image couleur ne peut pas montrer la racine NUE puis GAINÉE (le
+  manteau en devient propriétaire → trous dans la racine avant p = 0,74). D'où **deux couches dans la texture
+  couleur** : `mycelium_couleur.png` 960×270 = fond (scène SANS mycélium, rendue à part) | mycélium (pixels dont le
+  propriétaire a un âge, couleurs de la scène complète → occlusions justes) ; `mycelium_ages.png` 480×270
+  (gris = âge × 255, 0 réservé). Poids : 20,9 ko + 15,2 ko. Résolution 480×270 affichée ×4 (hyphes de 1 px nettes).
+- **Scène** (`tools/splat/recettes/mycelium.js` + `cuire_mycelium.js`, README) : coupe de sol, spore → réseau à pousse
+  SYNCHRONE (âge ∝ distance le long des hyphes, chimiotropisme vers la racine, anastomose), contact à 0,74, manteau =
+  2 hyphes en hélice autour du pivot 0,74→0,88, carpophore (laccaire) 0,88→1 (pied ∝ hauteur, chapeau en dernier).
+  196 649 splats, 1 105 nœuds, cuisson ~2,5 min [VM charge 3-4, n=2]. Zéro `Math.random` (hash `KIT.hash`).
+- **Shader** `visuals/chargement_mycelium.gdshader` : âge ≤ p → mycélium, front = lueur sur 0,035 d'âge ; sinon fond.
+- **Chargement non bloquant (L5), vérifié au code** : `PreparerGerbes` (octets + `Image`, hors fil) / `EnvoyerGerbes`
+  (`ImageTexture`, fil principal) ; `StartSimulation` scindé en `PreparerMonde` (pont seul : init + warmup + snapshot,
+  `Task.Run`) / `MonterMonde` (arbre de scène). Personne d'autre ne parle au pont pendant l'init (`_Process` et
+  `_UnhandledInput` coupés par `_started`, sélecteur libéré, `_Input` n'écoute que la souris) ; `_ExitTree` attend
+  la tâche avant `quit`. Chemin sans écran (`StartSimulation`) inchangé (capture smoke vérifiée).
+- **Progression (L6)** `world/ProgressionChargement.cs` (classe pure) : parts {gerbes 0,01 · pont 0,46 · montage 0,05 ·
+  cuisson 0,48} = durées mesurées ; τ pont 10 s ; cuisson = 1 − file restante / file max (`BakeQueue.FileEligibles`) ;
+  max + lissage 1er ordre ; l'écran attend la valeur 1 (carpophore sorti) avant d'ouvrir. Filet 30 s conservé.
+- **Mesures** (`capture_vm.sh -b full -J`, journal `[Chargement] phases`) : gerbes 386-395 ms (calcul 125 ms hors fil,
+  envoi 15-17 ms) · pont 14,9 s (warmup 10,3-10,4 s) · montage 1,6-1,7 s dont **gel 1 396-1 432 ms** · cuisson
+  15,0-15,6 s (20 images : la cuisson elle-même gèle ~0,75 s/image) · total 34,2-35,9 s [VM llvmpipe charge 3,4-4,4,
+  n=2]. Avant (code ③) : tout le pont + montage gelés 19,6 s d'un bloc. Captures `mesures/04_chargement_image{02,30,
+  56,66,74}.png` (spore → réseau → front à la racine → manteau → carpophore).
+- **F5 ④** : le mycélium pousse pendant l'init (fluide, pas d'à-coup) ; gel du montage (~1,4 s VM) et cuisson du cadre
+  saccadée (à relire au PC) ; lisibilité du récit (spore, mycorhize, champignon) ; texte « Le jardin se prépare » en
+  bas, croisé par 2-3 hyphes (à juger) ; parts/τ à recaler sur les durées du PC (log `[Chargement] phases`).
+- `PlantRenderer.TouffeChargement` n'a plus d'appelant (gardé, règle « ne jamais jeter de code »).
+
 ## §REPRISE
-Relire ce fichier + `docs/rendu/splatting/conception_lisiere_chargement.md`. ①② faits et commités ; ③ fait
-côté code (non commité par le sous-agent : commit `feat(lisière③)` à faire par l'orchestrateur, avec les
-`assets/splats/lisiere_*_hauts*`). Prochaine étape : tronçon ④ `04_chargement_mycelium.md` (indépendant).
+Relire ce fichier + `docs/rendu/splatting/conception_lisiere_chargement.md`. ①②③ faits et commités ; ④ fait côté
+code (non commité par le sous-agent : commit `feat(chargement④)` à faire par l'orchestrateur, avec
+`assets/chargement/` (+ `.import` « keep »), `visuals/chargement_mycelium.gdshader`, `world/ProgressionChargement.cs`,
+`tools/splat/{cuire_mycelium.js,recettes/mycelium.js}` et `mesures/04_*`). Prochaine étape : tronçon ⑤ `05_revue_f5.md`.
