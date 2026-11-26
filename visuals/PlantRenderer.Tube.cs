@@ -24,6 +24,9 @@ namespace Symbiose
 		/// <summary>Bois en tube lissé (sinon : l'ancien bois, segment par segment).</summary>
 		private static bool TubeActif => SplatsActifs;
 
+		// Demi-largeur interne (px) au-dessus de laquelle le départ d'une branche reçoit un bout rond.
+		private const float CapMinPx = 1.5f;
+
 		/// <summary>LE point du bois : segment `s`, `t` ∈ [0,1] de sa base à son bout. Sur la courbe
 		/// quand le tube est actif, sur le segment droit sinon (ce qui est dessiné, dans les deux cas).</summary>
 		private Vector3 PointDuBois(in Segment s, float t) =>
@@ -97,6 +100,11 @@ namespace Symbiose
 				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 				if (m.RangAxe == 0 && s.Parent < 0 && m.Points[0].Z <= 1f)
 					DrawColoredPolygon(EllipsePoints(pts[0], demi[0], demi[0] * 0.5f, 16), Ton(col, PaletteIndexee.TonBase));
+				// ⑥ : départ d'une branche ARRONDI. Le col naît dans le porteur ; une branche posée
+				// DEVANT lui montrait son bout carré par-dessus (vu au noisetier ×16-×32). Le rond est
+				// au ton d'OMBRE : au ton de base il se lisait comme une bûche sciée (capture ⑥).
+				else if (m.RangAxe == 0 && s.Parent >= 0 && demi[0] * WorldView.CurrentZoom >= CapMinPx)
+					DrawColoredPolygon(EllipsePoints(pts[0], demi[0], demi[0], 12), Ton(col, PaletteIndexee.TonBase - 1));
 				PeindreEcorceTube(m, pts, demi, nrm, col, w, lig, CleSegment(s));
 				if (houppier) DrawBoutTendre(s, collet);
 				DrawNeigeTube(pts, demi, w, s, m.Index);

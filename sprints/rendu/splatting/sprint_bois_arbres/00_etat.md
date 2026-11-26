@@ -1,6 +1,6 @@
 # sprint_bois_arbres — état (S2 du style homogène)
 
-**Conception FIGÉE le 2026-11-25** (`/conception`, Nico : « oui vas y ») → `docs/rendu/splatting/conception_bois_arbres.md`.
+**SPRINT S2 CLOS côté code le 2026-11-26** (①→⑥). **Conception FIGÉE le 2026-11-25** (`/conception`, Nico : « oui vas y ») → `docs/rendu/splatting/conception_bois_arbres.md`.
 **Prêt pour `/sprint-auto sprint_bois_arbres`.**
 Source : `docs/rendu/splatting/backlog_splatting.md` (S2), `conception_reliquats_plantes.md` §2-3
 (E3/E4 bois sans joint, rendu seul ; E9 brins/rubans des graminées en S2).
@@ -75,7 +75,7 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 | ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ⑤ | `05_sapin_portraits.md` — cône du sapin en jeu, portraits d'arbres | **FAIT côté code 2026-11-26** (F5 attendu) |
-| ⑥ | `06_revue.md` — revue des paliers, F5 consolidé S2, clôture | à faire |
+| ⑥ | `06_revue.md` — revue des paliers, F5 consolidé S2, clôture | **FAIT côté code 2026-11-26** (F5 après S3) |
 
 ## Règles du sprint
 - Golden `bce813af…` INTACT à chaque tronçon ; build vert, 0 avertissement.
@@ -274,7 +274,93 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 - **F5 Nico** : sapin ×1→×32 (cône, étages, pointe), ×8 aiguilles ; taille d'un latéral du sapin ;
   encyclopédie : cerisier jeune en fleurs / mûr en cerises, sapin conique, bouleau blanc, figuier.
 
+### ⑥ Revue des paliers et clôture — FAIT côté code (2026-11-26), golden `bce813af…` intact, build 0 avert.
+- **Planches ×0,5→×32** (`-l 2`, VM llvmpipe, charge 4-9, n=1 planche par cas) lues au Read : les 12 essences
+  (`houppiers`) en HIVER NU (`-w 28` → hiver s9, `-H`) ; été : pommier, cerisier, bouleau, saule, figuier ;
+  `verger_floraison` avant (`SYMBIOSE_SPLATS=0`) / après ; dactyle et blé (`planche_especes`) ; squelette (mort
+  debout de `nucleation`) avant/après ; `full` avant/après (la planche y vise une consoude sous le toit : sert
+  pour la mémoire, pas pour le bois) ; avant : noyer, chêne, sapin en hiver. Montages gardés :
+  `mesures/06_planche_*.png` (7 paliers + étiquette d'espèce, recadrés au centre).
+- **Constats** : tronc et charpentières continus, sans marche ni coude, aux 12 essences ; pied évasé ; écorces
+  lisibles ×8→×32 (cerisier lenticelles horizontales, chêne crevasses, charme cannelures, noyer losanges,
+  noisetier lenticelles pâles, bouleau blanc + lenticelles) ; graminées et verger conformes à ③/④.
+- **Corrigé (finition, sans recette)** : départ de branche posée DEVANT son porteur = bout CARRÉ visible
+  par-dessus le tronc (noisetier ×16-×32, `06_planche_hv_hazel.png`) → rond au ton d'ombre au départ de tout axe
+  enfant (`PlantRenderer.Tube.cs`, `CapMinPx` 1,5 px internes). Essayé au ton de base : se lisait comme une
+  bûche sciée → ton d'ombre retenu (`06_planche_hv_hazel_cap2.png`).
+- **« Grosses branches pâles en arcs » (signalé au ④) = géométrie du MOTEUR, pas un défaut du tube** : le noyer
+  avant/après (`06_planche_av_walnut.png` / `hv_walnut.png`) montre la même branche qui part VERS LE BAS puis
+  remonte à angle vif ; la courbe passe par ces nœuds (B1) et l'arrondit en U. Idem saule (charpentières basses
+  arquées). Couleur pâle presque blanche : identique avant/après (rampe de palette, pas S2). Rien corrigé.
+- **Sapin ×8 tranché : laissé tel quel, pas de correction au ⑥.** ×1→×4 : cône net (gerbes). ×8→×32 : bâtons
+  bruns + aiguilles d'1 px (×8) puis traits courbes (×16-×32) ; la masse lue à ×4 se perd au saut ×4→×8. Les
+  gerbes s'arrêtent à ×4 (atlas 4 paliers) : les poser à ×8 = pixels doublés (refusé) ; densifier les aiguilles
+  = gain faible, pinceau +60 % (⑤). Seule vraie réponse : une recette neuve « rameau aplati de sapin » cuite
+  (comme les bouquets du ④), interdite au ⑥ → **candidat dette** (signalé à l'orchestrateur).
+- **Non corrigé, au F5** : marche de COULEUR à certains nœuds (aulne ×16 : brun foncé au-dessus, gris dessous) —
+  la couleur du bois est par segment (`AvecEcorce` × épaisseur) et le pinceau pose des CODES de palette : un
+  dégradé continu n'existe pas, il faudrait un tramage ; écorces grises (hêtre, noyer, charme, sapin) très
+  claires, proches du bouleau à ×0,5-×2 (avant comme après) ; feuilles ×16-×32 du pommier/saule (S1).
+- **Mémoire de précuisson** (`full`, planche, VM, n=1) : ×8 266 · ×16 698 · ×32 926/1024 Mo [après] contre
+  252 · 560 · 692 [`SYMBIOSE_SPLATS=0`, donc sans aucun splat, pas « avant S2 »] ; S1 notait ≈ 930 à ×32 → S2
+  n'ajoute rien de mesurable. En repli à ×32 : **2 plantes (Mint, WalnutTree)**, évincées (avant comme après).
+  Écorces : 0,30 Mo de planches. `assets/splats/` **65 Mo** (inchangé au ⑥).
+- **ms par image** (`tools/perf_vm.sh -b full`, VM llvmpipe, charge 3,9-4, n=6 relevés de 1 s, NON
+  transposable au PC) : ×1 261,5 ms [cuisson en cours, 7 gels > 250 ms] · ×4 57,8 ms [71 draw calls] ·
+  ×8 53,2 ms [61] · ×32 53,0 ms [57].
+- **Refactor auto-léger** : fichiers touchés par S2 tous ≤ 300 LDC sauf `PlantRenderer.Organs.cs` 321 (inchangé
+  par S2, déjà 321 avant) → rien à scinder.
+- **Clôture** : `docs/rendu/splatting/backlog_splatting.md` (S2 CLOS côté code, S3 prochain). journal, DETTE,
+  BACKLOG : laissés à l'orchestrateur (consigne du tronçon).
+
+## F5 consolidé (S2, à jouer au F5 complet APRÈS S3 — avec celui de S1)
+Mode d'emploi : banc `houppiers` (12 arbres, `houppiers_25` pour 25 ans), touche **L** = planche ×0,5→×32 sur
+l'arbre visé, **H** = maison transparente ; jouer jusqu'en HIVER pour le bois nu. **Maj+F11** = ancien dessin.
+**C** / **F4** : précuisson, plantes en repli (et lesquelles), pinceau max. Monde `full` pour l'ensemble.
+
+**Général (bois)**
+- [ ] Tronc et charpentières sans marche ni coude, ×4→×32 ; pied évasé (force 0,8 [choix]) ; cols de branche.
+- [ ] Départ des branches posées devant le tronc : rond sombre (⑥) — naturel ou « trou » ?
+- [ ] Branche partie derrière le tronc : passe derrière.
+- [ ] Branches en U (noyer, saule : la branche plonge puis remonte, géométrie moteur) : acceptable ?
+- [ ] Marche de couleur à certains nœuds (aulne ×16) : gênante ?
+- [ ] Écorces grises (hêtre, noyer, charme, sapin) trop claires, confondues avec le bouleau de loin ?
+- [ ] Écorce : fondu rameau/branche/tronc sans marche ; côté soleil vs ombre ; neige et surbrillance par-dessus ;
+      pinceau ET repli identiques ; petit bois effilé, écorce de rameau pas trop chargée.
+- [ ] Squelette d'arbre mort : tube lisse gris uni (aucun modelé : voulu ?).
+- [ ] Taille : surbrillance qui suit la courbe, coupe là où l'on vise (pommier, latéral du sapin).
+- [ ] Rapport C : précuisson à ×32 sur la HD 4600 (VM : 926/1024 Mo, 2 en repli : menthe, noyer) ; une plante
+      PLATE visible ?
+
+**Par essence** (hiver nu ×8-×32 sauf mention)
+- [ ] **Pommier** plaques gris-brun ; ×4 en fleur : bouquets (pompons trop gros ?), saut ×4 → ×8.
+- [ ] **Cerisier** brun-rouge à lenticelles horizontales ; montée de floraison (boutons blanc verdâtre).
+- [ ] **Noyer** losanges clairs sur gris (très contrasté ?). **Chêne** crevasses verticales. **Hêtre** lisse, quelques
+      marques. **Charme** cannelures. **Aulne** fissures sombres. **Saule** réseau, charpentières basses arquées.
+- [ ] **Bouleau** blanc, lenticelles, base « noire crevassée » (VM : taches gris-bleu, pas noires) ; pleureur.
+- [ ] **Noisetier** brun-rouge à lenticelles pâles. **Figuier** gris lisse (port à un tronc : moteur).
+- [ ] **Sapin** ×1→×4 cône, étages, pointe ; **×8-×32 bâtons bruns + aiguilles fines : la masse se perd** (connu,
+      recette « rameau aplati » à venir) ; tronc gris très clair.
+
+**Graminées**
+- [ ] Dactyle/blé ×16-×32 nervures + cœur clair, seigle/pâturin ×32 ; pas de moirage gênant ; vent qui plie ;
+      paille d'automne. Petites taches vert sombre sur les brins du dactyle ×16-×32 (VM) : qu'est-ce ?
+
+**Encyclopédie → portraits d'arbres (⑤)**
+- [ ] Cerisier jeune en fleurs / mûr en cerises (discrètes) ; sapin conique ; bouleau blanc (marques invisibles à
+      240 px) ; figuier (figues peu visibles) ; les 8 autres.
+
+**Restes connus, hors S2** : aiguilles du sapin ×8-×32 (recette à cuire) ; figuier en cépée (moteur) ; lisière et
+écran de chargement (S3).
+
 ## §REPRISE
+**SPRINT S2 CLOS côté code le 2026-11-26** (①→⑥, golden `bce813af…` intact, build 0 avert., refactor : rien à
+scinder). Prochain = **`/conception` S3** (lisière sur le bois de S2 — primitive `RubanTexture` réutilisable —,
+puis écran de chargement en mycélium). F5 complet après S3, avec les sections « F5 consolidé » de S1 et S2.
+Banc de revue du ⑥ : `tools/capture_vm.sh -b houppiers -c X,Y -l 2 -n 220 -w 28 -H` (hiver nu ; X = col×50+25,
+Y = ligne×50+25 de `bancs/houppiers.py` PLACES) ; `SYMBIOSE_SPLATS=0` pour l'avant.
+
+(ancienne reprise, toujours valable pour les outils)
 ⑤ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
 conception, puis le kickoff du premier tronçon « à faire ». ①→⑤ faits côté code. Prochain : ⑥
 (`06_revue.md`) — y trancher le rendu ×8 des aiguilles du sapin (cf. ⑤). Portraits d'arbres :

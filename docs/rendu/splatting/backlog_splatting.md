@@ -32,10 +32,10 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
   - **S1 reliquats plantes** — **CLOS côté code le 2026-11-25** (①→⑥, golden intact, F5 consolidé dans son `00_etat.md`, à jouer après S3 ; restes : recette dédiée plantain, framboisier caduc au moteur, myrtille fruitière = D134) → `sprints/rendu/splatting/sprint_reliquats_plantes/`
     (×32 confirmé par capture puis corrigé sous un budget de précuisson de 1 Go, 3 classes de
     taille, tous les détails des feuilles cuits, trèfle/thym/lavande/fétuque, portraits non-arbres) ;
-  - **S2 arbres** — **CONÇU le 2026-11-25** (`conception_bois_arbres.md`, 6 tronçons, golden intact) → `sprints/rendu/splatting/sprint_bois_arbres/`, prêt pour `/sprint-auto` : RENDU seul (moteur intact), tube lissé sans angles abrupts +
+  - **S2 arbres** — **CLOS côté code le 2026-11-26** (①→⑥, golden `bce813af…` intact, F5 consolidé S2 dans son `00_etat.md`, à jouer après S3 ; restes : rendu ×8-×32 des aiguilles du sapin = recette « rameau aplati » à cuire, figuier en cépée = moteur) (`conception_bois_arbres.md`) → `sprints/rendu/splatting/sprint_bois_arbres/` : RENDU seul (moteur intact), tube lissé sans angles abrupts +
     écorce cuite par essence, brins/rubans des graminées (même technique), masses ×4 des
     arbres, portraits d'arbres (sapin, bouleau, cerisier, figuier), fleurs d'arbre ×4 clairsemées ;
-  - **S3 = (b) + (g)** — à concevoir après S2 : lisière sur le bois de S2, puis écran de chargement.
+  - **S3 = (b) + (g)** — **PROCHAIN** (`/conception`) : lisière sur le bois de S2 (primitive `RubanTexture` réutilisable), puis écran de chargement en mycélium.
 - **Après S1-S3 : proof of concept ×64** sur une plante entière (chanvre), mesure du coût (sonde
   d'une feuille au ③ de S1). Un palier ×64 suppose que sol, faune, paillage… soient eux aussi
   cuits par palier (familles c-e).
