@@ -4,7 +4,7 @@
 // Ici le bois suit la courbe de BoisAxes.cs (passe par tous les nœuds du moteur), avec une
 // largeur continue, un pied évasé et des cols de branche, et il se peint par la primitive
 // RubanTexture.cs. Les tons restent ceux de l'ancien `DrawEcorce` (âme plate + 2 flancs orientés
-// + stries au hash) : l'écorce cuite vient au ②.
+// + stries au hash) ; ② y pose l'écorce cuite de l'essence (PlantRenderer.Ecorce.cs).
 //
 // Tri par PROFONDEUR iso (et non plus par épaisseur) : une branche partie derrière le tronc passe
 // derrière lui. L'unité triée est le morceau (un segment) ; deux morceaux voisins d'un même axe
@@ -97,7 +97,7 @@ namespace Symbiose
 				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 				if (m.RangAxe == 0 && s.Parent < 0 && m.Points[0].Z <= 1f)
 					DrawColoredPolygon(EllipsePoints(pts[0], demi[0], demi[0] * 0.5f, 16), Ton(col, PaletteIndexee.TonBase));
-				PeindreEcorceTube(pts, demi, nrm, m.V, col, w, CleSegment(s));
+				PeindreEcorceTube(m, pts, demi, nrm, col, w, lig, CleSegment(s));
 				if (houppier) DrawBoutTendre(s, collet);
 				DrawNeigeTube(pts, demi, w, s, m.Index);
 			}
@@ -122,8 +122,10 @@ namespace Symbiose
 		// tons orientés sont calculés une fois par morceau (pas un Ton par quad).
 		private readonly Color[] _tonsFlanc = new Color[8];
 
-		private void PeindreEcorceTube(Vector2[] pts, float[] demi, Vector2[] nrm, float[] v, Color col, float w, int graine)
+		private void PeindreEcorceTube(BoisAxes.Morceau m, Vector2[] pts, float[] demi, Vector2[] nrm, Color col, float w,
+			float lig, int graine)
 		{
+			float[] v = m.V;
 			float z = WorldView.CurrentZoom, wi = w * z;
 			Color ame = Ton(col, PaletteIndexee.TonBase);
 			RubanTexture.PoserBande(pts, demi, nrm, v, -1f, 1f, _ => ame);
@@ -133,8 +135,10 @@ namespace Symbiose
 				RubanTexture.PoserBande(pts, demi, nrm, v, 1f / 3f, 1f, p => _tonsFlanc[Orientation(p)]);
 				RubanTexture.PoserBande(pts, demi, nrm, v, -1f, -1f / 3f, p => _tonsFlanc[Orientation(-p)]);
 			}
-			RubanTexture.Envoyer(this);   // âme + flancs en un appel, avant les stries
-			if (wi >= StrieMinPx) StriesTube(pts, demi, nrm, col, wi, graine);
+			RubanTexture.Envoyer(this);   // âme + flancs en un appel, avant l'écorce
+			// ② : l'écorce cuite de l'essence par-dessus ; à défaut (bois fin, tige tendre), les stries.
+			if (!PeindreEcorceCuite(m, pts, demi, nrm, col, wi, lig) && wi >= StrieMinPx)
+				StriesTube(pts, demi, nrm, col, wi, graine);
 		}
 
 		// Stries : traits fins le long du tube, à u fixe, par tronçons au hash (même tirage que

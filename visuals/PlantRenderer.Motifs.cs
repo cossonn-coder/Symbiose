@@ -315,7 +315,7 @@ namespace Symbiose
 		}
 
 		// Littéral : part de l'éclat de la rampe par ton (creux … éclat).
-		private static readonly float[] GrisTon = { 0.4f, 0.62f, 0.8f, 0.92f, 1f };
+		internal static readonly float[] GrisTon = { 0.4f, 0.62f, 0.8f, 0.92f, 1f };
 
 		// Orientation d'un motif dans la bande `b` : celle du quartier (dôme), parfois
 		// voisine (±45°) ; au cœur, mêlée au hash (dont « plat »).

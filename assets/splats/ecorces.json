@@ -1,0 +1,2525 @@
+{
+ "recette": "ecorces",
+ "format": "R = niveau kit ; G = 128 | ton << 4 | 8 (plat) ; A = fût",
+ "ages": [
+  {
+   "nom": "rameau",
+   "d_cm": 1.5,
+   "periode_cm": 8
+  },
+  {
+   "nom": "branche",
+   "d_cm": 6,
+   "periode_cm": 16
+  },
+  {
+   "nom": "tronc",
+   "d_cm": 20,
+   "periode_cm": 32
+  }
+ ],
+ "planches": {
+  "x4": "ecorces_x4.png",
+  "x8": "ecorces_x8.png",
+  "x16": "ecorces_x16.png",
+  "x32": "ecorces_x32.png"
+ },
+ "bandes": [
+  {
+   "essence": "AppleTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    0,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    5,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 1,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    22,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    71,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 6,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    76,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 5,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    93,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    142,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    147,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 5,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    164,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    213,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 1,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    218,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 4,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    235,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    284,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    289,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 0,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    306,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 2,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    355,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 5,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    360,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 18,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    377,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    426,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    431,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 10,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    448,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    497,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 3,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    502,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 4,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    519,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 2,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    568,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    573,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 7,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    590,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    639,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    644,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 10,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    661,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    710,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    715,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 1,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    732,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    781,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    786,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 2,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    803,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "rameau",
+   "palier": 4,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 24,
+   "planche": "x4",
+   "rect": [
+    852,
+    0,
+    4,
+    12
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "branche",
+   "palier": 4,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 2,
+   "couture_sur": 224,
+   "planche": "x4",
+   "rect": [
+    857,
+    0,
+    16,
+    26
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "tronc",
+   "palier": 4,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 4,
+   "couture_sur": 1248,
+   "planche": "x4",
+   "rect": [
+    874,
+    0,
+    48,
+    50
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    0,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 5,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    9,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 19,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    38,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 2,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    133,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 5,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    142,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 16,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    171,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    266,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 2,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    275,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 23,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    304,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 2,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    399,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 3,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    408,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 25,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    437,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    532,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 1,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    541,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 4,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    570,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 2,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    665,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 18,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    674,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 60,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    703,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    798,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 2,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    807,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 29,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    836,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 3,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    931,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 10,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    940,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 14,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    969,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    1064,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    1073,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 43,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    1102,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    1197,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 1,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    1206,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 26,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    1235,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    1330,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    1339,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 2,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    1368,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    1463,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    1472,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 12,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    1501,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "rameau",
+   "palier": 8,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 112,
+   "planche": "x8",
+   "rect": [
+    1596,
+    0,
+    8,
+    26
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "branche",
+   "palier": 8,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 7,
+   "couture_sur": 728,
+   "planche": "x8",
+   "rect": [
+    1605,
+    0,
+    28,
+    50
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "tronc",
+   "palier": 8,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 13,
+   "couture_sur": 4700,
+   "planche": "x8",
+   "rect": [
+    1634,
+    0,
+    94,
+    100
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 9,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    0,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 12,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    15,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 105,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    72,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 6,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    261,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 39,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    276,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 70,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    333,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    522,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 7,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    537,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 82,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    594,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 7,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    783,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 7,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    798,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 149,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    855,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    1044,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 4,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    1059,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 20,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    1116,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 10,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    1305,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 63,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    1320,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 273,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    1377,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    1566,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 4,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    1581,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 118,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    1638,
+    0,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 6,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    1827,
+    0,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 30,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    1842,
+    0,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 67,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    0,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 8,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    189,
+    201,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 1,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    204,
+    201,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 145,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    261,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    450,
+    201,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 4,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    465,
+    201,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 100,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    522,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    711,
+    201,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 0,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    726,
+    201,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 10,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    783,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    972,
+    201,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 2,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    987,
+    201,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 69,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    1044,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "rameau",
+   "palier": 16,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 364,
+   "planche": "x16",
+   "rect": [
+    1233,
+    201,
+    14,
+    50
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "branche",
+   "palier": 16,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 16,
+   "couture_sur": 2800,
+   "planche": "x16",
+   "rect": [
+    1248,
+    201,
+    56,
+    100
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "tronc",
+   "palier": 16,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 26,
+   "couture_sur": 18800,
+   "planche": "x16",
+   "rect": [
+    1305,
+    201,
+    188,
+    200
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 38,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    0,
+    0,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 45,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    29,
+    0,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "AppleTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 361,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    144,
+    0,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 26,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    521,
+    0,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 146,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    550,
+    0,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "CherryTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 315,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    665,
+    0,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1042,
+    0,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 22,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    1071,
+    0,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "WalnutTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 312,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    1186,
+    0,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 36,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1563,
+    0,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 28,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    1592,
+    0,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "OakTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 575,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    0,
+    401,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    377,
+    401,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 15,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    406,
+    401,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "BeechTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 79,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    521,
+    401,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 41,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    898,
+    401,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 239,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    927,
+    401,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "BirchTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 1129,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    1042,
+    401,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1419,
+    401,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 11,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    1448,
+    401,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "HornbeamTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 540,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    1563,
+    401,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 28,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1940,
+    401,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 126,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    0,
+    802,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "HazelTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 286,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    115,
+    802,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 20,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    492,
+    802,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 2,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    521,
+    802,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "Alder",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 653,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    636,
+    802,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1013,
+    802,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 20,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    1042,
+    802,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "Willow",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 350,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    1157,
+    802,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    1534,
+    802,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 3,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    1563,
+    802,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "Fig",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 41,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    0,
+    1203,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    377,
+    1203,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 5,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    406,
+    1203,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "FirTree",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 294,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    521,
+    1203,
+    376,
+    400
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "rameau",
+   "palier": 32,
+   "d_cm": 1.5,
+   "periode_cm": 8,
+   "couture_texels": 0,
+   "couture_sur": 1400,
+   "planche": "x32",
+   "rect": [
+    898,
+    1203,
+    28,
+    100
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "branche",
+   "palier": 32,
+   "d_cm": 6,
+   "periode_cm": 16,
+   "couture_texels": 53,
+   "couture_sur": 11400,
+   "planche": "x32",
+   "rect": [
+    927,
+    1203,
+    114,
+    200
+   ]
+  },
+  {
+   "essence": "Generique",
+   "age": "tronc",
+   "palier": 32,
+   "d_cm": 20,
+   "periode_cm": 32,
+   "couture_texels": 99,
+   "couture_sur": 75200,
+   "planche": "x32",
+   "rect": [
+    1042,
+    1203,
+    376,
+    400
+   ]
+  }
+ ]
+}

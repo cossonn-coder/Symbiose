@@ -77,6 +77,7 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `recettes/tete_*.js`, `fruit_*.js`, `gousse`, `chaton`, `epi_*`, `panicule`, `bouton`, `fleuron` | ③ organes (une recette par forme dessinée par la vue, champ `vue` du manifeste) |
 | `controle_organes.js` | ③ planche de contrôle des organes (relue sur disque, couches superposées) |
 | `recettes/bois.js` + `couture_bois.js` | ③ tronçons d'écorce + MESURE de couture sur le pommier an 10 — bois NON livré (joints visibles), cf. 00_etat ③ |
+| `recettes/ecorce.js` + `cuire_ecorces.js` | BOIS & ARBRES ② : écorces 13 essences (12 arbres + Generique) × 3 âges, cylindre périodique photographié de face → `assets/splats/ecorces_x{4,8,16,32}.png` + `ecorces.json` (bandes de tons, couture mesurée). Parallèle : `node tools/splat/cuire_ecorces.js --liste \| xargs -P 8 -I{} node tools/splat/cuire_ecorces.js --seulement {} --cache D` puis `node tools/splat/cuire_ecorces.js --cache D [--controle DOSSIER]` |
 | `cuire_portraits.js` | ⑥ PORTRAITS : 3 par espèce (jeune · mûre · fin de cycle / hiver), plante entière en pleine couleur → `assets/portraits/<Espece>_<etat>.png` + `portraits.json` (`--manifeste`, `--liste`) |
 | `controle_portraits.js` | ⑥ planches de contrôle des portraits (relues sur disque) |
 | `portraits/table_cs.js` | ⑥ lit la table des espèces DANS le C# de la vue (littéraux FichePort, FicheLiane, RecetteRameaux, palettes…) — source unique |

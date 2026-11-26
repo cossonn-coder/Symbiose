@@ -83,6 +83,45 @@ namespace Symbiose
 			}
 		}
 
+		/// <summary>② : bande [u0, u1] TEXTURÉE par une bande PÉRIODIQUE de la texture `tex` (rectangle
+		/// `rect` en texels) : u en travers → largeur du rectangle, v (cm) + `decalage` → hauteur, une
+		/// période `periode` (cm) = toute la hauteur. Un quad qui franchit une période est COUPÉ à la
+		/// frontière (sans quoi l'interpolation des UV remonterait toute la bande à l'envers dans le
+		/// quad) : chaque morceau lit sa portion, la coupure du haut rejoint celle du bas. Une seule
+		/// couleur `mod` (palette de la pièce, modulate). `garder(k)` : le quad k est-il posé.</summary>
+		public static void PoserBandePeriodique(Vector2[] pts, float[] demi, Vector2[] nrm, float[] v,
+			float u0, float u1, Texture2D tex, Rect2 rect, float periode, float decalage, Color mod,
+			System.Func<int, bool> garder)
+		{
+			Vector2 taille = tex.GetSize();
+			float x0 = rect.Position.X / taille.X, x1 = rect.End.X / taille.X;
+			for (int k = 0; k + 1 < pts.Length; k++)
+			{
+				if (!garder(k) || pts[k].IsEqualApprox(pts[k + 1])) continue;
+				Vector2 a = pts[k] + nrm[k] * (demi[k] * u0), b = pts[k] + nrm[k] * (demi[k] * u1);
+				Vector2 c = pts[k + 1] + nrm[k + 1] * (demi[k + 1] * u1), d = pts[k + 1] + nrm[k + 1] * (demi[k + 1] * u0);
+				float f0 = (v[k] + decalage) / periode, f1 = (v[k + 1] + decalage) / periode;
+				float ta = 0f;
+				while (ta < 1f)
+				{
+					// Fin du morceau : la prochaine frontière de période, ou le bout du quad.
+					float fa = f0 + (f1 - f0) * ta, n = Mathf.Floor(fa + 1e-5f);
+					float tb = f1 - f0 > 1e-6f ? Mathf.Min(1f, (n + 1f - f0) / (f1 - f0)) : 1f;
+					float fb = f0 + (f1 - f0) * tb;
+					// Rangée : le haut de la bande (rangée 0) est le bout de la période (f → 1).
+					float ya = (rect.Position.Y + (1f - (fa - n)) * rect.Size.Y) / taille.Y;
+					float yb = (rect.Position.Y + (1f - (fb - n)) * rect.Size.Y) / taille.Y;
+					int i0 = _pts.Count;
+					_pts.Add(a.Lerp(d, ta)); _pts.Add(b.Lerp(c, ta)); _pts.Add(b.Lerp(c, tb)); _pts.Add(a.Lerp(d, tb));
+					_uvs.Add(new Vector2(x0, ya)); _uvs.Add(new Vector2(x1, ya)); _uvs.Add(new Vector2(x1, yb)); _uvs.Add(new Vector2(x0, yb));
+					for (int q = 0; q < 4; q++) _cols.Add(mod);
+					_idx.Add(i0); _idx.Add(i0 + 1); _idx.Add(i0 + 2);
+					_idx.Add(i0); _idx.Add(i0 + 2); _idx.Add(i0 + 3);
+					ta = tb > ta ? tb : 1f;
+				}
+			}
+		}
+
 		/// <summary>Pose le lot en cours sur le CanvasItem `ci` (un seul appel) puis le vide. `tex` :
 		/// texture du ② lue en (u, v) ; null = tons seuls (aucune coordonnée envoyée).</summary>
 		public static void Envoyer(CanvasItem ci, Texture2D tex = null)

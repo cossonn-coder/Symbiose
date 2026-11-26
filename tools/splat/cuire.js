@@ -264,4 +264,5 @@ function principal() {
 
 // Lancé en ligne de commande → cuisson ; requis (mesurer_vues.js) → la boîte à outils.
 if (require.main === module) principal();
-module.exports = { cuireMonde, tableTons, cuireRecette };
+// BOIS & ARBRES ② : la palette du builder et les rampes de couche servent aussi aux écorces.
+module.exports = { cuireMonde, tableTons, cuireRecette, PALETTE, rampeCouche, GRAINE, AMBIANT, CIEL };
