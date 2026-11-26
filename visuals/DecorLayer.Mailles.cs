@@ -48,6 +48,7 @@ namespace Symbiose
 			public ArrayMesh Mesh;
 			public ArrayMesh MeshDevant;   // LEVIERS ⑤ : pièces hautes côté caméra (DecorLayer.Devant.cs)
 			public int Sommets;            // total des deux mailles
+			public int Swatches;           // LISIÈRE ③ : texels-codes alloués à son Figer (DecorLayer.Hauts.cs)
 			public readonly List<Vector2> Pts = new();
 			public readonly List<uint> H = new();
 			public void Ajouter(Vector2 p, uint h) { Pts.Add(p); H.Add(h); }
@@ -105,6 +106,7 @@ namespace Symbiose
 		private static void Figer(LotTriangles lot, LotTriangles haut, Maille m)
 		{
 			m.Sommets = lot.Sommets + haut.Sommets;
+			m.Swatches = _swatches.Count;   // l'atlas d'un palier haut doit les porter tous
 			m.Mesh = lot.Figer(avecUv: true);
 			m.MeshDevant = haut.Figer(avecUv: true);   // null si aucun bord côté caméra n'a de pièce haute
 		}

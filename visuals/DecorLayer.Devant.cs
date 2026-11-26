@@ -52,7 +52,7 @@ namespace Symbiose
 			// Un simple Node2D : il peint dans le signal Draw (pas de classe dédiée).
 			_devant.Draw += () =>
 			{
-				if (_devantMaille?.MeshDevant != null) _devant.DrawMesh(_devantMaille.MeshDevant, KitTexture);
+				if (_devantMaille?.MeshDevant != null) _devant.DrawMesh(_devantMaille.MeshDevant, _texAffichee ?? KitTexture);   // ③ : atlas du palier
 			};
 			AddChild(_devant);
 		}

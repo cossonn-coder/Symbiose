@@ -68,7 +68,10 @@ namespace Symbiose
 			var m = MateriauDecor;
 			Vector2 sol = PaletteIndexee.Soleil;
 			if (!float.IsNaN(sol.X) && !sol.IsEqualApprox(_uSoleil)) { _uSoleil = sol; m.SetShaderParameter("soleil", sol); }
-			float z = ZoomMaille;   // la grille des pixels internes est celle de la maille affichée
+			// LISIÈRE ③ : la grille des pixels internes est celle du palier RÉEL — au-delà de ×4 la
+			// maille ×4 porte un atlas natif, les grains du shader (tissage, roche, écorce, neige,
+			// givre, brume) et le calage du vent suivent la même règle (avant : ZoomMaille, pavés ×k).
+			float z = WorldView.CurrentZoom;
 			if (z != _uZoom) { _uZoom = z; m.SetShaderParameter("zoom", z); }
 			float force = WindWave.Active ? WindWave.Force : 0f;
 			if (force != _uForce) { _uForce = force; m.SetShaderParameter("vent_force", force); }

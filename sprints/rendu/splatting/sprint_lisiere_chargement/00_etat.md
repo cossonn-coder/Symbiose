@@ -1,7 +1,7 @@
 # sprint_lisiere_chargement — état (S3 du style homogène)
 
 **Conception FIGÉE le 2026-11-26** (`/conception`, Nico : « vas-y ») → `docs/rendu/splatting/conception_lisiere_chargement.md`.
-**En cours (`/sprint-auto`)** : ① fait et commité ; ② fait côté code (2026-11-26, non commité par le sous-agent).
+**En cours (`/sprint-auto`)** : ①② faits et commités ; ③ fait côté code (2026-11-26, non commité par le sous-agent).
 Source : `docs/rendu/splatting/backlog_splatting.md` (S3 = (b) lisière + (g) chargement),
 `conception_reliquats_plantes.md` §2 (E2 : barre de progression permise à l'écran de chargement,
 philo #5 = pendant le jeu seulement), `conception_bois_arbres.md` (C2 : `RubanTexture` réutilisable).
@@ -50,7 +50,7 @@ Golden attendu : `bce813af…` INTACT (vue + outillage, `data/code/` jamais modi
 |---|---|---|
 | ① | `01_kit_lisiere.md` — kit de lisière en splats + rameau aplati | **fait** (F5 attendu) |
 | ② | `02_arbres_lisiere.md` — arbres de lisière sur le bois de S2 + sapin du jardin ×8-×32 | **fait** (F5 attendu) |
-| ③ | `03_paliers_hauts.md` — atlas par palier ×8-×32 | à faire |
+| ③ | `03_paliers_hauts.md` — atlas par palier ×8-×32 | **fait** (F5 attendu) |
 | ④ | `04_chargement_mycelium.md` — écran de chargement en mycélium (porte : maquette) | à faire |
 | ⑤ | `05_revue_f5.md` — revue, liste F5 exhaustive S1+S2+S3, clôture | à faire |
 Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
@@ -115,8 +115,36 @@ Ordre : ① avant ②③ ; ④ indépendant ; ⑤ en dernier.
   (marques grises denses, celles de la bande S2) ; sapin de lisière en étages (lisibilité, nombre de rangs) ;
   sapin du jardin ×8-×32 (pas de 8 cm, écart ±0,45 rad, ton des stomates).
 
+## Compte rendu ③ (2026-11-26)
+- **Atlas par palier** (`visuals/DecorLayer.Hauts.cs`, neuf) : au-delà de ×4, la maille ×4 reçoit un atlas k = 2/4/8
+  fois plus fin, mêmes UV (case ×4 (x,y,w,h) → (kx,ky,kw,kh)). Contenu : atlas ×4 agrandi k×k (texels-codes
+  des aplats + repli), puis pièces du kit cuites k× (`<recette>_hauts`, planches `x8/x16/x32`), puis bandes
+  d'écorce du palier ×4k (`Ecorces.CodesBruts`) rééchantillonnées sur la case agrandie (tailles cuites ≠ k×
+  celles de ×4 : 16×26 → 28×50 à ×8). Repli forme par forme si une recette `_hauts` manque.
+- **Cuisson** : `cuire.js --echelles 2,4,8` (nouvelle option ; ×4 ni recuit ni touché). 10 recettes, 369 pièces,
+  ~3 h 15 [VM chargée 7-10, n=1] (conifère 58 min, roseau 43 min, herbe haute 34 min). `assets/splats/` +0,5 Mo (67 Mo).
+- **Permutation** : `_Draw` choisit la texture (`TextureDecor`), la couche devant suit ; `_Process` redessine au
+  changement de palier même quand `ZoomMaille` reste 4. Un seul atlas haut vit (les autres rendus au GPU à
+  l'image suivante), compté dans `BudgetCuisson` (ligne « lisière N Mo »).
+- **Écart au kickoff (mesuré)** : construire ×32 sur le fil principal = 746 ms [VM chargée ~10, n=1] → à-coup neuf.
+  Construction passée en tâche de fond (`Task.Run` pour les octets ; lectures Godot sur le fil principal) ; en
+  attendant, l'atlas ×4 grossi (image d'avant ③). Reste au fil principal, 1ʳᵉ arrivée au palier : préparation
+  56-107 ms (×8), 127-138 ms (×16), 378-396 ms (×32) + envoi GPU 9-13 / 40-44 / 155-306 ms
+  [VM llvmpipe chargée, n=3 bords] ; les planches et bandes sont gardées → retours suivants : envoi seul.
+  À relire au PC (rapport C) : si l'envoi ×32 gêne, découper l'envoi.
+- **Mémoire mesurée** : ×8 1024×1612 = 6,3 Mo · ×16 2048×3224 = 25,2 Mo · ×32 4096×6448 = 100,8 Mo (> 64 Mo
+  estimés : l'atlas ×4 fait 512×806 — 16 teintes × toutes les formes). Un seul vit → ≤ 101 Mo, sous 1 Go.
+- **Grains du shader** : capture avant = pavés grossis (roche ×16 en blocs 4 px, tissage, écorce). L'uniform `zoom`
+  valait `ZoomMaille` (≤ 4) → il vaut désormais le palier RÉEL (`DecorLayer.Vent.cs`) : tissage, roche, écorce,
+  neige, givre, brume et calage du vent au pixel natif (même règle que ×0,5-×4 : plus de motifs en zoomant).
+- **`EauScintillement`** : était ÉTEINT au-delà de ×4 (miroir périmé de MaxZoom) → allumé jusqu'à ×32, px du palier réel.
+- **Captures** `mesures/03_avant|apres_{foret_x8,x16,x32, falaise_x16, riviere_x32}.png` (banc `full -B`, -w 2) +
+  `03_controle_conifere_hauts.png`. Effet net : écorce de bouleau, herbes, fougères, galets et sol au pixel natif.
+- **F5 ③** : zoom ×4→×8→×16→×32 sur chaque bord (à-coup ressenti à la 1ʳᵉ arrivée ×32 ; bascule « grossi → net »
+  visible ~1 s) ; roche de falaise à ×16-×32 (grain natif très fin, lit comme du gravier : à juger) ; neige/givre
+  à ×16-×32 en hiver (non capturés) ; étincelles de rivière à ×8-×32 (3 px natifs, discrètes) ; Maj+F11 à ×16.
+
 ## §REPRISE
-Relire ce fichier + `docs/rendu/splatting/conception_lisiere_chargement.md`. ①② faits (② non commité par
-le sous-agent : commit `feat(lisiere②)` à faire par l'orchestrateur). Prochaine étape : tronçon ③
-`03_paliers_hauts.md` — y recopier aussi les bandes d'écorce du palier (`Ecorces.CodesBruts(…, palier, …)`,
-`RangerEcorces`) pour que le bois de lisière garde son écorce au-delà de ×4.
+Relire ce fichier + `docs/rendu/splatting/conception_lisiere_chargement.md`. ①② faits et commités ; ③ fait
+côté code (non commité par le sous-agent : commit `feat(lisière③)` à faire par l'orchestrateur, avec les
+`assets/splats/lisiere_*_hauts*`). Prochaine étape : tronçon ④ `04_chargement_mycelium.md` (indépendant).

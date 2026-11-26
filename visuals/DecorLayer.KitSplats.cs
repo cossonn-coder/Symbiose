@@ -113,13 +113,19 @@ namespace Symbiose
 		private readonly record struct PieceLisiere(byte[] Codes, int L, int H);
 
 		// Pièces d'une recette par (taille_px, variante), couches fondues sur leur attache
-		// commune (couche 0 d'abord, les suivantes par-dessus).
-		private static Dictionary<(int, int), PieceLisiere> LirePlancheLisiere(string recette, Piece forme)
+		// commune (couche 0 d'abord, les suivantes par-dessus). LISIÈRE ③ : `planche` choisit
+		// la planche lue (« kit » = ×4 ; « x8 »… = paliers hauts, DecorLayer.Hauts.cs).
+		private static Dictionary<(int, int), PieceLisiere> LirePlancheLisiere(string recette, Piece forme, string planche = "kit")
 		{
 			string chemin = SplatPlanches.Dossier + recette + ".json";
 			if (!FileAccess.FileExists(chemin)) { GD.PushWarning($"[DecorLayer] manifeste absent : {chemin} (kit généré)."); return null; }
 			var m = Json.ParseString(FileAccess.GetFileAsString(chemin)).AsGodotDictionary();
-			var img = SplatPlanches.LireImage($"{SplatPlanches.Dossier}{recette}_kit.png");
+			if (!m["planches"].AsGodotDictionary().TryGetValue(planche, out var fichier))
+			{
+				GD.PushWarning($"[DecorLayer] planche « {planche} » absente de {chemin}.");
+				return null;
+			}
+			var img = SplatPlanches.LireImage(SplatPlanches.Dossier + fichier.AsString());
 			if (img == null) return null;
 			var nomsCouches = new List<string>();
 			if (m.TryGetValue("couches", out var cs)) foreach (var c in cs.AsGodotArray()) nomsCouches.Add(c.AsString());
@@ -127,6 +133,7 @@ namespace Symbiose
 			foreach (var e in m["pieces"].AsGodotArray())
 			{
 				var p = e.AsGodotDictionary();
+				if (p.TryGetValue("planche", out var pl) && pl.AsString() != planche) continue;
 				int[] rc = p["rect"].AsInt32Array(), at = p["attache"].AsInt32Array();
 				int couche = p.TryGetValue("couche", out var c) ? Mathf.Max(0, nomsCouches.IndexOf(c.AsString())) : 0;
 				var cle = (p["taille_px"].AsInt32(), p["variante"].AsInt32());

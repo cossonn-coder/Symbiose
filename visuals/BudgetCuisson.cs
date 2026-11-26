@@ -2,7 +2,9 @@
 // Le PLAFOND GLOBAL de la mémoire de précuisson (décision E6 de Nico : 1 Go). Il
 // couvre les deux postes qui grossissent avec le zoom :
 //  • les pages d'atlas des images cuites (AtlasPages.TotalBytes) ;
-//  • les planches de codes splat chargées pour cuire (SplatPlanches.OctetsCharges).
+//  • les planches de codes splat chargées pour cuire (SplatPlanches.OctetsCharges) ;
+//  • LISIÈRE ③ : l'atlas de la lisière au palier affiché ×8-×32 (DecorLayer.OctetsHauts) —
+//    compté, jamais évincé ici (un seul vit à la fois, rendu dès qu'on quitte le palier).
 // Avant ①, rien ne bornait leur somme : les plafonds PAR PLANTE de PlantBaker
 // (2048 px de côté) en tenaient lieu, et une grande plante à ×32 n'était jamais
 // cuite — donc jamais en splats (conception §4). Depuis ①, une plante se cuit
@@ -44,7 +46,7 @@ namespace Symbiose
 		public const long BudgetOctets = 1L << 30;
 
 		/// <summary>Mémoire de précuisson courante (pages + planches), octets.</summary>
-		public static long Courant => AtlasPages.TotalBytes + SplatPlanches.OctetsCharges;
+		public static long Courant => AtlasPages.TotalBytes + SplatPlanches.OctetsCharges + DecorLayer.OctetsHauts;
 
 		/// <summary>Images évincées pour faire place / replis journalisés (cumuls).</summary>
 		public static long Evictions, ReplisTotal;
@@ -132,7 +134,8 @@ namespace Symbiose
 		/// cuisson (ms de pinceau, espèce) — le rapport du PC ne permettait pas de le savoir.</summary>
 		public static string Ligne() =>
 			$"précuisson {Courant / 1048576.0:F0}/{BudgetOctets / 1048576} Mo "
-			+ $"(pages {AtlasPages.TotalBytes / 1048576.0:F0}, planches {SplatPlanches.OctetsCharges / 1048576.0:F0}) "
+			+ $"(pages {AtlasPages.TotalBytes / 1048576.0:F0}, planches {SplatPlanches.OctetsCharges / 1048576.0:F0}, "
+			+ $"lisière {DecorLayer.OctetsHauts / 1048576.0:F0}) "
 			+ $"· {Replis} plante(s) en repli{EspecesEnRepli()} · {Evictions} évincée(s)"
 			+ $" · pinceau max {BakeQueue.PinceauMaxMs:F1} ms ({BakeQueue.PinceauMaxEspece})";
 

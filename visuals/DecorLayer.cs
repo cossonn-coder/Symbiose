@@ -190,7 +190,7 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
-		private float _lastZoom;
+		private float _lastZoom, _lastZoomAtlas;
 
 		public override void _Process(double delta)
 		{
@@ -199,11 +199,14 @@ namespace Symbiose
 			// MaxZoom) et, tant qu'il est visible, au CHANGEMENT DE PALIER — depuis
 			// FLUIDITÉ PC ③ les pièces du kit gardent leurs px internes, leur semis
 			// dépend donc du palier (et la bascule DetailZoom en fait partie).
-			if (ZoomMaille != _lastZoom)
+			// LISIÈRE ③ : au-delà de ×4 la maille reste, mais l'atlas change à chaque palier.
+			if (ZoomMaille != _lastZoom || WorldView.CurrentZoom != _lastZoomAtlas || HautPret)
 			{
 				_lastZoom = ZoomMaille;
+				_lastZoomAtlas = WorldView.CurrentZoom;
 				QueueRedraw();
 			}
+			LibererHauts();   // atlas haut remplacé à l'image d'avant (DecorLayer.Hauts.cs)
 			// LEVIERS ③ : les mailles des autres paliers se préparent par tranches
 			// (DecorLayer.Mailles.cs) — le prochain cran de molette n'aura qu'à permuter.
 			AvancerFond();
@@ -228,7 +231,9 @@ namespace Symbiose
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			Maille m = MailleImmediate(ZoomMaille, out bool construite);
 			TeleverserKit();   // ⑥ : texels-codes neufs / vidage de LUT → atlas au GPU
-			if (m.Mesh != null) DrawMesh(m.Mesh, KitTexture);
+			Texture2D tex = TextureDecor(m);   // LISIÈRE ③ : atlas du palier, ×8-×32 (DecorLayer.Hauts.cs)
+			if (m.Mesh != null) DrawMesh(m.Mesh, tex);
+			if (tex != _texAffichee) { _texAffichee = tex; _devant?.QueueRedraw(); }
 			PublierDevant(m);   // LEVIERS ⑤ : pièces hautes côté caméra, couche au-dessus du jardin
 			PublierEau(m);      // étincelles de CE palier (couche animée, DecorLayer.Eau.cs)
 			TracerDessin(t0, m.Sommets, construite);   // console : coût (DecorLayer.Banc.cs)

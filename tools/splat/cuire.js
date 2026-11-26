@@ -43,6 +43,10 @@
 //   extraites (un pixel leur appartient dès que leur splat est propriétaire d'un tiers de
 //   ses échantillons), sans trous, aux paliers de la table → `<recette>_details.json`.
 //   La pièce de base n'est pas recuite.
+// LISIÈRE ③ (L2) : `--echelles 2,4,8` (recette à `boites` seulement) → les cases sont cuites
+//   k fois plus grandes, une planche par palier ×(4k) (`x8`, `x16`, `x32`), sous le nom
+//   `<recette>_hauts` : l'atlas du décor des paliers ×8-×32 (DecorLayer.Hauts.cs). Le kit ×4
+//   (`<recette>.json`) n'est ni recuit ni touché.
 //
 // Déterministe : graines fixes, aucune horloge dans les fichiers écrits (les
 // temps ne vont qu'à la console). Golden non concerné (outil hors moteur).
@@ -74,13 +78,14 @@ const INCLINAISONS = [-30, 0, 30];              // V retenu au ① (8 lacets × 
 
 function options(argv) {
   const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: null,
-    inclinaisons: null, paliers: null, details: false };
+    inclinaisons: null, paliers: null, details: false, echelles: null };
   for (let i = 1; i < argv.length; i += 2) {
     const k = argv[i].replace(/^--/, ''), v = argv[i + 1];
     if (k === 'details') { o.details = true; i--; }
     else if (k === 'lacets') o.lacets = +v;
     else if (k === 'inclinaisons') o.inclinaisons = v.split(',').map(Number);
     else if (k === 'paliers') o.paliers = v.split(',').map(Number);
+    else if (k === 'echelles') o.echelles = v.split(',').map(Number);
     else if (k in o) o[k] = v;
     else throw new Error('option inconnue --' + k);
   }
@@ -117,7 +122,10 @@ function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null, avecDetai
 // Les prises de vue d'une recette : [{ trou, variante, inclinaison, zooms }],
 // zooms = [{ z, k, planche, taille?, tailleCm? }]. Pièces saines d'abord, trouées ensuite.
 function plan(recette, o) {
-  const zooms = recette.boites
+  const zooms = recette.boites && o.echelles
+    ? o.echelles.flatMap(k => recette.boites.map(([w, h]) => ({ z: (k * w) / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X),
+      k: 1, planche: 'x' + 4 * k, taille: k * w, boite: [k * w, k * h] })))
+    : recette.boites
     ? recette.boites.map(([w, h]) => ({ z: w / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), k: 1, planche: 'kit', taille: w, boite: [w, h] }))
     : recette.tailles
     ? recette.tailles.map(t => ({ z: t / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), k: 1, planche: 'kit', taille: t }))
@@ -278,6 +286,7 @@ function principal() {
     format: 'R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé',
     px_par_cm_x1: iso.PX_PAR_CM_X, seuil_plat: codes.SEUIL_PLAT,
     lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
+    ...(o.echelles ? { echelles: o.echelles } : {}),
     ...(recette.vue ? { vue: recette.vue } : {}), ...(recette.notes ? { notes: recette.notes } : {}),
     ...(o.details ? { couches: details.DETAILS[recette.nom].couches, base: recette.nom }
       : recette.couches ? { couches: recette.couches } : {}),
@@ -287,7 +296,7 @@ function principal() {
       degres: TROUS.filter(Boolean) } } : {}),
     attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'
   };
-  const nom = recette.nom + (o.details ? '_details' : '');
+  const nom = recette.nom + (o.details ? '_details' : o.echelles ? '_hauts' : '');
   const fichiers = planche.ecrire(png, path.resolve(RACINE, o.sortie), nom, meta, pieces);
   if (o.controle) fichiers.push(ecrireControle(path.resolve(RACINE, o.controle), nom, o.details ? tout.pieces : pieces, o));
   const total = Number(process.hrtime.bigint() - t0) / 1e6;

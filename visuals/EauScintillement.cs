@@ -20,7 +20,10 @@ namespace Symbiose
 	public partial class EauScintillement : Node2D
 	{
 		private const float PhasesParSeconde = 3f;
-		private const float MaxZoom = 4f;   // miroir de DecorLayer.MaxZoom (décor éteint au-delà)
+		// LISIÈRE ③ : le décor est visible jusqu'à ×32 depuis D125 (maille ×4 grossie, atlas natif
+		// au palier depuis ③) ; les étincelles ne l'étaient pas (ancien miroir de DecorLayer.MaxZoom = 4,
+		// « décor éteint au-delà »). Elles suivent la même règle : px du palier RÉEL (px = 1/z).
+		private const float MaxZoom = 32f;
 		private static readonly Color Etincelle = new Color("e4f4f8");
 
 		private readonly List<Vector2> _pts = new();
