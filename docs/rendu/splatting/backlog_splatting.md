@@ -45,7 +45,7 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
     - « les tuiles, les maisons d'auxiliaires, les événements météo, entre autres, ne sont pas encore
       en splats » : c'est le reste du programme, familles (c)-(f). Le style n'est donc pas encore
       homogène PARTOUT, alors que c'était la condition du F5 complet.
-- **Après S1-S3 : proof of concept ×64** sur une plante entière (chanvre), mesure du coût (sonde
+- **Après S1-S3 : proof of concept ×64** (placé au ⑧ de `sprint_sol_meteo_splats`, jamais fait avant) sur une plante entière (chanvre), mesure du coût (sonde
   d'une feuille au ③ de S1). Un palier ×64 suppose que sol, faune, paillage… soient eux aussi
   cuits par palier (familles c-e).
 - (b) décor de lisière (`visuals/DecorLayer.*`, même kit indexé) — S3, **CLOS côté code le 2026-11-26**.
@@ -53,7 +53,11 @@ Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
 - (d) structures + maison (`CompostStructure`, `ContainerStructure`, `SupportRenderer`,
   `HabitatAuxiliaire`, `HouseNode`) — à concevoir.
 - (e) sol, litière, eau, neige, météo (`world/Sol*`, `*Litter*`, `Mulch*`, `Puddle*`,
-  `SnowLayer`, `WeatherLayer`) — à concevoir ; surface continue, méthode à inventer.
+  `SnowLayer`, `WeatherLayer`) — **CONÇUE le 2026-11-26** (`conception_sol_meteo_splats.md`) →
+  `sprints/rendu/splatting/sprint_sol_meteo_splats/` (9 tronçons, golden intact) : tapis de matériaux
+  pavables cuits par palier (tore iso, variantes à bord commun) mêlés au shader par une carte des champs
+  et un seuil par hauteur ; objets épars en pièces ; eau au shader ; météo cuite à taille par palier
+  (plafond ×8) ; **+ reliquat écorce sous ×4 (⑦) + POC chanvre ×64 (⑧)**.
 - (f) icônes de gestes et de faune en petits objets splats (D8, F5 de lisibilité d'abord).
 - (g) **écran de chargement** (Nico 2026-11-25 : « devenu moche ») — S3, **CLOS côté code le 2026-11-26** : un **filament de
   mycélium qui s'arborise petit à petit, en splats, et sert de barre de progression** (philo #5
