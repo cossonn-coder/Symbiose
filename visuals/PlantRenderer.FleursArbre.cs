@@ -5,7 +5,8 @@
 //  · Bouquets : un cerisier porte ses fleurs par 2 à 4, un pommier par 3 à 5 (corymbes [odg]).
 //  · Boutons : à la montée, une part des fleurs est encore en bouton (rose franc chez le pommier,
 //    blanc verdâtre chez le cerisier) ; au pic tout est ouvert ; à la descente, plus de bouton.
-//  · ×0,5 à ×4 : gerbes de fleurs, un bouquet par tracé (GerbesFleurs.cs) ; ×8 et plus : fleurs une
+//  · ×0,5 à ×2 (×4 pièces éteintes) : gerbes de fleurs, un bouquet par tracé (GerbesFleurs.cs) ; ×4
+//    pièces allumées : bouquets cuits (BouquetsArbre.cs, BOIS & ARBRES ④) ; ×8 et plus : fleurs une
 //    à une en pièces (PiecesFleur.cs), cinq pétales, liseré rosé chez le pommier, étamines dès ×16.
 // Les pétales qui tombent au sol sont dans PetalLayer.cs (vue seule).
 //
@@ -35,7 +36,7 @@ namespace Symbiose
 		private const float BoutonsOuverts0 = 0.5f, BoutonsOuverts1 = 0.9f;
 		// Pic oublié sous ce seuil : la floraison suivante repart de zéro.
 		private const float FloraisonFinie = 0.005f;
-		// Plafond de dessin par arbre à ×8 et plus [choix, mesuré au bilan ④] ; en dessous, gerbes de fleurs.
+		// Plafond de dessin par arbre à ×8 et plus [choix, mesuré au bilan ④] ; à ×4, bouquets cuits sans plafond.
 		private const int FleursArbreMax = 1500;
 
 		/// <summary>Bouquet (fleurs par brindille), écart des fleurs du bouquet, couleur du bouton.</summary>
@@ -149,7 +150,10 @@ namespace Symbiose
 			if (!AuPalier(PalierOrganesZoom) && !SplatsIci) { DrawGerbesFleurs(pal); return; }
 			if (_structure.Floraison < FloraisonApparition || FleursCachees) return;
 			FicheFleurArbre fiche = FicheFleurs(pal);
-			if (!Chatons.Contains(_structure.SpeciesName)) { DrawPiecesFleurs(c, pal, fiche); return; }
+			bool chatons = Chatons.Contains(_structure.SpeciesName);
+			// BOIS & ARBRES ④ : à ×4, un bouquet cuit par site (BouquetsArbre.cs) ; sinon une à une.
+			if (!chatons && !AuPalier(PalierOrganesZoom) && DrawBouquetsArbre(c, pal, fiche)) return;
+			if (!chatons) { DrawPiecesFleurs(c, pal, fiche); return; }
 			_lotPrairie ??= new LotTriangles();
 			_lotPrairie.Vider();
 			foreach (var f in FleursHouppier(pal))

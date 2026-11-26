@@ -1,0 +1,456 @@
+{
+ "recette": "bouquet_corolles",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 4,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "BouquetsArbre (corolles, ×4)"
+ ],
+ "couches": [
+  "petales",
+  "coeur"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "x4": "bouquet_corolles_x4.png"
+ },
+ "pieces": [
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    0,
+    0,
+    24,
+    18
+   ],
+   "attache": [
+    12,
+    14
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    25,
+    0,
+    16,
+    10
+   ],
+   "attache": [
+    6,
+    10
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    42,
+    0,
+    24,
+    18
+   ],
+   "attache": [
+    11,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 90,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    67,
+    0,
+    18,
+    11
+   ],
+   "attache": [
+    8,
+    12
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    86,
+    0,
+    24,
+    17
+   ],
+   "attache": [
+    12,
+    14
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 180,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    111,
+    0,
+    20,
+    13
+   ],
+   "attache": [
+    9,
+    13
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    132,
+    0,
+    24,
+    20
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 270,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    157,
+    0,
+    15,
+    13
+   ],
+   "attache": [
+    7,
+    11
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    173,
+    0,
+    25,
+    19
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    199,
+    0,
+    18,
+    11
+   ],
+   "attache": [
+    10,
+    11
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    218,
+    0,
+    25,
+    19
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 90,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    244,
+    0,
+    18,
+    10
+   ],
+   "attache": [
+    10,
+    11
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    263,
+    0,
+    25,
+    18
+   ],
+   "attache": [
+    12,
+    14
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 180,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    289,
+    0,
+    22,
+    14
+   ],
+   "attache": [
+    11,
+    13
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    312,
+    0,
+    25,
+    20
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 270,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    338,
+    0,
+    20,
+    13
+   ],
+   "attache": [
+    10,
+    12
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    359,
+    0,
+    25,
+    18
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    385,
+    0,
+    22,
+    10
+   ],
+   "attache": [
+    10,
+    10
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    408,
+    0,
+    24,
+    18
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 90,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    433,
+    0,
+    20,
+    11
+   ],
+   "attache": [
+    10,
+    12
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    454,
+    0,
+    25,
+    20
+   ],
+   "attache": [
+    12,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 180,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    480,
+    0,
+    14,
+    14
+   ],
+   "attache": [
+    8,
+    13
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "petales",
+   "planche": "x4",
+   "rect": [
+    495,
+    0,
+    24,
+    20
+   ],
+   "attache": [
+    11,
+    15
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 270,
+   "couche": "coeur",
+   "planche": "x4",
+   "rect": [
+    520,
+    0,
+    16,
+    14
+   ],
+   "attache": [
+    7,
+    12
+   ]
+  }
+ ]
+}

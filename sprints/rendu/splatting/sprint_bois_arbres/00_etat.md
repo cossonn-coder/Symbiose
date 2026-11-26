@@ -73,7 +73,7 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
 | ① | `01_axes_tube.md` — parent lu, axes, tube lissé, pied, cols, tri profondeur, géométrie unique, rapport C | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ② | `02_ecorces.md` — maquette C3, écorces 12 essences × 3 âges, plaquage | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ③ | `03_rubans.md` — brins/rubans des graminées, petit bois en tube | **FAIT côté code 2026-11-26** (F5 attendu) |
-| ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | à faire |
+| ④ | `04_arbres_x4.md` — bouquets de fleurs cuits ×4, masses constatées l'été | **FAIT côté code 2026-11-26** (F5 attendu) |
 | ⑤ | `05_sapin_portraits.md` — cône du sapin en jeu, portraits d'arbres | à faire |
 | ⑥ | `06_revue.md` — revue des paliers, F5 consolidé S2, clôture | à faire |
 
@@ -210,9 +210,39 @@ repli ni le temps de cuisson par plante → l'enrichir au ① (règle « rapport
   automne/paille et santé (teinte du brin) ; petit bois des 12 arbres ×8→×32 (effilement,
   écorce de rameau pas trop chargée) ; Maj+F11 avant/après ; pinceau ET repli.
 
+### ④ Arbres au palier ×4 — FAIT côté code (2026-11-26), golden `bce813af…` intact, build 0 avert.
+- **Prémisse du kickoff RÉFUTÉE** : le ×4 clairsemé ne venait PAS du plafond `FleursArbreMax`
+  (1 500). Mesuré (compteur temporaire, retiré) : un pommier de `verger_floraison` (an 1, floraison
+  1,00) n'a que 36 bouts de bois → ~210 fleurs [n=3 pieds], loin du plafond. Le vide venait de la
+  TAILLE : fleur de 3-4 cm = 5-6 px à ×4, un bouquet de 3-5 fleurs = un point.
+- **Recettes** `tools/splat/recettes/bouquet_corolles.js` (11 corolles de 2 cm de rayon — le
+  « relevé d'un tiers » de `FleurArbreRayonCm` — en dôme par angle d'or, ~14 cm ; couches pétales +
+  cœur) et `bouquet_boutons.js` (11 boutons de 0,9 cm, une couche, teinte du bouton d'espèce) ;
+  ×4 seul, 4 lacets, inclinaison 0, 3 variantes. Une recette pour toutes les essences (à ×4 seule la
+  couleur se lit, comme les gerbes). Cuisson ≈ 10-15 s chacune, déterministe (sha256 identiques sur 2
+  cuissons).
+- **Vue** `visuals/PlantRenderer.BouquetsArbre.cs` : à ×4 pièces allumées, un bouquet par site de
+  `FleursHouppier` (bout + éperon mi-brindille, même hash 543 → les mêmes brindilles fleurissent qu'à
+  ×8), part = `PartFleursArbre` × 0,85 SANS plafond (densité = indice moteur, philo #5) ; bouquet en
+  boutons au hash 579 < `PartBoutons` (comme les gerbes). Recettes absentes → repli sur les fleurs une
+  à une. Chatons (noyer…) inchangés. `FleursArbre.cs` : aiguillage + commentaires.
+- **Tracés** pommier ×4 [n=3 pieds identiques, banc an 1] : avant ≈ 420 (≈ 210 fleurs × pétales +
+  cœur) ; après 106 (53 bouquets × 2). Poids `assets/splats/` 65 Mo (+≈ 15 Ko : 2 planches + 2 manifestes).
+- **Masses ×4 l'été** : `houppiers` charme été an 2 ×4 → masse dense et continue ; `full` printemps
+  s12 ×4 → couronne aérée en cordons le long des rameaux, sans trou anormal. **Rien à corriger**
+  (constat seul, n=1 capture par cas). Vu en passant (hors ④, à juger au F5) : dans `full`, grosses
+  branches pâles en arcs très courbes et un tronc blanc à losanges (essence non identifiée).
+- Captures `mesures/04_*` : verger ×4 avant/après, houppiers charme ×4 été, full ×4 printemps s12.
+- **Non vérifié en capture** : bouquets de BOUTONS (aucun banc en montée de floraison ; floraison
+  1,00 au banc) ; cerisier (le banc ne montre que des pommiers à ce cadrage).
+- **F5 Nico** : verger en fleur ×4 (taille des bouquets : pompons trop gros ?) ; saut ×4 → ×8
+  (bouquets ~14 cm → fleurs une à une plus petites : discontinuité attendue, comme l'ancienne gerbe) ;
+  montée de floraison (bouquets roses de boutons pommier, blanc verdâtre cerisier) ; descente
+  (bouquets clairsemés à mesure que `floraison` baisse) ; Maj+F11 (repli gerbes).
+
 ## §REPRISE
-③ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
-conception, puis le kickoff du premier tronçon « à faire ». ①②③ faits côté code. Prochain : ④
-(`04_arbres_x4.md`). Outils : écorces `node tools/splat/cuire_ecorces.js`, limbes `… --jeu limbes`
+④ non commité au moment de l'écriture (l'orchestrateur commit). Lire `CLAUDE.md`, ce fichier, la
+conception, puis le kickoff du premier tronçon « à faire ». ①②③④ faits côté code. Prochain : ⑤
+(`05_sapin_portraits.md`). Outils : écorces `node tools/splat/cuire_ecorces.js`, limbes `… --jeu limbes`
 (cf. tools/splat/README.md) ; chargeur commun `visuals/BandesCuites.cs` (texel blanc en (0, 0) :
 aplats + bandes en un envoi, `RubanTexture.Verser` pour un LotTriangles).
