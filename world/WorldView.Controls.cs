@@ -116,7 +116,7 @@ namespace Symbiose
 					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
 					case Key.F10:      _decorLayer?.ToggleBanc(); break;  // banc décor : 4 motifs (lisibilité décor T4)
 					case Key.F11:   // Maj+F11 = pièces splat ×4→×32 avant/après (PRÉCUISSON SPLATS ④)
-						if (k.ShiftPressed) PlantRenderer.BasculerSplats();
+						if (k.ShiftPressed) { PlantRenderer.BasculerSplats(); DecorLayer.BasculerSplats(); }   // + lisière (LISIÈRE ①)
 						else PaletteIndexee.Basculer();
 						break;  // palette indexée avant/après (CASSÉ À L'ÉCRAN ③ ; ex-palette SNES)
 					case Key.F12:      ToggleDefile();    break;  // défilé météo « jardin vivant » (T5)

@@ -1,0 +1,290 @@
+{
+ "recette": "lisiere_feuillu",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "DecorLayer Piece.feuillu"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "lisiere_feuillu_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    7,
+    6
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    8,
+    0,
+    11,
+    9
+   ],
+   "attache": [
+    5,
+    7
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    20,
+    0,
+    15,
+    11
+   ],
+   "attache": [
+    7,
+    9
+   ]
+  },
+  {
+   "palier": 0.8119658119658119,
+   "taille_px": 19,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    36,
+    0,
+    19,
+    15
+   ],
+   "attache": [
+    9,
+    12
+   ]
+  },
+  {
+   "palier": 1.0683760683760684,
+   "taille_px": 25,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    56,
+    0,
+    25,
+    20
+   ],
+   "attache": [
+    12,
+    16
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    82,
+    0,
+    7,
+    6
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    90,
+    0,
+    11,
+    9
+   ],
+   "attache": [
+    5,
+    7
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    102,
+    0,
+    15,
+    11
+   ],
+   "attache": [
+    7,
+    9
+   ]
+  },
+  {
+   "palier": 0.8119658119658119,
+   "taille_px": 19,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    118,
+    0,
+    19,
+    15
+   ],
+   "attache": [
+    8,
+    12
+   ]
+  },
+  {
+   "palier": 1.0683760683760684,
+   "taille_px": 25,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    138,
+    0,
+    25,
+    19
+   ],
+   "attache": [
+    11,
+    15
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    164,
+    0,
+    7,
+    6
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    172,
+    0,
+    11,
+    7
+   ],
+   "attache": [
+    5,
+    5
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    184,
+    0,
+    15,
+    10
+   ],
+   "attache": [
+    7,
+    8
+   ]
+  },
+  {
+   "palier": 0.8119658119658119,
+   "taille_px": 19,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    200,
+    0,
+    19,
+    13
+   ],
+   "attache": [
+    9,
+    10
+   ]
+  },
+  {
+   "palier": 1.0683760683760684,
+   "taille_px": 25,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    220,
+    0,
+    25,
+    17
+   ],
+   "attache": [
+    12,
+    13
+   ]
+  }
+ ]
+}

@@ -31,7 +31,7 @@ node tools/splat/controle_feuilles.js sprints/…/mesures/controle_feuilles.png
 Portraits (⑥, ~10 processus) : `node tools/splat/cuire_portraits.js --liste | xargs -P 10 -n 1 node tools/splat/cuire_portraits.js` puis `node tools/splat/cuire_portraits.js --manifeste` et `node tools/splat/controle_portraits.js <dossier>`.
 
 Cuire toute la bibliothèque (② : 24 recettes, ~12 processus en parallèle) :
-`ls tools/splat/recettes | sed 's/\.js$//' | grep -v '^touffe$' | xargs -P 12 -I{} node tools/splat/cuire.js {}`.
+`ls tools/splat/recettes | sed 's/\.js$//' | grep -v '^touffe$' | grep -v '^lisiere$' | xargs -P 12 -I{} node tools/splat/cuire.js {}`.
 Ne recuire que les recettes modifiées (D2 : chaque régénération grossit l'historique git).
 Organes (③, 22 recettes) : même commande filtrée par
 `grep -E '^(tete_|fruit_|gousse|chaton|epi_|panicule|bouton|fleuron)'`.
@@ -80,6 +80,8 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `recettes/ecorce.js` + `cuire_ecorces.js` | BOIS & ARBRES ② : écorces 13 essences (12 arbres + Generique) × 3 âges, cylindre périodique photographié de face → `assets/splats/ecorces_x{4,8,16,32}.png` + `ecorces.json` (bandes de tons, couture mesurée). Parallèle : `node tools/splat/cuire_ecorces.js --liste \| xargs -P 8 -I{} node tools/splat/cuire_ecorces.js --seulement {} --cache D` puis `node tools/splat/cuire_ecorces.js --cache D [--controle DOSSIER]` |
 | `recettes/limbe_graminee.js` | BOIS & ARBRES ③ : limbes des graminées (« large » 1,5 cm, « etroit » 0,6 cm : nervures en ombre, cœur clair, bords), même contrat de bande, cuits par `node tools/splat/cuire_ecorces.js --jeu limbes [--controle DOSSIER]` (~6 s) → `assets/splats/limbes_x{4,8,16,32}.png` + `limbes.json` |
 | `recettes/bouquet_corolles.js`, `bouquet_boutons.js` | BOIS & ARBRES ④ : bouquet de fleurs d'arbre (11 corolles en dôme, couches pétales + cœur) et bouquet de boutons, palier ×4 seul (4 lacets, 3 variantes) → `PlantRenderer.BouquetsArbre.cs`. `node tools/splat/cuire.js bouquet_corolles` (~10 s) |
+| `recettes/lisiere.js` + `lisiere_<forme>.js` | LISIÈRE ① : kit de la lisière (10 formes de `DecorLayer.Kit.cs`, `boites` = ses `Tailles` × 3 variantes ; la cuisson ajuste le zoom pour remplir la case) → `assets/splats/lisiere_<forme>_kit.png` + `.json`, lus par `visuals/DecorLayer.KitSplats.cs`. `lisiere.js` est une fabrique (ne se cuit pas seule). Les 10 : `ls tools/splat/recettes \| grep '^lisiere_' \| sed 's/\.js$//' \| xargs -P 10 -I{} node tools/splat/cuire.js {}` |
+| `recettes/rameau_aplati.js` | LISIÈRE ① (L4) : rameau aplati du sapin (aiguilles plates en peigne, couche `stomates` dessous) ; sert le bouquet `Conifere` de la lisière et le sapin du jardin ×8-×32 (②) |
 | `cuire_portraits.js` | ⑥ PORTRAITS : 3 par espèce (jeune · mûre · fin de cycle / hiver), plante entière en pleine couleur → `assets/portraits/<Espece>_<etat>.png` + `portraits.json` (`--manifeste`, `--liste`) |
 | `controle_portraits.js` | ⑥ planches de contrôle des portraits (relues sur disque) |
 | `portraits/table_cs.js` | ⑥ lit la table des espèces DANS le C# de la vue (littéraux FichePort, FicheLiane, RecetteRameaux, palettes…) — source unique |

@@ -1,0 +1,366 @@
+{
+ "recette": "lisiere_roseau",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "DecorLayer Piece.roseau"
+ ],
+ "couches": [
+  "tiges",
+  "massette"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "lisiere_roseau_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    4,
+    6
+   ],
+   "attache": [
+    1,
+    5
+   ]
+  },
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    5,
+    0,
+    2,
+    1
+   ],
+   "attache": [
+    1,
+    4
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    8,
+    0,
+    5,
+    8
+   ],
+   "attache": [
+    2,
+    7
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    14,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    1,
+    5
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    17,
+    0,
+    7,
+    10
+   ],
+   "attache": [
+    3,
+    9
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    25,
+    0,
+    2,
+    3
+   ],
+   "attache": [
+    1,
+    7
+   ]
+  },
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    28,
+    0,
+    3,
+    7
+   ],
+   "attache": [
+    1,
+    6
+   ]
+  },
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    32,
+    0,
+    2,
+    1
+   ],
+   "attache": [
+    0,
+    4
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    35,
+    0,
+    5,
+    9
+   ],
+   "attache": [
+    2,
+    8
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    41,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    0,
+    6
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    44,
+    0,
+    7,
+    12
+   ],
+   "attache": [
+    3,
+    11
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    52,
+    0,
+    2,
+    3
+   ],
+   "attache": [
+    0,
+    8
+   ]
+  },
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    55,
+    0,
+    4,
+    7
+   ],
+   "attache": [
+    2,
+    6
+   ]
+  },
+  {
+   "palier": 0.17094017094017092,
+   "taille_px": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    60,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    1,
+    5
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    63,
+    0,
+    5,
+    8
+   ],
+   "attache": [
+    3,
+    7
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    69,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    1,
+    6
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "tiges",
+   "planche": "kit",
+   "rect": [
+    72,
+    0,
+    7,
+    11
+   ],
+   "attache": [
+    4,
+    10
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "massette",
+   "planche": "kit",
+   "rect": [
+    80,
+    0,
+    3,
+    3
+   ],
+   "attache": [
+    2,
+    8
+   ]
+  }
+ ]
+}

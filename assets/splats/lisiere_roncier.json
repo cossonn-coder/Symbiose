@@ -1,0 +1,182 @@
+{
+ "recette": "lisiere_roncier",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "DecorLayer Piece.roncier"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "lisiere_roncier_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    7,
+    4
+   ],
+   "attache": [
+    3,
+    2
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    8,
+    0,
+    11,
+    6
+   ],
+   "attache": [
+    4,
+    3
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    20,
+    0,
+    15,
+    8
+   ],
+   "attache": [
+    6,
+    4
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    36,
+    0,
+    7,
+    4
+   ],
+   "attache": [
+    2,
+    2
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    44,
+    0,
+    11,
+    7
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    56,
+    0,
+    14,
+    9
+   ],
+   "attache": [
+    4,
+    5
+   ]
+  },
+  {
+   "palier": 0.29914529914529914,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    71,
+    0,
+    7,
+    4
+   ],
+   "attache": [
+    3,
+    2
+   ]
+  },
+  {
+   "palier": 0.47008547008547,
+   "taille_px": 11,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    79,
+    0,
+    10,
+    6
+   ],
+   "attache": [
+    5,
+    3
+   ]
+  },
+  {
+   "palier": 0.641025641025641,
+   "taille_px": 15,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    90,
+    0,
+    15,
+    8
+   ],
+   "attache": [
+    8,
+    4
+   ]
+  }
+ ]
+}

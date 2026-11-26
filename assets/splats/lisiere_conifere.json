@@ -1,0 +1,594 @@
+{
+ "recette": "lisiere_conifere",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "DecorLayer Piece.conifere"
+ ],
+ "couches": [
+  "aiguilles",
+  "stomates"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "lisiere_conifere_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    5,
+    6
+   ],
+   "attache": [
+    2,
+    4
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    6,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    10,
+    10
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    7,
+    0,
+    9,
+    10
+   ],
+   "attache": [
+    4,
+    6
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    17,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    7
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    19,
+    0,
+    11,
+    15
+   ],
+   "attache": [
+    5,
+    10
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    31,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    -1,
+    10
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    33,
+    0,
+    14,
+    19
+   ],
+   "attache": [
+    6,
+    13
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    48,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    0,
+    12
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    51,
+    0,
+    20,
+    22
+   ],
+   "attache": [
+    9,
+    15
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    72,
+    0,
+    3,
+    5
+   ],
+   "attache": [
+    1,
+    18
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    76,
+    0,
+    5,
+    6
+   ],
+   "attache": [
+    2,
+    4
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    82,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    10,
+    10
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    83,
+    0,
+    9,
+    10
+   ],
+   "attache": [
+    4,
+    7
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    93,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    14,
+    14
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    94,
+    0,
+    12,
+    13
+   ],
+   "attache": [
+    6,
+    9
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    107,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    0,
+    11
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    110,
+    0,
+    16,
+    19
+   ],
+   "attache": [
+    8,
+    14
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    127,
+    0,
+    2,
+    3
+   ],
+   "attache": [
+    0,
+    13
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    130,
+    0,
+    21,
+    25
+   ],
+   "attache": [
+    11,
+    18
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    152,
+    0,
+    3,
+    4
+   ],
+   "attache": [
+    1,
+    18
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    156,
+    0,
+    5,
+    6
+   ],
+   "attache": [
+    2,
+    4
+   ]
+  },
+  {
+   "palier": 0.21367521367521367,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    162,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    10,
+    10
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    163,
+    0,
+    9,
+    11
+   ],
+   "attache": [
+    4,
+    7
+   ]
+  },
+  {
+   "palier": 0.3846153846153846,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    173,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    14,
+    14
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    174,
+    0,
+    12,
+    15
+   ],
+   "attache": [
+    5,
+    10
+   ]
+  },
+  {
+   "palier": 0.5555555555555555,
+   "taille_px": 13,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    187,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    -1,
+    10
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    189,
+    0,
+    16,
+    19
+   ],
+   "attache": [
+    7,
+    13
+   ]
+  },
+  {
+   "palier": 0.7264957264957265,
+   "taille_px": 17,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    206,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    0,
+    12
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "aiguilles",
+   "planche": "kit",
+   "rect": [
+    209,
+    0,
+    21,
+    22
+   ],
+   "attache": [
+    9,
+    15
+   ]
+  },
+  {
+   "palier": 0.8974358974358974,
+   "taille_px": 21,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "stomates",
+   "planche": "kit",
+   "rect": [
+    231,
+    0,
+    3,
+    4
+   ],
+   "attache": [
+    1,
+    18
+   ]
+  }
+ ]
+}

@@ -125,11 +125,8 @@ namespace Symbiose
 		private static void AssurerKitDecor()
 		{
 			if (_kitTex != null) return;
-			var codes = new Dictionary<(Piece, int, int), byte[]>();
-			for (int f = 0; f < NbPieces; f++)
-				for (int i = 0; i < Tailles[f].Length; i++)
-					for (int v = 0; v < Variantes; v++)
-						codes[((Piece)f, i, v)] = CoderPiece((Piece)f, Tailles[f][i].X, Tailles[f][i].Y, v);
+			// LISIÈRE ① : pièces splat ou générées selon l'interrupteur (DecorLayer.KitSplats.cs).
+			var codes = CodesKit();
 			_kitRects = new Rect2I[TeintesBase.Length * NbPieces * NbTaillesMax * Variantes];
 			_kitCodes.Clear();
 			int x = 3, y = 0, hRang = 3;   // (0..1, 0..1) = texel blanc (repère des aplats)

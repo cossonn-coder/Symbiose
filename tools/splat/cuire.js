@@ -117,7 +117,9 @@ function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null, avecDetai
 // Les prises de vue d'une recette : [{ trou, variante, inclinaison, zooms }],
 // zooms = [{ z, k, planche, taille?, tailleCm? }]. Pièces saines d'abord, trouées ensuite.
 function plan(recette, o) {
-  const zooms = recette.tailles
+  const zooms = recette.boites
+    ? recette.boites.map(([w, h]) => ({ z: w / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), k: 1, planche: 'kit', taille: w, boite: [w, h] }))
+    : recette.tailles
     ? recette.tailles.map(t => ({ z: t / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), k: 1, planche: 'kit', taille: t }))
     : o.paliers.flatMap(z => classesDe(recette.nom).map(({ k, tailleCm }) =>
       ({ z, k, tailleCm, planche: planche.nomPalier(z) + suffixe(k) })));
@@ -148,10 +150,13 @@ function cuireRecette(recette, o) {
       for (let k = 0; k < o.lacets; k++) {
         const lacetDeg = (360 * k) / o.lacets;
         t = process.hrtime.bigint();
-        const photo = iso.photographier(ink, monde, recette.rayonCm, q.z * q.k, (lacetDeg * Math.PI) / 180);
         const couches = o.details ? coucheDetails(recette) : recette.couches || [null];
-        const ps = couches.map((n, c) => (o.details ? (c < o.base ? codes.piece(photo, monde, tons, c)
-          : codes.piece(photo, monde, tons, c, PART_DETAIL)) : codes.piece(photo, monde, tons, c)));
+        const prendre = z => {
+          const photo = iso.photographier(ink, monde, recette.rayonCm, z, (lacetDeg * Math.PI) / 180);
+          return couches.map((n, c) => (o.details ? (c < o.base ? codes.piece(photo, monde, tons, c)
+            : codes.piece(photo, monde, tons, c, PART_DETAIL)) : codes.piece(photo, monde, tons, c)));
+        };
+        const ps = q.boite ? ajuster(prendre, q.z, q.boite) : prendre(q.z * q.k);
         const dt = Number(process.hrtime.bigint() - t) / 1e6;
         const cle = q.taille ? 't' + q.taille : q.z * q.k;
         const [n, s] = temps.photo.get(cle) || [0, 0];
@@ -161,6 +166,37 @@ function cuireRecette(recette, o) {
       }
   }
   return { pieces, temps };
+}
+
+// LISIÈRE ① : `boites: [[w, h], …]` (kit du décor, DecorLayer.Kit.cs `Tailles`) → la pièce doit
+// TENIR dans une case w × h px ; le zoom de départ vient de `empriseCm`, puis on l'ajuste
+// (≤ 10 essais, dichotomie dès qu'encadré) : la plus grande photo qui tient gagne. Toutes couches réunies (même attache).
+// 📖 Une boucle de régulation simple : mesurer → corriger le gain → re-mesurer.
+function ajuster(prendre, z0, [W, H]) {
+  let z = z0, lo = null, hi = null, meilleur = null, ps = null;
+  for (let essai = 0; essai < 10; essai++) {
+    ps = prendre(z);
+    const [w, h] = emprise(ps), tient = w <= W && h <= H;
+    if (tient) {
+      if (!meilleur || w * h > meilleur.a) meilleur = { ps, a: w * h };
+      lo = z;
+      if (w === W || h === H) break;   // touche un bord de la case : pleine
+    } else hi = z;
+    // Encadrée (une qui tient, une qui déborde) → dichotomie ; sinon règle de trois.
+    z = lo !== null && hi !== null ? Math.sqrt(lo * hi) : z * Math.min(W / Math.max(w, 1), H / Math.max(h, 1)) * (tient ? 1 : 0.97);
+  }
+  return meilleur ? meilleur.ps : ps;
+}
+
+// Boîte (w, h) de toutes les couches d'une vue, recalées sur leur attache commune.
+function emprise(ps) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of ps) {
+    if (!p.w) continue;
+    x0 = Math.min(x0, -p.attache[0]); y0 = Math.min(y0, -p.attache[1]);
+    x1 = Math.max(x1, p.w - p.attache[0]); y1 = Math.max(y1, p.h - p.attache[1]);
+  }
+  return x1 < x0 ? [0, 0] : [x1 - x0, y1 - y0];
 }
 
 // RELIQUATS ③ : couches photographiées en mode --details = celles de la recette (pour la
